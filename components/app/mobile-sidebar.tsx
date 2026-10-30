@@ -33,7 +33,7 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
             <Clapperboard className="w-[18px] h-[18px] text-white" />
           </div>
           <SheetTitle className="text-lg font-bold text-sidebar-accent-foreground tracking-tight lowercase">
-            harish
+            flowbender
           </SheetTitle>
         </SheetHeader>
 

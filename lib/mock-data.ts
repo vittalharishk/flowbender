@@ -1,0 +1,17 @@
+export {
+  budgetCategories,
+  currentUser,
+  dashboardStats,
+  departments,
+  genreOptions,
+  languageOptions,
+  monthlyBudgetData,
+  notifications,
+  productionAlerts,
+  productionStatusLabels,
+  projectTypeLabels,
+  projects,
+  recentActivity,
+  scheduleEntries,
+  timelineMilestones,
+} from "./demo-data";

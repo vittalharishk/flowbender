@@ -1,0 +1,4 @@
+export function demoImage(label: string, accent = "#f59e0b") {
+  const safe = label.replace(/[<>&'"]/g, "");
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#0f172a"/><stop offset="1" stop-color="${accent}"/></linearGradient></defs><rect width="800" height="500" fill="url(#g)"/><circle cx="650" cy="110" r="170" fill="${accent}" opacity=".18"/><text x="48" y="390" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="38" font-weight="700">${safe}</text><text x="50" y="430" fill="white" opacity=".75" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" letter-spacing="3">FLOW BENDER STUDIOS • CINEMA PRODUCTION</text></svg>`)}`;
+}

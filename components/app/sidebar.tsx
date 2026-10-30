@@ -40,7 +40,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </div>
           {!collapsed && (
             <span className="text-lg font-bold text-sidebar-accent-foreground tracking-tight whitespace-nowrap lowercase">
-              flowbender
+              harish
             </span>
           )}
         </div>

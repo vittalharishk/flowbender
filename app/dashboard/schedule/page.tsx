@@ -1,17 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, Clapperboard, Video, Plus } from "lucide-react";
+import { CalendarDays, Video } from "lucide-react";
 import { useShootDays } from "@/lib/schedule-store";
 import { ScheduleListView } from "@/components/schedule/schedule-list-view";
+import { MasterCalendar } from "@/components/schedule/master-calendar";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function GlobalSchedulePage() {
   const days = useShootDays();
 
   return (
     <div className="max-w-[1400px] mx-auto space-y-6">
-      {/* Executive Master Schedule Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -31,7 +32,6 @@ export default function GlobalSchedulePage() {
             Cross-production call sheets, soundstage reservations, visual stripboards, and scene page tracking.
           </p>
         </div>
-
         <div className="flex items-center gap-2.5">
           <Button variant="outline" size="sm" asChild className="gap-1.5 h-9 text-xs">
             <Link href="/dashboard/production">
@@ -42,7 +42,18 @@ export default function GlobalSchedulePage() {
         </div>
       </div>
 
-      <ScheduleListView shootDays={days} basePath="/dashboard/schedule" onAdded={() => undefined} />
+      <Tabs defaultValue="schedule">
+        <TabsList>
+          <TabsTrigger value="schedule">Shoot Day Schedule</TabsTrigger>
+          <TabsTrigger value="calendar">Event Calendar</TabsTrigger>
+        </TabsList>
+        <TabsContent value="schedule" className="mt-4">
+          <ScheduleListView shootDays={days} basePath="/dashboard/schedule" onAdded={() => undefined} />
+        </TabsContent>
+        <TabsContent value="calendar" className="mt-4">
+          <MasterCalendar />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

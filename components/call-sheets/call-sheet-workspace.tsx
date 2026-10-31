@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useAttendanceRecords, useCateringAdjustments, calcCateringCount } from "@/lib/attendance-store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Copy, FileCheck2, Plus, Printer, Search, Trash2 } from "lucide-react";
@@ -24,10 +25,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-const statuses: CallSheetStatus[] = ["Draft", "Ready for Review", "Published", "Revised", "Completed"];
+const statuses: CallSheetStatus[] = ["Draft", "Ready for Review", "Approved", "Published", "Revised", "Completed"];
 const statusClass: Record<CallSheetStatus, string> = {
   Draft: "border-zinc-500/20 bg-zinc-500/10 text-zinc-400",
   "Ready for Review": "border-amber-500/20 bg-amber-500/10 text-amber-400",
+  Approved: "border-teal-500/20 bg-teal-500/10 text-teal-400",
   Published: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400",
   Revised: "border-blue-500/20 bg-blue-500/10 text-blue-400",
   Completed: "border-violet-500/20 bg-violet-500/10 text-violet-400",
@@ -117,6 +119,30 @@ function CallSheetWorkspaceContent({ detailId, projectId }: { detailId?: string;
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">{!projectId && <select aria-label="Filter call sheets by project" className="min-w-0 flex-1 rounded-md border bg-background p-2 text-sm sm:w-52 sm:flex-none" value={projectFilter} onChange={(event) => { setProjectFilter(event.target.value); setSelectedId(""); }}><option value="all">All projects</option>{data.projects.map((project) => <option key={project.id} value={project.id}>{project.title}</option>)}</select>}<Button onClick={create} disabled={!effectiveProjectId} className="gap-2"><Plus className="h-4 w-4" /> Create Call Sheet</Button></div>
       </div>
       {toast && <div className="rounded border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-400"><CheckCircle2 className="mr-2 inline h-4 w-4" />{toast}</div>}
+      {(() => {
+        const today = new Date().toISOString().slice(0, 10);
+        const upcoming = scopedSheets
+          .filter(s => s.date >= today && (s.status === "Published" || s.status === "Ready for Review"))
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .slice(0, 5);
+        if (upcoming.length === 0) return null;
+        return (
+          <Card className="border-amber-500/20">
+            <CardHeader><CardTitle className="text-sm text-amber-400">Upcoming Shoot Days</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {upcoming.map(s => (
+                <button key={s.id} onClick={() => { setPreview(false); setSelectedId(s.id); }} className="flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-sm hover:bg-muted/30 transition-colors">
+                  <span>
+                    <span className="font-medium">{s.project}</span>
+                    <span className="ml-2 text-muted-foreground">Day {s.shootDay} · {dateLabel(s.date)}</span>
+                  </span>
+                  <Badge variant="outline" className={statusClass[s.status]}>{s.status}</Badge>
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+        );
+      })()}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">{statuses.map((item) => <Card key={item}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{item}</p><p className="text-2xl font-semibold">{scopedSheets.filter((s) => s.status === item).length}</p></CardContent></Card>)}</div>
       <Card><CardContent className="flex flex-col gap-3 p-4 md:flex-row"><div className="relative flex-1"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="pl-9" placeholder="Search number, project, episode, location…" value={query} onChange={(e) => setQuery(e.target.value)} /></div><select className="rounded-md border bg-background px-3 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">All statuses</option>{statuses.map((s) => <option key={s}>{s}</option>)}</select><select className="rounded-md border bg-background px-3 text-sm" value={workflowFilter} onChange={(e) => setWorkflowFilter(e.target.value)}><option value="all">All workflows</option>{callSheetWorkflowOptions.map((s) => <option key={s}>{s}</option>)}</select></CardContent></Card>
       <Card><CardHeader><CardTitle className="text-base">Production call sheets</CardTitle></CardHeader><CardContent className="overflow-x-auto p-0">
@@ -147,6 +173,9 @@ function SheetEditor({ sheet, data, onBack, notify, initialPreview }: { sheet: C
   const locations = data.locations.filter((l) => l.projectId === project?.id);
   const sceneRecords = scenes.filter((s) => sheet.sceneIds?.includes(s.id));
   const totalPages = sheet.scenes.reduce((sum, scene) => sum + scene.pages, 0);
+  const attendanceRecords = useAttendanceRecords();
+  const cateringAdjustments = useCateringAdjustments();
+  const liveCatering = calcCateringCount(attendanceRecords, cateringAdjustments, sheet.projectId ?? "", sheet.date);
   const patch = (updates: Partial<CallSheet>) => updateCallSheet(sheet.id, { ...updates, updated: nowText() });
   const addRow = (key: "transport" | "catering" | "equipment" | "locations") => patch({ [key]: [...(sheet[key] ?? []), { id: `${key}-${Date.now()}`, Item: "", Notes: "" }] } as Partial<CallSheet>);
   const removeRow = (key: "transport" | "catering" | "equipment" | "locations", id: string) => patch({ [key]: (sheet[key] ?? []).filter((row) => row.id !== id) } as Partial<CallSheet>);
@@ -163,7 +192,7 @@ function SheetEditor({ sheet, data, onBack, notify, initialPreview }: { sheet: C
     <div className="flex flex-wrap items-center gap-3 print:hidden"><Button variant="outline" onClick={() => setPreview(!preview)}>{preview ? "Back to editing" : "Document preview"}</Button><p className="text-xs text-muted-foreground">Saved in this app. Publishing does not send messages to recipients.</p></div>
     <div className={preview ? "" : "hidden print:block"}><CallSheetDocument sheet={sheet} />{preview && <div className="my-4 flex gap-2 print:hidden"><Button onClick={() => window.print()}>Print / Save PDF</Button><Button variant="outline" onClick={onBack}>All call sheets</Button></div>}</div>
     <div className={preview ? "hidden" : "space-y-5 print:hidden"}>
-    <div className="flex flex-wrap items-center justify-between gap-3 print:hidden"><Button variant="ghost" onClick={onBack}>← All call sheets</Button><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print / PDF</Button>{sheet.status === "Draft" && <Button onClick={() => transition("Ready for Review")}>Submit for Review</Button>}{sheet.status === "Ready for Review" && <Button onClick={() => transition("Published")}>Publish</Button>}{sheet.status === "Published" && <Button variant="outline" onClick={addRevision}>Create Revision</Button>}{sheet.status === "Revised" && <Button onClick={() => transition("Published")}>Publish Revision</Button>}{sheet.status !== "Completed" && <Button variant="outline" onClick={() => transition("Completed")}>Mark Completed</Button>}</div></div>
+    <div className="flex flex-wrap items-center justify-between gap-3 print:hidden"><Button variant="ghost" onClick={onBack}>← All call sheets</Button><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print / PDF</Button>{sheet.status === "Draft" && <Button onClick={() => transition("Ready for Review")}>Submit for Review</Button>}{sheet.status === "Ready for Review" && <Button onClick={() => transition("Approved")}>Approve</Button>}{sheet.status === "Approved" && <Button onClick={() => transition("Published")}>Publish</Button>}{sheet.status === "Published" && <Button variant="outline" onClick={addRevision}>Create Revision</Button>}{sheet.status === "Revised" && <Button onClick={() => transition("Published")}>Publish Revision</Button>}{sheet.status !== "Completed" && <Button variant="outline" onClick={() => transition("Completed")}>Mark Completed</Button>}</div></div>
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
       <div className="space-y-5 print:col-span-2">
         <Card className="overflow-hidden"><div className="bg-slate-950 p-6 text-white"><div className="flex justify-between gap-4"><div className="flex items-center gap-4">{sheet.projectImage && <img src={sheet.projectImage} alt="" className="h-16 w-12 rounded object-cover" />}<div><p className="text-xs uppercase tracking-[.25em] text-amber-300">{sheet.workflow} · {sheet.productionCompany ?? project?.productionHouse ?? "Production Company"}</p><h1 className="mt-2 text-3xl font-bold">{project?.title ?? sheet.project}</h1><p className="mt-2 text-slate-300">{sheet.id} · Shoot Day {sheet.shootDay} · {dateLabel(sheet.date)} · V{sheet.version ?? 1}</p></div></div><Badge className={statusClass[sheet.status]}>{sheet.status}</Badge></div></div><CardContent className="grid grid-cols-2 gap-3 p-5 md:grid-cols-6"><EditField label="General Call" value={sheet.callTime ?? ""} type="time" onChange={(v) => patch({ callTime: v })} required /><EditField label="First Shot" value={sheet.firstShot ?? ""} type="time" onChange={(v) => patch({ firstShot: v })} required /><EditField label="Pack Up" value={sheet.packUp ?? ""} type="time" onChange={(v) => patch({ packUp: v })} /><EditField label="Shoot Date" value={sheet.date} type="date" onChange={(v) => patch({ date: v })} required /><div><Label>Location</Label><select className="mt-1 w-full rounded-md border bg-background px-2 py-2 text-sm" value={sheet.location} onChange={(e) => patch({ location: e.target.value })}><option value="">Select location</option>{locations.map((l) => <option key={l.id} value={l.name}>{l.name}</option>)}<option value={sheet.location}>{sheet.location}</option></select></div><div><Label>Project</Label><p className="mt-2 font-medium">{project?.title ?? sheet.project}</p></div></CardContent></Card>
@@ -174,6 +203,19 @@ function SheetEditor({ sheet, data, onBack, notify, initialPreview }: { sheet: C
         <Section title={`Cast · ${sheet.castAssignments?.length ?? 0}`} action={<Button size="sm" variant="outline" onClick={syncCast}>Sync required cast</Button>}>{(sheet.castAssignments ?? []).length === 0 ? <p className="text-sm text-muted-foreground">Select scenes and sync cast from project relationships.</p> : <div className="space-y-2">{sheet.castAssignments?.map((item) => <div key={item.id} className="grid gap-2 rounded border p-3 md:grid-cols-5"><b>{item.name}<small className="block text-muted-foreground">{item.character}</small></b><Input placeholder="Status" value={item.status} onChange={(e) => patch({ castAssignments: sheet.castAssignments?.map((x) => x.id === item.id ? { ...x, status: e.target.value } : x) })} /><Input type="time" value={item.call} onChange={(e) => patch({ castAssignments: sheet.castAssignments?.map((x) => x.id === item.id ? { ...x, call: e.target.value } : x) })} /><Input placeholder="Makeup" value={item.makeup} onChange={(e) => patch({ castAssignments: sheet.castAssignments?.map((x) => x.id === item.id ? { ...x, makeup: e.target.value } : x) })} /><Input placeholder="Wrap" value={item.wrap} onChange={(e) => patch({ castAssignments: sheet.castAssignments?.map((x) => x.id === item.id ? { ...x, wrap: e.target.value } : x) })} /></div>)}</div>}</Section>
         <Section title={`Crew · ${sheet.crewAssignments?.length ?? 0}`} action={<Button size="sm" variant="outline" onClick={() => patch({ crewAssignments: crew.map((member) => sheet.crewAssignments?.find((assignment) => assignment.crewId === member.id) ?? ({ id: member.id, crewId: member.id, name: member.name, designation: member.role, department: member.department, callTime: sheet.callTime ?? "05:30", transport: "", phone: member.phone, notes: "" })) })}>Sync project crew</Button>}><div className="grid gap-2 md:grid-cols-2">{(sheet.crewAssignments ?? []).map((member) => <div key={member.id} className="rounded border p-3 text-sm"><b>{member.name}</b> · {member.designation}<div className="mt-2 flex gap-2"><Input aria-label={`Call time for ${member.name}`} type="time" value={member.callTime} onChange={(event) => patch({ crewAssignments: sheet.crewAssignments?.map((assignment) => assignment.id === member.id ? { ...assignment, callTime: event.target.value } : assignment) })} /><span className="text-muted-foreground">{member.department}</span></div></div>)}</div></Section>
         <Section title="Schedule"><EditableTable title="" rows={sheet.schedule ?? []} fields={["Start", "End", "Scene", "Description", "Location", "Notes"]} onAdd={() => patch({ schedule: [...(sheet.schedule ?? []), { id: `schedule-${Date.now()}`, Start: sheet.firstShot ?? "", End: "", Scene: "", Description: "", Location: sheet.location, Notes: "" }] })} onDelete={(id) => patch({ schedule: (sheet.schedule ?? []).filter((r) => r.id !== id) })} onChange={(id, f, v) => patch({ schedule: (sheet.schedule ?? []).map((r) => r.id === id ? { ...r, [f]: v } : r) })} /></Section>
+        <Card className="border-amber-500/20 bg-amber-500/5">
+          <CardHeader><CardTitle className="text-sm">Live Catering Set Count</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-lg border bg-card px-3 py-2"><p className="text-[11px] text-muted-foreground">Cast Meals</p><p className="text-xl font-bold text-emerald-400">{liveCatering.castCount}</p></div>
+              <div className="rounded-lg border bg-card px-3 py-2"><p className="text-[11px] text-muted-foreground">Crew Meals</p><p className="text-xl font-bold text-blue-400">{liveCatering.crewCount}</p></div>
+              <div className="rounded-lg border bg-card px-3 py-2"><p className="text-[11px] text-muted-foreground">Visitors</p><p className="text-xl font-bold text-violet-400">{liveCatering.visitorCount}</p></div>
+              <div className="rounded-lg border bg-amber-500/20 px-3 py-2"><p className="text-[11px] text-muted-foreground">Total Set Count</p><p className="text-xl font-bold text-amber-400">{liveCatering.total}</p></div>
+            </div>
+            {liveCatering.adjustmentDelta !== 0 && <p className="mt-2 text-xs text-muted-foreground">Includes manual adjustment: {liveCatering.adjustmentDelta > 0 ? "+" : ""}{liveCatering.adjustmentDelta}</p>}
+            <p className="mt-2 text-xs text-muted-foreground">Based on attendance records for {sheet.date}. Update in the Attendance module.</p>
+          </CardContent>
+        </Card>
         <div className="grid gap-5 md:grid-cols-2"><EditableTable title={`Transport · ${(sheet.transport ?? []).length}`} rows={sheet.transport ?? []} fields={["Vehicle", "Driver", "Pickup Time", "Passenger", "Status", "Notes"]} onAdd={() => addRow("transport")} onDelete={(id) => removeRow("transport", id)} onChange={(id, f, v) => updateRow("transport", id, f, v)} /><EditableTable title={`Catering · ${(sheet.catering ?? []).length}`} rows={sheet.catering ?? []} fields={["Meal", "Time", "Location", "Expected People", "Menu", "Status"]} onAdd={() => addRow("catering")} onDelete={(id) => removeRow("catering", id)} onChange={(id, f, v) => updateRow("catering", id, f, v)} /></div>
         <div className="grid gap-5 md:grid-cols-2"><EditableTable title={`Equipment · ${(sheet.equipment ?? []).length}`} rows={sheet.equipment ?? []} fields={["Equipment", "Category", "Quantity", "Responsible Person", "Status", "Notes"]} onAdd={() => addRow("equipment")} onDelete={(id) => removeRow("equipment", id)} onChange={(id, f, v) => updateRow("equipment", id, f, v)} /><Card className="border-red-500/30"><CardHeader><CardTitle>Safety / Emergency</CardTitle></CardHeader><CardContent><Textarea value={sheet.safety?.specialInstructions ?? ""} placeholder="Hospital, police, emergency contact, first aid, fire safety…" onChange={(e) => patch({ safety: { ...(sheet.safety ?? {}), specialInstructions: e.target.value } })} /></CardContent></Card></div>
       </div>

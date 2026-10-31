@@ -52,7 +52,10 @@ export interface PaymentMilestone {
   label: string;
   amount: number;
   dueDate: string;
-  status: "paid" | "due" | "upcoming";
+  status: "paid" | "due" | "upcoming" | "overdue";
+  paymentDate?: string;
+  paymentRef?: string;
+  notes?: string;
 }
 
 export interface CastScene {
@@ -388,6 +391,71 @@ export interface ScriptDraftVersion {
   scenes: ScriptScene[];
   archived?: boolean;
 }
+export type ShotType =
+  | "wide"
+  | "medium"
+  | "medium-close"
+  | "close-up"
+  | "extreme-close"
+  | "over-shoulder"
+  | "pov"
+  | "insert"
+  | "establishing"
+  | "aerial"
+  | "two-shot"
+  | "group";
+
+export type ShotMovement =
+  | "static"
+  | "pan"
+  | "tilt"
+  | "dolly"
+  | "track"
+  | "steadicam"
+  | "handheld"
+  | "crane"
+  | "drone"
+  | "zoom"
+  | "whip-pan"
+  | "arc";
+
+export type ShotStatus = "planned" | "storyboarded" | "approved" | "shot" | "pickup";
+
+export interface Shot {
+  id: string;
+  sceneId: string;
+  shotNumber: string;
+  type: ShotType;
+  movement: ShotMovement;
+  lens: string;
+  angle: string;
+  description: string;
+  duration: string;
+  characters: string[];
+  equipment: string[];
+  vfx: boolean;
+  vfxNotes: string;
+  status: ShotStatus;
+  notes: string;
+  imageUrl?: string;
+}
+
+export type ReferenceCategory = "audio" | "video" | "image" | "character" | "location" | "prop";
+
+export interface ScriptReference {
+  id: string;
+  category: ReferenceCategory;
+  title: string;
+  description: string;
+  url: string;
+  thumbnail?: string;
+  linkedSceneIds: string[];
+  linkedCharacters: string[];
+  tags: string[];
+  createdAt: string;
+  notes: string;
+}
+
 export interface Script {
   id: string;
   projectId: string;
@@ -408,13 +476,16 @@ export interface Script {
   updatedAt: string;
   createdBy: string;
   archived: boolean;
+  isMain?: boolean;
   blocks: ScriptBlock[];
   scenes: ScriptScene[];
   versions: ScriptDraftVersion[];
   linkedSceneIds: string[];
+  shots: Shot[];
+  references: ScriptReference[];
 }
 
-export type CallSheetStatus = "Draft" | "Ready for Review" | "Published" | "Revised" | "Completed";
+export type CallSheetStatus = "Draft" | "Ready for Review" | "Approved" | "Published" | "Revised" | "Completed";
 
 export type CallSheetWorkflow =
   | "Feature Film"
@@ -561,6 +632,7 @@ export interface CharacterProfile {
   arc: string;
   languages: string[];
   linkedCastIds: string[];
+  multiArtist?: boolean; // explicit opt-in: role may have more than one selected artist
 }
 
 export interface ProjectLocation {
@@ -663,8 +735,11 @@ export type PostProductionStatus =
   | "not-started"
   | "in-progress"
   | "review"
+  | "in-review"
   | "approved"
-  | "completed";
+  | "completed"
+  | "on-hold"
+  | "delayed";
 
 export interface PostProductionItem {
   id: string;
@@ -675,6 +750,28 @@ export interface PostProductionItem {
   status: PostProductionStatus;
   progress: number;
   dueDate: string;
+  // Extended fields
+  description?: string;
+  linkedSceneId?: string;
+  linkedShotId?: string;
+  startDate?: string;
+  priority?: "low" | "medium" | "high" | "critical";
+  notes?: string;
+  approvalHistory?: { action: string; by: string; at: string; notes: string }[];
+  completionPercentage?: number;
+}
+
+export type PostProdMilestoneStatus = "pending" | "in-progress" | "completed" | "delayed";
+
+export interface PostProdMilestone {
+  id: string;
+  projectId: string;
+  title: string;
+  targetDate: string;
+  actualDate?: string;
+  status: PostProdMilestoneStatus;
+  notes: string;
+  completedBy?: string;
 }
 
 export type VfxShotStatus = "briefed" | "in-progress" | "client-review" | "final";
@@ -724,7 +821,15 @@ export interface MarketingItem {
   notes: string;
 }
 
-export type AttendanceStatus = "present" | "absent" | "partial" | "leave";
+export type AttendanceStatus =
+  | "present"
+  | "absent"
+  | "partial"   // kept for backward compat (legacy = half-day)
+  | "half-day"
+  | "leave"
+  | "on-leave"  // alias
+  | "not-required"
+  | "unconfirmed";
 
 export interface AttendanceRecord {
   id: string;
@@ -739,6 +844,16 @@ export interface AttendanceRecord {
   status: AttendanceStatus;
   hoursWorked: number;
   notes?: string;
+}
+
+export interface CateringAdjustment {
+  id: string;
+  projectId: string;
+  date: string;
+  delta: number;       // positive or negative integer
+  reason: string;
+  adjustedBy: string;
+  createdAt: string;
 }
 
 export interface CameraCard {
@@ -804,3 +919,183 @@ export interface SubtitleLanguage {
   fileSize?: string;
 }
 
+
+// ── Cast: roles (CharacterProfile), probable candidates, decisions, availability, contracts ──
+
+export type CastCandidateStatus =
+  | "proposed"
+  | "under-discussion"
+  | "shortlisted"
+  | "negotiation"
+  | "on-hold"
+  | "rejected"
+  | "selected";
+
+export interface CastCandidate {
+  id: string;
+  roleId: string; // CharacterProfile.id
+  projectId: string;
+  name: string;
+  category: CastCategory;
+  agency: string;
+  email: string;
+  phone: string;
+  languages: string[];
+  proposedFee: number;
+  availabilityNote: string;
+  status: CastCandidateStatus;
+  notes: string; // audition / meeting notes
+  negotiationNotes: string;
+  linkedCastId: string | null; // CastMember.id once selected
+  isDemo: boolean; // fictional sample artist with demo contact details
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CastDecisionLogEntry {
+  id: string;
+  candidateId: string;
+  roleId: string;
+  projectId: string;
+  fromStatus: CastCandidateStatus | null;
+  toStatus: CastCandidateStatus;
+  note: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export type ArtistAvailabilityState = "available" | "unavailable" | "tentative" | "confirmed";
+
+export interface ArtistAvailability {
+  id: string;
+  castId: string; // CastMember.id
+  date: string; // YYYY-MM-DD
+  state: ArtistAvailabilityState;
+  note: string;
+  endDate?: string;
+  reason?: string;
+}
+
+// ─── Pre-Production Checklist ───────────────────────────────────────────────
+export type ChecklistStatus = "pending" | "in-progress" | "done" | "blocked";
+
+export interface PreProdChecklistItem {
+  id: string;
+  projectId: string;
+  category: string;
+  title: string;
+  owner: string;
+  dueDate: string;
+  status: ChecklistStatus;
+  notes: string;
+}
+
+// ─── Daily Production Report (rich) ─────────────────────────────────────────
+export type DPRStatus = "draft" | "submitted" | "approved";
+
+export interface DPRScene {
+  sceneNumber: string;
+  heading: string;
+  pagesPlanned: number;
+  pagesCompleted: number;
+  status: "completed" | "partial" | "not-started" | "moved";
+  notes: string;
+}
+
+export interface DPRReport {
+  id: string;
+  projectId: string;
+  shootDayId: string;
+  date: string;
+  shootDayNumber: number;
+  location: string;
+  director: string;
+  adName: string;
+  callTime: string;
+  actualCallTime: string;
+  wrapTime: string;
+  actualWrapTime: string;
+  castPresent: number;
+  crewPresent: number;
+  cateringCount: number;
+  scenesPlanned: number;
+  scenesCompleted: number;
+  pagesPlanned: number;
+  pagesCompleted: number;
+  scenes: DPRScene[];
+  issues: string;
+  tomorrowLocation: string;
+  tomorrowScenes: string;
+  status: DPRStatus;
+  submittedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ContractStage = "draft" | "under-review" | "approved" | "signed" | "completed";
+
+export interface CastContract {
+  id: string;
+  castId: string; // CastMember.id (confirmed casting record)
+  roleId: string;
+  projectId: string;
+  contractRef: string; // e.g. "FLW-2027-001"
+  amount: number;
+  advance: number;
+  milestones: PaymentMilestone[];
+  startDate: string;
+  endDate: string;
+  contractStage: ContractStage;
+  documentName: string | null; // placeholder until document upload exists
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Event Calendar ────────────────────────────────────────────────────────
+
+export type CalendarEventType =
+  | "shoot"
+  | "cast-meeting"
+  | "crew-meeting"
+  | "audition"
+  | "rehearsal"
+  | "table-read"
+  | "location-scouting"
+  | "pre-prod-deadline"
+  | "post-prod-deadline"
+  | "dubbing"
+  | "delivery"
+  | "other";
+
+export type CalendarEventStatus =
+  | "scheduled"
+  | "confirmed"
+  | "cancelled"
+  | "completed"
+  | "postponed";
+
+export interface CalendarEvent {
+  id: string;
+  type: CalendarEventType;
+  title: string;
+  date: string;
+  endDate?: string;
+  time?: string;
+  endTime?: string;
+  projectId?: string;
+  projectTitle?: string;
+  location?: string;
+  department?: string;
+  description?: string;
+  participants?: string[];
+  notes?: string;
+  status: CalendarEventStatus;
+  linkedShootDayId?: string;
+  linkedCallSheetId?: string;
+  linkedTaskId?: string;
+  linkedPostProdId?: string;
+  linkedDprId?: string;
+  createdBy?: string;
+  createdAt: string;
+}

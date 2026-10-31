@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { PreProdBoard } from "@/components/schedule/pre-prod-board";
+import { ProductionDashboard } from "@/components/schedule/production-dashboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import {
   Clapperboard,
@@ -54,7 +57,27 @@ const dateLabel = (date: string) =>
 
 export default function ProjectProductionPage() {
   const params = useParams();
-  return <ProjectProduction key={String(params.id)} projectId={String(params.id)} />;
+  const projectId = String(params.id);
+  return (
+    <Tabs defaultValue="dpr">
+      <div className="mb-4">
+        <TabsList className="h-9">
+          <TabsTrigger value="pre-production" className="text-xs">Pre-Production</TabsTrigger>
+          <TabsTrigger value="production" className="text-xs">Shoot Days &amp; DPR</TabsTrigger>
+          <TabsTrigger value="dpr" className="text-xs">Daily DPR Form</TabsTrigger>
+        </TabsList>
+      </div>
+      <TabsContent value="pre-production">
+        <PreProdBoard projectId={projectId} />
+      </TabsContent>
+      <TabsContent value="production">
+        <ProductionDashboard projectId={projectId} />
+      </TabsContent>
+      <TabsContent value="dpr">
+        <ProjectProduction key={projectId} projectId={projectId} />
+      </TabsContent>
+    </Tabs>
+  );
 }
 
 function ProjectProduction({ projectId }: { projectId: string }) {

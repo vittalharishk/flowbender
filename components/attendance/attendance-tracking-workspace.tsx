@@ -25,7 +25,7 @@ import type { AttendanceRecord, AttendanceStatus } from "@/lib/types";
 import { toast } from "sonner";
 
 const getStatusBadgeColor = (status: AttendanceStatus) => {
-  const colors: Record<AttendanceStatus, string> = {
+  const colors: Partial<Record<AttendanceStatus, string>> = {
     present: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
     absent: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30",
     partial: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",

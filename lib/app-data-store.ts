@@ -3,6 +3,7 @@ import { createFlowBenderSeedData } from "./flowbender-demo-seed";
 import { getAccessToken, getDemoAccountForUser, getDemoUserFromToken } from "./auth-client";
 import type {
   AttendanceRecord,
+  CateringAdjustment,
   BudgetLineItem,
   CallSheet,
   CameraCard,
@@ -11,6 +12,8 @@ import type {
   CrewMember,
   DeliverableItem,
   DprReport,
+  DPRReport,
+  PreProdChecklistItem,
   EquipmentItem,
   ExpenseItem,
   FootageMetadata,
@@ -33,11 +36,17 @@ import type {
   SubtitleLanguage,
   VendorRecord,
   VfxShot,
+  CastCandidate,
+  CastDecisionLogEntry,
+  ArtistAvailability,
+  CastContract,
+  PostProdMilestone,
+  CalendarEvent,
 } from "./types";
 
 export const APP_DATA_LOCAL_STORAGE_KEY = "flow-bender.demo-data.v7";
 
-const APP_DATA_VERSION = 15;
+const APP_DATA_VERSION = 18;
 
 function shiftDemoDatesTo2027(value: unknown): void {
   if (Array.isArray(value)) {
@@ -87,6 +96,15 @@ const collectionKeys = [
   "storageDevices",
   "footageMetadata",
   "subtitleLanguages",
+  "castCandidates",
+  "castDecisionLog",
+  "artistAvailability",
+  "castContracts",
+  "cateringAdjustments",
+  "preProdChecklist",
+  "richDprReports",
+  "postProdMilestones",
+  "calendarEvents",
 ] as const;
 
 export type AppDataCollectionKey = (typeof collectionKeys)[number];
@@ -123,6 +141,15 @@ export type AppDataCollections = {
   storageDevices: StorageDevice[];
   footageMetadata: FootageMetadata[];
   subtitleLanguages: SubtitleLanguage[];
+  castCandidates: CastCandidate[];
+  castDecisionLog: CastDecisionLogEntry[];
+  artistAvailability: ArtistAvailability[];
+  castContracts: CastContract[];
+  cateringAdjustments: CateringAdjustment[];
+  preProdChecklist: PreProdChecklistItem[];
+  richDprReports: DPRReport[];
+  postProdMilestones: PostProdMilestone[];
+  calendarEvents: CalendarEvent[];
 };
 
 
@@ -151,6 +178,9 @@ let unresolvedSeedKeys = new Set<AppDataCollectionKey>(collectionKeys);
 let stateCache: AppDataState | null = null;
 let storageListenerAttached = false;
 let sharedHydrationStarted = false;
+let sharedHydrationDone = false;
+let pendingPersistState: AppDataState | null = null;
+let persistTimer: ReturnType<typeof setTimeout> | null = null;
 let visibleStateSource: AppDataState | null = null;
 let visibleStateToken: string | null = null;
 let visibleStateCache: AppDataState | null = null;
@@ -200,6 +230,15 @@ function emptyCollections(): AppDataCollections {
     storageDevices: [],
     footageMetadata: [],
     subtitleLanguages: [],
+    castCandidates: [],
+    castDecisionLog: [],
+    artistAvailability: [],
+    castContracts: [],
+    cateringAdjustments: [],
+    preProdChecklist: [],
+    richDprReports: [],
+    postProdMilestones: [],
+    calendarEvents: [],
   };
 }
 
@@ -445,9 +484,36 @@ function attachStorageListener() {
   storageListenerAttached = true;
 }
 
+// Saves go to data/flowbender-demo-data.json via /api/demo-data (no database yet).
+// Writes are held until the shared copy has loaded so seed data never overwrites the file.
 function persistState(state: AppDataState) {
-  // User requested to disable browser storage for demos
-  return;
+  if (typeof window === "undefined") return;
+  pendingPersistState = state;
+  if (!sharedHydrationDone) return;
+  if (persistTimer) clearTimeout(persistTimer);
+  persistTimer = setTimeout(flushPersistState, 300);
+}
+
+function flushPersistState() {
+  persistTimer = null;
+  const state = pendingPersistState;
+  if (!state) return;
+  pendingPersistState = null;
+
+  void fetch("/api/demo-data", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data: state }),
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error(`Saving shared demo data failed (${response.status}).`);
+    })
+    .catch((error) => {
+      console.error("Unable to save flowbender data to the JSON file.", error);
+      window.dispatchEvent(new CustomEvent("flowbender:persistence-error", {
+        detail: "Your last change could not be saved to the server. Export a backup before reloading.",
+      }));
+    });
 }
 
 function hydrateSharedState(localState: AppDataState, hadLocalState: boolean) {
@@ -457,16 +523,21 @@ function hydrateSharedState(localState: AppDataState, hadLocalState: boolean) {
   void fetch("/api/demo-data", { cache: "no-store" })
     .then(async (response) => {
       if (response.status === 404) {
-        if (!hadLocalState) persistState(localState);
+        // No JSON file yet: create it from the current (seeded or edited) state.
+        sharedHydrationDone = true;
+        persistState(pendingPersistState ?? localState);
         return;
       }
       if (!response.ok) throw new Error(`Shared demo data request failed (${response.status}).`);
       const payload = await response.json() as { data?: unknown };
-      if (!payload.data) return;
-      const shared = normalizeInput(payload.data).data;
-      // The server copy is the shared demo source of truth across browsers.
-      // Local storage remains the fast cache and offline fallback.
-      commitState(shared, true);
+      sharedHydrationDone = true;
+      if (!payload.data) {
+        if (pendingPersistState) persistState(pendingPersistState);
+        return;
+      }
+      // The JSON file is the source of truth; edits made before it loaded are dropped.
+      pendingPersistState = null;
+      commitState(normalizeInput(payload.data).data, false);
     })
     .catch((error) => {
       console.error("Unable to load shared flowbender demo data; using this browser's local copy.", error);

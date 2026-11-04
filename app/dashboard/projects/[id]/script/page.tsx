@@ -13,7 +13,7 @@ export default function ProjectScriptPage() {
   const project = useProject(projectId);
   const scripts = useScripts().filter((item) => item.projectId === projectId && !item.archived && item.status !== "Archived");
   const [selectedId, setSelectedId] = useState("");
-  const script = scripts.find((item) => item.id === selectedId) ?? scripts[0];
+  const script = scripts.find((item) => item.id === selectedId) ?? scripts.find((item) => item.isMain) ?? scripts[0];
 
   function create() {
     if (!project) return;
@@ -25,5 +25,5 @@ export default function ProjectScriptPage() {
     return <div className="space-y-3 rounded-xl border bg-card p-6"><p className="text-sm text-muted-foreground">No active script is linked to this project.</p><Button disabled={!project} onClick={create}>Create project script</Button></div>;
   }
 
-  return <div className="space-y-4">{scripts.length > 1 && <label className="flex items-center gap-3 text-sm">Active script<select className="rounded border bg-background p-2" value={script.id} onChange={(event) => setSelectedId(event.target.value)}>{scripts.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>}<ScriptEditor scriptId={script.id} embeddedProjectId={projectId} /></div>;
+  return <div className="space-y-4">{scripts.length > 1 && <label className="flex items-center gap-3 text-sm">Active script<select className="rounded border bg-background p-2" value={script.id} onChange={(event) => setSelectedId(event.target.value)}>{scripts.map((item) => <option key={item.id} value={item.id}>{item.title}{item.isMain ? " (main)" : ""}</option>)}</select></label>}<ScriptEditor scriptId={script.id} embeddedProjectId={projectId} /></div>;
 }

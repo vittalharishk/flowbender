@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, User, Clapperboard, Globe } from "lucide-react";
+import { CalendarDays, User, Clapperboard, Globe, FileText } from "lucide-react";
 import type { Project } from "@/lib/types";
+import { useScripts } from "@/lib/script-store";
 import { ProductionBadge } from "@/components/app/production-badge";
 import { ProjectPoster } from "./project-poster";
 import { projectTypeLabels } from "@/lib/mock-data";
@@ -22,6 +23,8 @@ interface ProjectGridCardProps {
 
 export function ProjectGridCard({ project }: ProjectGridCardProps) {
   const budgetPct = project.budget > 0 ? Math.round((project.spent / project.budget) * 100) : 0;
+  const scripts = useScripts();
+  const mainScript = scripts.find((s) => s.projectId === project.id && s.isMain && !s.archived);
 
   return (
     <Link
@@ -64,6 +67,14 @@ export function ProjectGridCard({ project }: ProjectGridCardProps) {
             <CalendarDays className="w-3 h-3 shrink-0" /> {formatDate(project.startDate)}
           </span>
         </div>
+
+        {/* Main script */}
+        {mainScript && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
+            <FileText className="w-3 h-3 shrink-0" />
+            <span className="truncate">{mainScript.draftName} v{mainScript.draftNumber} · {mainScript.status}</span>
+          </div>
+        )}
 
         {/* Shoot progress */}
         <div>

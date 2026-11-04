@@ -39,6 +39,13 @@ This application is **100% frontend-only**. No backend, database, or external AP
 | vfxShots | 5 | Script |
 | locations | 12 | Schedule |
 | crewMembers | 36 | Crew |
+| crewAssignments | 36 | Crew Phase 1 |
+| remunerationAgreements | 36 | Crew Phase 1 |
+| crewPaymentRecords | 36 | Crew Phase 1 |
+| vendors | 5 | Equipment (legacy) |
+| rentalVendors | 20 | Crew Phase 2 — Rentals |
+| rentalRecords | 35 | Crew Phase 2 — Rentals |
+| rentalPayments | 45 | Crew Phase 2 — Rentals |
 | shootDays | 96 | Schedule |
 | scheduleEntries | 96 | Schedule |
 | callSheets | 92 | Call Sheets |
@@ -52,6 +59,17 @@ This application is **100% frontend-only**. No backend, database, or external AP
 | postProdMilestones | 70 | Post-Production |
 | calendarEvents | 37 | Event Calendar |
 | deliverables | 22 | Post-Production |
+| crewAssignments | 36 | Production Crew Phase 1 |
+| remunerationAgreements | 36 | Production Crew Phase 1 |
+| crewPaymentRecords | 36 | Production Crew Phase 1 |
+| rentalVendors | 20 | Production Crew Phase 2 |
+| rentalRecords | 35 | Production Crew Phase 2 |
+| rentalPayments | 45 | Production Crew Phase 2 |
+| productionExpenses | 40 | Production Crew Phase 3 |
+| expensePayments | 28 | Production Crew Phase 3 |
+| officeRentals | 5 | Production Crew Phase 3 |
+| officeRentPayments | 22 | Production Crew Phase 3 |
+| maintenanceRecords | 20 | Production Crew Phase 3 |
 
 ---
 

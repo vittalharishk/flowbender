@@ -9,32 +9,19 @@ import {
   Trash2,
   Upload,
   Users,
-  MessageSquare,
   Film,
-  Sparkles,
-  BookOpen,
   FileText,
-  Search,
-  CheckCircle2,
-  Clock,
-  Layers,
-  BarChart3,
-  AlignLeft,
 } from "lucide-react";
 import { useProjects } from "@/lib/project-store";
 import {
   addScriptBlock,
-  addScriptScene,
-  createScriptVersion,
   deleteScript,
   removeScriptBlock,
-  removeScriptScene,
   updateScript,
-  updateScriptBlock,
   updateScriptScene,
   useScript,
 } from "@/lib/script-store";
-import type { IntExt, TimeOfDay, ScriptBlockType, ScriptStatus } from "@/lib/types";
+import type { ScriptBlockType, ScriptStatus } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +36,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScriptUploadDialog } from "./script-upload-dialog";
+import { ScenesTab } from "./scenes-tab";
+import { VersionsTab } from "./versions-tab";
+import { ShotDivisionTab } from "./shot-division-tab";
+import { ReportsTab } from "./reports-tab";
+import { TimelineTab } from "./timeline-tab";
+import { LocationsTab } from "./locations-tab";
+import { ReferencesTab } from "./references-tab";
+import { AnalysisTab } from "./analysis-tab";
 import "@/lib/persistence-bootstrap";
 
 const blockTypes: ScriptBlockType[] = [
@@ -96,14 +91,6 @@ function ScriptEditorContent({
   // Form states
   const [blockType, setBlockType] = useState<ScriptBlockType>("action");
   const [blockText, setBlockText] = useState("");
-  const [sceneNumber, setSceneNumber] = useState("");
-  const [sceneHeading, setSceneHeading] = useState("");
-  const [sceneLocation, setSceneLocation] = useState("");
-  const [scenePages, setScenePages] = useState("");
-  const [sceneDescription, setSceneDescription] = useState("");
-  const [sceneIntExt, setSceneIntExt] = useState<IntExt>("INT");
-  const [sceneTime, setSceneTime] = useState<TimeOfDay>("DAY");
-  const [versionName, setVersionName] = useState("");
   const [message, setMessage] = useState("");
 
   const returnTo = searchParams.get("returnTo");
@@ -264,46 +251,6 @@ function ScriptEditorContent({
     setBlockText("");
   }
 
-  function addScene(event: React.FormEvent) {
-    event.preventDefault();
-    if (!sceneNumber.trim() || !sceneHeading.trim()) return;
-    if (script?.scenes.some((scene) => scene.number.toLowerCase() === sceneNumber.trim().toLowerCase())) {
-      setMessage("This scene number already exists in the script.");
-      return;
-    }
-    const pages = Number(scenePages);
-    if (!Number.isFinite(pages) || pages < 0 || !Number.isInteger(pages * 8)) {
-      setMessage("Pages must be a non-negative number in eighth-page increments.");
-      return;
-    }
-    addScriptScene(id, {
-      number: sceneNumber.trim(),
-      heading: sceneHeading.trim(),
-      intExt: sceneIntExt,
-      location: sceneLocation.trim(),
-      timeOfDay: sceneTime,
-      scriptDay: "",
-      pages,
-      eighths: Math.round(pages * 8),
-      description: sceneDescription.trim(),
-    });
-    setMessage("Script scene added. Production scene records are managed in the project scene list.");
-    setSceneNumber("");
-    setSceneHeading("");
-    setSceneLocation("");
-    setScenePages("");
-    setSceneDescription("");
-  }
-
-  function newVersion() {
-    if (!versionName.trim()) return;
-    createScriptVersion(id, {
-      name: versionName.trim(),
-      notes: "Created from current draft",
-      status: currentStatus,
-    });
-    setVersionName("");
-  }
 
   return (
     <main className={embeddedProjectId ? "space-y-6" : "mx-auto max-w-7xl space-y-6 p-6"}>
@@ -347,7 +294,7 @@ function ScriptEditorContent({
 
       {/* Navigation Tabs */}
       <nav className="flex gap-1 overflow-auto border-b">
-        {["Overview", "Script", "Scenes", "Characters & Dialogue", "Breakdown", "Locations", "Versions", "Reports"].map((item) => (
+        {["Overview", "Script", "Scenes", "Shot Division", "Timeline", "Characters & Dialogue", "Breakdown", "Locations", "References", "Versions", "Reports", "Analysis"].map((item) => (
           <button
             key={item}
             onClick={() => setTab(item)}
@@ -366,6 +313,21 @@ function ScriptEditorContent({
             {item === "Scenes" && (
               <span className="ml-1.5 rounded-full bg-muted text-muted-foreground px-1.5 py-0.2 text-[11px]">
                 {script.scenes.length}
+              </span>
+            )}
+            {item === "Shot Division" && (
+              <span className="ml-1.5 rounded-full bg-muted text-muted-foreground px-1.5 py-0.2 text-[11px]">
+                {(script.shots ?? []).length}
+              </span>
+            )}
+            {item === "References" && (
+              <span className="ml-1.5 rounded-full bg-muted text-muted-foreground px-1.5 py-0.2 text-[11px]">
+                {(script.references ?? []).length}
+              </span>
+            )}
+            {item === "Versions" && (
+              <span className="ml-1.5 rounded-full bg-muted text-muted-foreground px-1.5 py-0.2 text-[11px]">
+                {script.versions.length}
               </span>
             )}
           </button>
@@ -712,89 +674,13 @@ function ScriptEditorContent({
       )}
 
       {/* Tab: Scenes */}
-      {tab === "Scenes" && (
-        <section className="space-y-5">
-          <form onSubmit={addScene} className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-6">
-            <div>
-              <Label>Scene # *</Label>
-              <Input value={sceneNumber} onChange={(e) => setSceneNumber(e.target.value)} placeholder="4A" />
-            </div>
-            <div className="lg:col-span-2">
-              <Label>Heading *</Label>
-              <Input value={sceneHeading} onChange={(e) => setSceneHeading(e.target.value)} placeholder="OLD HOUSE - NIGHT" />
-            </div>
-            <div>
-              <Label>Location</Label>
-              <Input value={sceneLocation} onChange={(e) => setSceneLocation(e.target.value)} />
-            </div>
-            <div>
-              <Label>Pages</Label>
-              <Input type="number" step="0.125" min="0" value={scenePages} onChange={(e) => setScenePages(e.target.value)} />
-            </div>
-            <div className="flex items-end">
-              <Button type="submit" className="w-full">
-                <Plus className="mr-2 h-4 w-4" /> Add Scene
-              </Button>
-            </div>
-            <div className="sm:col-span-2 lg:col-span-6">
-              <Label>Description / Synopsis</Label>
-              <Input value={sceneDescription} onChange={(e) => setSceneDescription(e.target.value)} />
-            </div>
-          </form>
+      {tab === "Scenes" && <ScenesTab scriptId={id} script={script} />}
 
-          <div className="space-y-2">
-            {script.scenes.map((scene) => {
-              // Find characters speaking in this scene
-              const sceneBlocks = script.blocks.filter((b) => scene.blockIds.includes(b.id));
-              const sceneChars = Array.from(
-                new Set(
-                  sceneBlocks
-                    .filter((b) => b.type === "character")
-                    .map((b) => b.text.replace(/\s*\([^)]*\)/g, "").trim().toUpperCase())
-                )
-              );
+      {/* Tab: Shot Division */}
+      {tab === "Shot Division" && <ShotDivisionTab scriptId={id} script={script} />}
 
-              return (
-                <div key={scene.id} className="flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-center">
-                  <span className="w-12 font-mono font-bold text-base text-primary">
-                    Sc. {scene.number}
-                  </span>
-                  <div className="flex-1 space-y-1">
-                    <p className="font-semibold uppercase text-sm">
-                      {scene.intExt}. {scene.heading} - {scene.timeOfDay}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {scene.location || "No location"} · {scene.pages} pages · {scene.status}
-                    </p>
-                    {scene.description && <p className="text-xs text-foreground/80">{scene.description}</p>}
-
-                    {/* Characters in scene */}
-                    {sceneChars.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {sceneChars.map((char) => (
-                          <span
-                            key={char}
-                            onClick={() => {
-                              setSelectedCharacterForInspect(char);
-                              setTab("Characters & Dialogue");
-                            }}
-                            className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20 cursor-pointer hover:bg-amber-500/20"
-                          >
-                            {char}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <Button size="icon" variant="ghost" onClick={() => removeScriptScene(id, scene.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      {/* Tab: Timeline */}
+      {tab === "Timeline" && <TimelineTab scriptId={id} script={script} />}
 
       {/* Tab: Breakdown */}
       {tab === "Breakdown" && (
@@ -838,75 +724,19 @@ function ScriptEditorContent({
       )}
 
       {/* Tab: Locations */}
-      {tab === "Locations" && (
-        <section className="rounded-xl border bg-card p-5">
-          <h2 className="mb-4 font-semibold text-base">Unique Script Locations ({locations.size})</h2>
-          <div className="flex flex-wrap gap-2">
-            {Array.from(locations).map((location) => (
-              <span key={location} className="rounded-lg border bg-muted/50 px-3 py-1.5 text-xs font-medium">
-                {location}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
+      {tab === "Locations" && <LocationsTab scriptId={id} script={script} />}
+
+      {/* Tab: References */}
+      {tab === "References" && <ReferencesTab scriptId={id} script={script} />}
 
       {/* Tab: Versions */}
-      {tab === "Versions" && (
-        <section className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              value={versionName}
-              onChange={(e) => setVersionName(e.target.value)}
-              placeholder="Version name, e.g. Locked Shooting Draft Rev 4"
-            />
-            <Button onClick={newVersion}>Create Version</Button>
-          </div>
-          <div className="rounded-xl border bg-card divide-y">
-            {script.versions.map((version) => (
-              <div key={version.id} className="flex items-center justify-between p-4">
-                <div>
-                  <p className="font-medium text-sm">
-                    V{version.number} · {version.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(version.revisionDate).toLocaleDateString()} · {version.status}
-                  </p>
-                </div>
-                <span className="text-xs text-muted-foreground">{version.scenes.length} scenes</span>
-              </div>
-            ))}
-            {script.versions.length === 0 && (
-              <p className="p-6 text-sm text-muted-foreground">No saved versions yet.</p>
-            )}
-          </div>
-        </section>
-      )}
+      {tab === "Versions" && <VersionsTab scriptId={id} script={script} />}
 
       {/* Tab: Reports */}
-      {tab === "Reports" && (
-        <section className="rounded-xl border bg-card p-5">
-          <h2 className="font-semibold text-base">Production Script Report</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-4">
-            <div className="p-3 rounded-lg border bg-muted/40">
-              <p className="text-xs text-muted-foreground">Page Eighths</p>
-              <p className="text-xl font-bold">{Math.round(totalPages * 8)}/8</p>
-            </div>
-            <div className="p-3 rounded-lg border bg-muted/40">
-              <p className="text-xs text-muted-foreground">Speaking Characters</p>
-              <p className="text-xl font-bold text-amber-500">{characterMetrics.characters.length}</p>
-            </div>
-            <div className="p-3 rounded-lg border bg-muted/40">
-              <p className="text-xs text-muted-foreground">Dialogue Speeches</p>
-              <p className="text-xl font-bold text-primary">{characterMetrics.totalDialogueCount}</p>
-            </div>
-            <div className="p-3 rounded-lg border bg-muted/40">
-              <p className="text-xs text-muted-foreground">Last Updated</p>
-              <p className="text-xl font-bold">{new Date(script.updatedAt).toLocaleDateString()}</p>
-            </div>
-          </div>
-        </section>
-      )}
+      {tab === "Reports" && <ReportsTab scriptId={id} script={script} />}
+
+      {/* Tab: Analysis */}
+      {tab === "Analysis" && <AnalysisTab scriptId={id} script={script} />}
 
       {/* Script Upload Dialog Modal */}
       <ScriptUploadDialog

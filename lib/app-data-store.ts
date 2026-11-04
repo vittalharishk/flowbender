@@ -42,11 +42,62 @@ import type {
   CastContract,
   PostProdMilestone,
   CalendarEvent,
+  CrewAssignment,
+  RemunerationAgreement,
+  CrewPaymentRecord,
+  Vendor,
+  RentalRecord,
+  RentalPayment,
+  ProductionExpense,
+  ExpensePayment,
+  OfficeRental,
+  OfficeRentPayment,
+  MaintenanceRecord,
+  FilmLocation,
+  LocationScouting,
+  LocationAgreement,
+  LocationPayment,
+  Hotel,
+  HotelBooking,
+  HotelPayment,
+  Trip,
+  TravelPayment,
+  PropItem,
+  PropTransaction,
+  ProductionSet,
+  SetTask,
+  AISetExtensionTask,
+  AISetExtensionVersion,
+  ProductionVehicle,
+  VehicleAllocation,
+  Caravan,
+  CaravanAllocation,
+  DriverProfile,
+  DriverAssignment,
+  StuntPlan,
+  StuntSafetyChecklist,
+  StuntEquipment,
+  StuntEquipmentTransaction,
+  ProjectBudget,
+  DepartmentBudget,
+  BudgetRevision,
+  PurchaseOrder,
+  InsurancePolicy,
+  EquipmentAllocation,
+  EquipmentMaintenance,
+  VfxVersion,
+  VfxReview,
+  MediaAsset,
+  MediaVersion,
+  DistributionAgreement,
+  DistributionRelease,
+  DistributionRevenue,
+  DistributionSettlement,
 } from "./types";
 
 export const APP_DATA_LOCAL_STORAGE_KEY = "flow-bender.demo-data.v7";
 
-const APP_DATA_VERSION = 18;
+const APP_DATA_VERSION = 23;
 
 function shiftDemoDatesTo2027(value: unknown): void {
   if (Array.isArray(value)) {
@@ -89,6 +140,10 @@ const collectionKeys = [
   "vfxShots",
   "deliverables",
   "rightsDeals",
+  "distributionAgreements",
+  "distributionReleases",
+  "distributionRevenue",
+  "distributionSettlements",
   "marketingItems",
   "notifications",
   "attendanceRecords",
@@ -105,6 +160,54 @@ const collectionKeys = [
   "richDprReports",
   "postProdMilestones",
   "calendarEvents",
+  "crewAssignments",
+  "remunerationAgreements",
+  "crewPaymentRecords",
+  "rentalVendors",
+  "rentalRecords",
+  "rentalPayments",
+  "productionExpenses",
+  "expensePayments",
+  "officeRentals",
+  "officeRentPayments",
+  "maintenanceRecords",
+  "filmLocations",
+  "locationScouting",
+  "locationAgreements",
+  "locationPayments",
+  "hotels",
+  "hotelBookings",
+  "hotelPayments",
+  "trips",
+  "travelPayments",
+  "propItems",
+  "propTransactions",
+  "productionSets",
+  "setTasks",
+  "aiSetExtensionTasks",
+  "aiSetExtensionVersions",
+  "productionVehicles",
+  "vehicleAllocations",
+  "caravans",
+  "caravanAllocations",
+  "driverProfiles",
+  "driverAssignments",
+  "stuntPlans",
+  "stuntSafetyChecklists",
+  "stuntEquipment",
+  "stuntEquipmentTransactions",
+  "projectBudgets",
+  "departmentBudgets",
+  "budgetRevisions",
+  "purchaseOrders",
+  "reconciliationExceptions",
+  "insurancePolicies",
+  "equipmentAllocations",
+  "equipmentMaintenance",
+  "vfxVersions",
+  "vfxReviews",
+  "mediaAssets",
+  "mediaVersions",
 ] as const;
 
 export type AppDataCollectionKey = (typeof collectionKeys)[number];
@@ -134,6 +237,10 @@ export type AppDataCollections = {
   vfxShots: VfxShot[];
   deliverables: DeliverableItem[];
   rightsDeals: RightsDeal[];
+  distributionAgreements: DistributionAgreement[];
+  distributionReleases: DistributionRelease[];
+  distributionRevenue: DistributionRevenue[];
+  distributionSettlements: DistributionSettlement[];
   marketingItems: MarketingItem[];
   notifications: Notification[];
   attendanceRecords: AttendanceRecord[];
@@ -150,6 +257,54 @@ export type AppDataCollections = {
   richDprReports: DPRReport[];
   postProdMilestones: PostProdMilestone[];
   calendarEvents: CalendarEvent[];
+  crewAssignments: CrewAssignment[];
+  remunerationAgreements: RemunerationAgreement[];
+  crewPaymentRecords: CrewPaymentRecord[];
+  rentalVendors: Vendor[];
+  rentalRecords: RentalRecord[];
+  rentalPayments: RentalPayment[];
+  productionExpenses: ProductionExpense[];
+  expensePayments: ExpensePayment[];
+  officeRentals: OfficeRental[];
+  officeRentPayments: OfficeRentPayment[];
+  maintenanceRecords: MaintenanceRecord[];
+  filmLocations: FilmLocation[];
+  locationScouting: LocationScouting[];
+  locationAgreements: LocationAgreement[];
+  locationPayments: LocationPayment[];
+  hotels: Hotel[];
+  hotelBookings: HotelBooking[];
+  hotelPayments: HotelPayment[];
+  trips: Trip[];
+  travelPayments: TravelPayment[];
+  propItems: PropItem[];
+  propTransactions: PropTransaction[];
+  productionSets: ProductionSet[];
+  setTasks: SetTask[];
+  aiSetExtensionTasks: AISetExtensionTask[];
+  aiSetExtensionVersions: AISetExtensionVersion[];
+  productionVehicles: ProductionVehicle[];
+  vehicleAllocations: VehicleAllocation[];
+  caravans: Caravan[];
+  caravanAllocations: CaravanAllocation[];
+  driverProfiles: DriverProfile[];
+  driverAssignments: DriverAssignment[];
+  stuntPlans: StuntPlan[];
+  stuntSafetyChecklists: StuntSafetyChecklist[];
+  stuntEquipment: StuntEquipment[];
+  stuntEquipmentTransactions: StuntEquipmentTransaction[];
+  projectBudgets: ProjectBudget[];
+  departmentBudgets: DepartmentBudget[];
+  budgetRevisions: BudgetRevision[];
+  purchaseOrders: PurchaseOrder[];
+  reconciliationExceptions: any[];
+  insurancePolicies: InsurancePolicy[];
+  equipmentAllocations: EquipmentAllocation[];
+  equipmentMaintenance: EquipmentMaintenance[];
+  vfxVersions: VfxVersion[];
+  vfxReviews: VfxReview[];
+  mediaAssets: MediaAsset[];
+  mediaVersions: MediaVersion[];
 };
 
 
@@ -223,6 +378,10 @@ function emptyCollections(): AppDataCollections {
     vfxShots: [],
     deliverables: [],
     rightsDeals: [],
+    distributionAgreements: [],
+    distributionReleases: [],
+    distributionRevenue: [],
+    distributionSettlements: [],
     marketingItems: [],
     notifications: [],
     attendanceRecords: [],
@@ -239,6 +398,54 @@ function emptyCollections(): AppDataCollections {
     richDprReports: [],
     postProdMilestones: [],
     calendarEvents: [],
+    crewAssignments: [],
+    remunerationAgreements: [],
+    crewPaymentRecords: [],
+    rentalVendors: [],
+    rentalRecords: [],
+    rentalPayments: [],
+    productionExpenses: [],
+    expensePayments: [],
+    officeRentals: [],
+    officeRentPayments: [],
+    maintenanceRecords: [],
+    filmLocations: [],
+    locationScouting: [],
+    locationAgreements: [],
+    locationPayments: [],
+    hotels: [],
+    hotelBookings: [],
+    hotelPayments: [],
+    trips: [],
+    travelPayments: [],
+    propItems: [],
+    propTransactions: [],
+    productionSets: [],
+    setTasks: [],
+    aiSetExtensionTasks: [],
+    aiSetExtensionVersions: [],
+    productionVehicles: [],
+    vehicleAllocations: [],
+    caravans: [],
+    caravanAllocations: [],
+    driverProfiles: [],
+    driverAssignments: [],
+    stuntPlans: [],
+    stuntSafetyChecklists: [],
+    stuntEquipment: [],
+    stuntEquipmentTransactions: [],
+    projectBudgets: [],
+    departmentBudgets: [],
+    budgetRevisions: [],
+    purchaseOrders: [],
+    reconciliationExceptions: [],
+    insurancePolicies: [],
+    equipmentAllocations: [],
+    equipmentMaintenance: [],
+    vfxVersions: [],
+    vfxReviews: [],
+    mediaAssets: [],
+    mediaVersions: [],
   };
 }
 

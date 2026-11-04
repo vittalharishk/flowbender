@@ -100,6 +100,7 @@ export function AddCrewDialog({ open, onOpenChange, projectId, projectTitle, onC
     try {
       createCrew({
         name: name.trim(),
+        initials: name.trim().split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2),
         department,
         role: (role === "__custom" ? customRole.trim() : role) || customRole.trim(),
         projectId: selectedProjectId,
@@ -109,6 +110,12 @@ export function AddCrewDialog({ open, onOpenChange, projectId, projectTitle, onC
         agency: agency.trim() || undefined,
         dayRate: Number(dayRate) || 0,
         totalDays: Number(totalDays) || 0,
+        daysWorked: 0,
+        totalPaid: 0,
+        contractStatus: "pending",
+        paymentStatus: "pending",
+        availability: "available",
+        joinedDate: new Date().toISOString().slice(0, 10),
         notes: notes.trim(),
         profileImage,
       });

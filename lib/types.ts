@@ -788,6 +788,116 @@ export interface VfxShot {
   dueDate: string;
 }
 
+export type VfxVersionStatus = "submitted" | "in-review" | "approved" | "rejected" | "superseded";
+
+export interface VfxVersion {
+  id: string;
+  shotId: string;
+  versionNumber: number;
+  submittedAt: string;
+  submittedBy?: string;
+  assetReference?: string;
+  notes?: string;
+  status: VfxVersionStatus;
+  reviewStatus?: "pending" | "approved" | "rejected" | "revision-required";
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  revisionReason?: string;
+}
+
+export interface VfxReview {
+  id: string;
+  shotId: string;
+  versionId: string;
+  reviewerId?: string;
+  reviewerRole?: string;
+  decision: "approved" | "rejected" | "revision-required";
+  comments?: string;
+  createdAt: string;
+}
+
+export type EquipmentAllocationStatus = "pending" | "active" | "returned" | "partial-return";
+
+export interface EquipmentAllocation {
+  id: string;
+  equipmentId: string;
+  projectId: string;
+  shootDayId?: string;
+  departmentId?: string;
+  locationId?: string;
+  crewMemberId?: string;
+  quantity: number;
+  startDate: string;
+  endDate?: string;
+  status: EquipmentAllocationStatus;
+  returnedQuantity: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type EquipmentMaintenanceType = "preventive" | "repair" | "inspection" | "calibration";
+export type EquipmentMaintenanceStatus = "scheduled" | "in-progress" | "completed" | "cancelled";
+
+export interface EquipmentMaintenance {
+  id: string;
+  equipmentId: string;
+  projectId?: string;
+  maintenanceType: EquipmentMaintenanceType;
+  description: string;
+  vendorId?: string;
+  estimatedCost?: number;
+  actualCost?: number;
+  scheduledDate: string;
+  completedDate?: string;
+  status: EquipmentMaintenanceStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type MediaAssetType = "video" | "audio" | "image" | "document" | "other";
+export type MediaAssetStatus = "draft" | "registered" | "in-review" | "approved" | "rejected" | "archived";
+
+export interface MediaAsset {
+  id: string;
+  projectId: string;
+  title: string;
+  description?: string;
+  mediaType: MediaAssetType;
+  fileReference?: string;
+  shootDayId?: string;
+  sceneId?: string;
+  locationId?: string;
+  castId?: string;
+  recordedDate?: string;
+  uploadedAt: string;
+  status: MediaAssetStatus;
+  currentVersion: number;
+  tags: string[];
+  notes?: string;
+  createdBy?: string;
+  updatedAt: string;
+}
+
+export type MediaVersionStatus = "active" | "superseded" | "rejected";
+
+export interface MediaVersion {
+  id: string;
+  assetId: string;
+  versionNumber: number;
+  fileReference?: string;
+  notes?: string;
+  createdAt: string;
+  createdBy?: string;
+  status: MediaVersionStatus;
+  reviewStatus?: "pending" | "approved" | "rejected";
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+}
+
 export interface DeliverableItem {
   id: string;
   projectId: string;
@@ -808,6 +918,83 @@ export interface RightsDeal {
   minimumGuarantee: number;
   advanceReceived: number;
   deliveryStatus: "pending" | "partial" | "complete";
+}
+
+// ── Distribution A13 Types ──────────────────────────────────────────────────
+
+export type AgreementStatus = "draft" | "negotiating" | "pending-approval" | "active" | "expired" | "terminated" | "cancelled";
+export type DistributionChannel = "theatrical" | "satellite" | "digital-ott" | "television" | "audio" | "dubbed" | "remake" | "broadcast" | "ancillary" | "other";
+export type ReleaseStatus = "planned" | "confirmed" | "released" | "postponed" | "cancelled";
+export type RevenueType = "advance" | "minimum-guarantee" | "royalty" | "commission" | "settlement" | "other";
+export type CollectionStatus = "pending" | "partial" | "collected" | "overdue" | "disputed" | "written-off";
+
+export interface DistributionAgreement {
+  id: string;
+  projectId: string;
+  rightsDealId?: string;
+  distributorName: string;
+  distributorContact?: string;
+  channel: DistributionChannel;
+  territories: string[];
+  agreementValue: number;
+  advancePaid: number;
+  paymentTerms?: string;
+  startDate: string;
+  endDate: string;
+  status: AgreementStatus;
+  documentReference?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DistributionRelease {
+  id: string;
+  projectId: string;
+  agreementId?: string;
+  title: string;
+  channel: DistributionChannel;
+  territory: string;
+  plannedDate: string;
+  actualDate?: string;
+  windowStart?: string;
+  windowEnd?: string;
+  status: ReleaseStatus;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface DistributionRevenue {
+  id: string;
+  projectId: string;
+  agreementId?: string;
+  rightsDealId?: string;
+  revenueType: RevenueType;
+  amount: number;
+  currency?: string;
+  territory?: string;
+  channel?: DistributionChannel;
+  receivedDate?: string;
+  dueDate?: string;
+  status: CollectionStatus;
+  referenceNumber?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface DistributionSettlement {
+  id: string;
+  projectId: string;
+  agreementId: string;
+  grossRevenue: number;
+  distributorCommission: number;
+  deductions: number;
+  netPayable: number;
+  settledAmount: number;
+  settlementDate?: string;
+  status: "pending" | "partial" | "settled" | "disputed";
+  notes?: string;
+  createdAt: string;
 }
 
 export interface MarketingItem {
@@ -1052,6 +1239,103 @@ export interface CastContract {
   updatedAt: string;
 }
 
+// ─── Purchase Orders (A5) ─────────────────────────────────────────────────
+
+export type POStatus =
+  | "draft"
+  | "submitted"
+  | "dept-approved"
+  | "finance-approved"
+  | "producer-approved"
+  | "rejected"
+  | "returned"
+  | "partially-fulfilled"
+  | "fulfilled"
+  | "cancelled";
+
+export interface POLineItem {
+  id: string;
+  itemName: string;
+  description: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  discount: number;
+  taxPercent: number;
+  lineSubtotal: number;
+  lineTax: number;
+  lineTotal: number;
+  fulfilledQty: number;
+}
+
+export interface POApprovalRecord {
+  level: string;
+  approverName: string;
+  decision: "approved" | "rejected" | "returned";
+  comments: string;
+  decisionDate: string;
+  previousStatus: POStatus;
+  newStatus: POStatus;
+}
+
+export interface POAmendment {
+  id: string;
+  reason: string;
+  originalAmount: number;
+  revisedAmount: number;
+  difference: number;
+  requestedBy: string;
+  status: "draft" | "submitted" | "approved" | "rejected";
+  approvalHistory: POApprovalRecord[];
+  createdAt: string;
+}
+
+export interface POFulfilment {
+  id: string;
+  lineItemId: string;
+  quantity: number;
+  deliveryDate: string;
+  receivedBy: string;
+  deliveryReference: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  poNumber: string;
+  title: string;
+  vendorId: string;
+  projectId: string;
+  department: string;
+  poDate: string;
+  expectedDeliveryDate: string;
+  currency: CurrencyCode;
+  exchangeRate: number;
+  paymentTerms: string;
+  deliveryAddress: string;
+  billingAddress: string;
+  contactPerson: string;
+  notes: string;
+  termsAndConditions: string;
+  lineItems: POLineItem[];
+  subtotal: number;
+  totalDiscount: number;
+  totalTax: number;
+  grandTotal: number;
+  inrTotal: number;
+  status: POStatus;
+  approvalHistory: POApprovalRecord[];
+  amendments: POAmendment[];
+  fulfilments: POFulfilment[];
+  linkedSourceType?: string;
+  linkedSourceId?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Event Calendar ────────────────────────────────────────────────────────
 
 export type CalendarEventType =
@@ -1098,4 +1382,986 @@ export interface CalendarEvent {
   linkedDprId?: string;
   createdBy?: string;
   createdAt: string;
+}
+
+// ─── Crew Departments (Production Crew Module) ─────────────────────────────
+
+export type CrewDeptKey =
+  | "writing-direction"
+  | "daily-production"
+  | "camera-lights"
+  | "locations"
+  | "art-props"
+  | "costume-makeup"
+  | "vehicles"
+  | "action-stunts"
+  | "production-office";
+
+export interface CrewDeptInfo {
+  key: CrewDeptKey;
+  name: string;
+  designations: string[];
+}
+
+export interface CrewAssignment {
+  id: string;
+  crewMemberId: string;
+  projectId: string;
+  department: string;
+  designation: string;
+  startDate: string;
+  endDate?: string;
+  status: "active" | "completed" | "on-hold";
+  notes?: string;
+}
+
+export type RemunerationPeriod = "daily" | "weekly" | "monthly" | "fixed" | "per-project";
+export type RemunerationPaymentStatus = "pending" | "partially-paid" | "paid" | "on-hold";
+
+export interface RemunerationAgreement {
+  id: string;
+  crewMemberId: string;
+  projectId: string;
+  department: string;
+  designation: string;
+  period: RemunerationPeriod;
+  agreedAmount: number;
+  workStartDate: string;
+  workEndDate?: string;
+  totalPayable: number;
+  advancePaid: number;
+  notes?: string;
+  status: RemunerationPaymentStatus;
+  createdAt: string;
+}
+
+export interface CrewPaymentRecord {
+  id: string;
+  agreementId: string;
+  crewMemberId: string;
+  projectId: string;
+  amount: number;
+  paymentDate: string;
+  paymentReference?: string;
+  type: "advance" | "partial" | "full" | "final";
+  notes?: string;
+  recordedBy: string;
+  createdAt: string;
+}
+
+// ─── Vendor Management (Rentals Module) ──────────────────────────────────────
+
+export type VendorCategory =
+  | "camera-equipment" | "lighting-equipment" | "generator-electrical"
+  | "art-set-suppliers" | "props-suppliers" | "costume-suppliers"
+  | "makeup-prosthetics" | "location-services" | "hotel-accommodation"
+  | "travel-transport" | "vehicle-caravan" | "catering"
+  | "general-rental" | "other";
+
+export interface Vendor {
+  id: string;
+  name: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  address: string;
+  gstin?: string;
+  category: VendorCategory;
+  services: string;
+  paymentTerms: string;
+  bankDetails?: string;
+  notes?: string;
+  status: "active" | "inactive";
+  createdAt: string;
+}
+
+// ─── Rental Management ────────────────────────────────────────────────────────
+
+export type RentalCategory =
+  | "camera-equipment" | "lenses-accessories" | "lighting-equipment"
+  | "generators-electrical" | "grip-equipment" | "art-set-equipment"
+  | "props-furniture" | "costumes" | "makeup-prosthetics-equipment"
+  | "location-equipment" | "production-office-equipment" | "other";
+
+export type RentalStatus =
+  | "requested" | "approved" | "booked" | "issued"
+  | "partially-returned" | "returned" | "overdue" | "cancelled";
+
+export type RentalRatePeriod = "daily" | "weekly" | "monthly" | "fixed";
+
+export interface RentalRecord {
+  id: string;
+  projectId: string;
+  vendorId: string;
+  category: RentalCategory;
+  itemName: string;
+  description?: string;
+  quantity: number;
+  ratePeriod: RentalRatePeriod;
+  rateAmount: number;
+  rentalStartDate: string;
+  expectedReturnDate: string;
+  actualReturnDate?: string;
+  rentalDays: number;
+  subtotal: number;
+  deposit: number;
+  additionalCharges: number;
+  lateFees: number;
+  totalRentalCost: number;
+  depositForfeited: boolean;
+  totalPaid: number;
+  status: RentalStatus;
+  invoicePlaceholder?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RentalPayment {
+  id: string;
+  rentalId: string;
+  projectId: string;
+  vendorId: string;
+  amount: number;
+  isDeposit: boolean;
+  paymentDate: string;
+  paymentReference?: string;
+  notes?: string;
+  recordedBy: string;
+  createdAt: string;
+}
+
+// ─── Phase 3: Expenses and Production Office ─────────────────────────────────
+
+export type ExpenseCategoryA =
+  | "office-rent" | "office-maintenance" | "electricity" | "internet-telephone"
+  | "office-supplies" | "printing-stationery" | "furniture-equipment"
+  | "cleaning-housekeeping" | "repairs" | "office-misc";
+
+export type ExpenseCategoryB =
+  | "daily-production" | "catering-food" | "local-transportation" | "fuel"
+  | "parking-tolls" | "location-expenses" | "accommodation" | "travel"
+  | "art-props" | "costume-makeup" | "camera-lighting"
+  | "production-staff" | "permissions-licenses" | "emergency" | "production-misc";
+
+export type ExpenseCategory = ExpenseCategoryA | ExpenseCategoryB;
+
+export type ExpenseSection = "production-office" | "production";
+
+export type ExpensePaymentStatus =
+  | "draft" | "pending-approval" | "approved" | "partially-paid" | "paid"
+  | "rejected" | "cancelled";
+
+export type ExpensePaymentMethod =
+  | "cash" | "bank-transfer" | "cheque" | "upi" | "card" | "other";
+
+export interface ProductionExpense {
+  id: string;
+  projectId: string;
+  section: ExpenseSection;
+  category: ExpenseCategory;
+  subcategory?: string;
+  department: string;
+  title: string;
+  description?: string;
+  vendorPayee?: string;
+  expenseDate: string;
+  dueDate?: string;
+  quantity: number;
+  unitCost: number;
+  subtotal: number;
+  taxAmount: number;
+  discount: number;
+  finalAmount: number;
+  totalPaid: number;
+  paymentStatus: ExpensePaymentStatus;
+  paymentMethod?: ExpensePaymentMethod;
+  paymentReference?: string;
+  invoiceNumber?: string;
+  attachmentPlaceholder?: string;
+  createdBy: string;
+  notes?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedBy?: string;
+  rejectedReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExpensePayment {
+  id: string;
+  expenseId: string;
+  projectId: string;
+  amount: number;
+  paymentDate: string;
+  paymentMethod: ExpensePaymentMethod;
+  referenceNumber?: string;
+  notes?: string;
+  recordedBy: string;
+  createdAt: string;
+}
+
+export type OfficeRentPaymentStatus = "upcoming" | "paid" | "overdue" | "partial";
+
+export interface OfficeRental {
+  id: string;
+  projectId?: string;
+  propertyName: string;
+  address: string;
+  landlordPayee: string;
+  landlordPhone?: string;
+  monthlyRent: number;
+  securityDeposit: number;
+  depositPaid: boolean;
+  leaseStartDate: string;
+  leaseEndDate: string;
+  paymentDueDay: number;
+  renewalDate?: string;
+  agreementNotes?: string;
+  status: "active" | "expired" | "terminated";
+  createdAt: string;
+}
+
+export interface OfficeRentPayment {
+  id: string;
+  officeRentalId: string;
+  projectId?: string;
+  month: string;
+  amount: number;
+  paymentDate: string;
+  paymentMethod: ExpensePaymentMethod;
+  referenceNumber?: string;
+  notes?: string;
+  recordedBy: string;
+  createdAt: string;
+}
+
+export type MaintenanceCategory =
+  | "electrical" | "plumbing" | "air-conditioning" | "furniture"
+  | "office-equipment" | "networking-internet" | "cleaning" | "repairs" | "other";
+
+export type MaintenanceStatus =
+  | "reported" | "assigned" | "in-progress" | "completed" | "on-hold" | "cancelled";
+
+export type MaintenancePriority = "low" | "medium" | "high" | "urgent";
+
+export interface MaintenanceRecord {
+  id: string;
+  projectId?: string;
+  officeRentalId?: string;
+  category: MaintenanceCategory;
+  title: string;
+  description?: string;
+  reportedDate: string;
+  assignedTo?: string;
+  priority: MaintenancePriority;
+  expectedCompletion?: string;
+  actualCompletion?: string;
+  estimatedCost: number;
+  actualCost: number;
+  linkedExpenseId?: string;
+  status: MaintenanceStatus;
+  invoiceReference?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Phase 4: Locations, Boarding & Travel ───────────────────────────────────
+
+export type LocationCategory =
+  | "film-set" | "studio" | "outdoor" | "indoor" | "residential"
+  | "commercial" | "road-public" | "hotel-resort" | "village-rural" | "other";
+
+export type PermissionStatus =
+  | "not-requested" | "requested" | "under-review" | "approved" | "rejected" | "expired";
+
+export interface FilmLocation {
+  id: string;
+  name: string;
+  category: LocationCategory;
+  address: string;
+  city: string;
+  state: string;
+  contactPerson?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  locationOwner?: string;
+  locationManager?: string;
+  permissionStatus: PermissionStatus;
+  ratePerDay: number;
+  deposit: number;
+  accessTimings?: string;
+  parking?: string;
+  facilities?: string;
+  restrictions?: string;
+  notes?: string;
+  imagePlaceholder?: string;
+  status: "available" | "booked" | "unavailable";
+  createdAt: string;
+}
+
+export type ScoutingStatus =
+  | "planned" | "scheduled" | "visited" | "under-review" | "shortlisted" | "approved" | "rejected";
+
+export interface LocationScouting {
+  id: string;
+  projectId: string;
+  locationId?: string;
+  locationName: string;
+  scoutingDate: string;
+  scoutingTeam: string[];
+  assignedManager: string;
+  requirements?: string;
+  observations?: string;
+  estimatedCost: number;
+  suitabilityRating: number;
+  status: ScoutingStatus;
+  decision?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type LocationAgreementStatus =
+  | "pending" | "active" | "completed" | "cancelled" | "disputed";
+
+export interface LocationAgreement {
+  id: string;
+  projectId: string;
+  locationId: string;
+  usageStartDate: string;
+  usageEndDate: string;
+  agreedAmount: number;
+  deposit: number;
+  depositPaid: boolean;
+  totalPaid: number;
+  agreementReference?: string;
+  permissionStatus: PermissionStatus;
+  status: LocationAgreementStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LocationPayment {
+  id: string;
+  agreementId: string;
+  projectId: string;
+  locationId: string;
+  amount: number;
+  isDeposit: boolean;
+  paymentDate: string;
+  referenceNumber?: string;
+  notes?: string;
+  recordedBy: string;
+  createdAt: string;
+}
+
+// ─── Boarding / Hotel ─────────────────────────────────────────────────────────
+
+export type HotelAccommodationType =
+  | "hotel" | "resort" | "guest-house" | "serviced-apartment"
+  | "production-accommodation" | "other";
+
+export interface Hotel {
+  id: string;
+  name: string;
+  accommodationType: HotelAccommodationType;
+  address: string;
+  city: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  facilities?: string;
+  notes?: string;
+  vendorId?: string;
+  createdAt: string;
+}
+
+export type RoomBookingStatus =
+  | "requested" | "confirmed" | "checked-in" | "checked-out" | "cancelled" | "no-show";
+
+export type GuestType = "cast" | "crew" | "production" | "other";
+
+export interface HotelBooking {
+  id: string;
+  projectId: string;
+  hotelId: string;
+  guestName: string;
+  guestType: GuestType;
+  castMemberId?: string;
+  crewMemberId?: string;
+  roomNumber?: string;
+  roomType: string;
+  occupants: number;
+  checkInDate: string;
+  checkOutDate: string;
+  nights: number;
+  ratePerNight: number;
+  additionalCharges: number;
+  discount: number;
+  totalAmount: number;
+  deposit: number;
+  depositPaid: boolean;
+  totalPaid: number;
+  status: RoomBookingStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HotelPayment {
+  id: string;
+  bookingId: string;
+  projectId: string;
+  hotelId: string;
+  amount: number;
+  isDeposit: boolean;
+  paymentDate: string;
+  referenceNumber?: string;
+  notes?: string;
+  recordedBy: string;
+  createdAt: string;
+}
+
+// ─── Travel / Trips ──────────────────────────────────────────────────────────
+
+export type TravelCategory =
+  | "flight" | "train" | "bus" | "car" | "taxi"
+  | "production-vehicle" | "rental-vehicle" | "other";
+
+export type TripStatus =
+  | "planned" | "requested" | "booked" | "confirmed" | "in-transit" | "completed" | "cancelled";
+
+export interface TripPassenger {
+  name: string;
+  guestType: GuestType;
+  castMemberId?: string;
+  crewMemberId?: string;
+  seatDetails?: string;
+}
+
+export interface Trip {
+  id: string;
+  projectId: string;
+  title: string;
+  category: TravelCategory;
+  vendorProvider?: string;
+  bookingReference?: string;
+  origin: string;
+  destination: string;
+  departureDateTime: string;
+  arrivalDateTime?: string;
+  passengers: TripPassenger[];
+  vehicleDetails?: string;
+  driverName?: string;
+  ticketCost: number;
+  additionalCharges: number;
+  totalCost: number;
+  totalPaid: number;
+  status: TripStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TravelPayment {
+  id: string;
+  tripId: string;
+  projectId: string;
+  amount: number;
+  paymentDate: string;
+  referenceNumber?: string;
+  notes?: string;
+  recordedBy: string;
+  createdAt: string;
+}
+
+// ─── Phase 5: Art, Props, Sets & AI Set Extensions ────────────────────────────
+
+export type PropCategory =
+  | "furniture" | "decor" | "weapons-armory" | "vehicles-miniatures"
+  | "electronic-gadgets" | "books-documents" | "clothing-accessories"
+  | "food-consumables" | "tools-equipment" | "art-craft-supplies"
+  | "period-props" | "action-props" | "signage-graphics" | "other";
+
+export type PropCondition = "excellent" | "good" | "fair" | "damaged" | "lost" | "under-repair";
+export type PropOwnership = "purchased" | "rented" | "borrowed" | "production-made";
+
+export interface PropItem {
+  id: string;
+  name: string;
+  category: PropCategory;
+  description?: string;
+  imagePlaceholder?: string;
+  quantityTotal: number;
+  quantityAvailable: number;
+  condition: PropCondition;
+  ownership: PropOwnership;
+  vendorId?: string;
+  rentalRecordId?: string;
+  purchaseCost: number;
+  rentalCostPerDay?: number;
+  projectId?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PropTransactionType = "checkout" | "checkin" | "damage-report" | "lost-report" | "return";
+export type PropTransactionStatus = "active" | "returned" | "damaged" | "lost";
+
+export interface PropTransaction {
+  id: string;
+  propItemId: string;
+  projectId: string;
+  sceneId?: string;
+  quantity: number;
+  transactionType: PropTransactionType;
+  checkedOutBy: string;
+  checkoutDate: string;
+  expectedReturnDate?: string;
+  actualReturnDate?: string;
+  conditionOnReturn?: PropCondition;
+  status: PropTransactionStatus;
+  notes?: string;
+  createdAt: string;
+}
+
+export type SetStatus =
+  | "planned" | "design" | "approved" | "construction"
+  | "ready-for-shoot" | "completed" | "dismantled";
+
+export type SetCategory =
+  | "interior" | "exterior" | "underwater" | "period" | "contemporary"
+  | "sci-fi-futuristic" | "action-stunt" | "miniature" | "green-screen" | "other";
+
+export interface ProductionSet {
+  id: string;
+  name: string;
+  category: SetCategory;
+  projectId: string;
+  locationId?: string;
+  artDirector: string;
+  crewMemberId?: string;
+  description?: string;
+  constructionStartDate?: string;
+  constructionEndDate?: string;
+  shootStartDate?: string;
+  dismantleDate?: string;
+  estimatedBudget: number;
+  actualCost: number;
+  linkedExpenseIds: string[];
+  status: SetStatus;
+  approvedBy?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SetTask {
+  id: string;
+  setId: string;
+  projectId: string;
+  title: string;
+  assignedTo: string;
+  dueDate?: string;
+  completedDate?: string;
+  status: "pending" | "in-progress" | "completed" | "blocked";
+  notes?: string;
+  createdAt: string;
+}
+
+export type AISetExtensionStatus =
+  | "planned" | "reference-collection" | "concept" | "in-review"
+  | "revision" | "approved" | "delivered";
+
+export interface AISetExtensionTask {
+  id: string;
+  projectId: string;
+  vfxShotId?: string;
+  sceneId?: string;
+  locationId?: string;
+  title: string;
+  description?: string;
+  promptInstructions?: string;
+  referencePlaceholders: string[];
+  assignedArtist: string;
+  crewMemberId?: string;
+  status: AISetExtensionStatus;
+  reviewNotes?: string;
+  deliveryPlaceholder?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AISetExtensionVersion {
+  id: string;
+  taskId: string;
+  versionNumber: number;
+  status: AISetExtensionStatus;
+  notes?: string;
+  reviewedBy?: string;
+  createdAt: string;
+}
+
+// ─── Phase 6: Vehicles, Caravans, Drivers, Action & Stunts ───────────────────
+
+// ── Vehicles ──────────────────────────────────────────────────────────────────
+
+export type VehicleCategory =
+  | "car" | "suv" | "van" | "bus" | "truck" | "cargo"
+  | "special-purpose" | "other";
+
+export type VehicleOwnership = "owned" | "rented";
+export type VehicleStatus = "available" | "allocated" | "maintenance" | "unavailable";
+
+export interface ProductionVehicle {
+  id: string;
+  registrationNumber: string;
+  name: string;
+  category: VehicleCategory;
+  ownership: VehicleOwnership;
+  vendorId?: string;
+  rentalRecordId?: string;
+  seatingCapacity: number;
+  status: VehicleStatus;
+  currentLocation?: string;
+  projectId?: string;
+  insuranceExpiry?: string;
+  permitExpiry?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AllocationStatus = "scheduled" | "active" | "completed" | "cancelled";
+
+export interface VehicleAllocation {
+  id: string;
+  vehicleId: string;
+  projectId: string;
+  shootDayId?: string;
+  tripId?: string;
+  driverCrewId?: string;
+  startDate: string;
+  endDate: string;
+  pickupLocation?: string;
+  dropLocation?: string;
+  passengerCrewIds: string[];
+  passengerCastIds: string[];
+  passengerCount: number;
+  status: AllocationStatus;
+  notes?: string;
+  createdAt: string;
+}
+
+// ── Caravans ──────────────────────────────────────────────────────────────────
+
+export type CaravanCategory =
+  | "artist" | "director" | "vanity-van" | "production" | "support" | "other";
+
+export type CaravanStatus = "available" | "allocated" | "maintenance" | "returned";
+
+export interface Caravan {
+  id: string;
+  identificationNumber: string;
+  name: string;
+  category: CaravanCategory;
+  capacity: number;
+  ownership: VehicleOwnership;
+  vendorId?: string;
+  rentalRecordId?: string;
+  projectId?: string;
+  rentalStartDate?: string;
+  rentalEndDate?: string;
+  rentalAgreementRef?: string;
+  depositPaid: number;
+  rentalCostPerDay: number;
+  totalRentalCost: number;
+  status: CaravanStatus;
+  parkingLocation?: string;
+  maintenanceStatus?: string;
+  returnCondition?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CaravanAllocation {
+  id: string;
+  caravanId: string;
+  projectId: string;
+  shootDayId?: string;
+  assignedTo: string;
+  crewMemberId?: string;
+  castMemberId?: string;
+  startDate: string;
+  endDate: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  status: AllocationStatus;
+  notes?: string;
+  createdAt: string;
+}
+
+// ── Driver Profiles ────────────────────────────────────────────────────────────
+
+export interface DriverProfile {
+  id: string;
+  crewMemberId: string;
+  licenseNumber: string;
+  licenseExpiry: string;
+  licenseType: string;
+  vehicleIds: string[];
+  available: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DriverAssignment {
+  id: string;
+  driverProfileId: string;
+  vehicleId: string;
+  projectId: string;
+  shootDayId?: string;
+  tripId?: string;
+  dutyStart: string;
+  dutyEnd: string;
+  status: AllocationStatus;
+  notes?: string;
+  createdAt: string;
+}
+
+// ── Stunts ─────────────────────────────────────────────────────────────────────
+
+export type StuntStatus =
+  | "planned" | "risk-assessment" | "rehearsal" | "safety-review"
+  | "approved" | "scheduled" | "completed" | "blocked" | "cancelled";
+
+export type RiskLevel = "low" | "medium" | "high" | "extreme";
+
+export interface StuntPlan {
+  id: string;
+  projectId: string;
+  sceneId?: string;
+  shootDayId?: string;
+  locationId?: string;
+  title: string;
+  description: string;
+  actionDirector: string;
+  actionDirectorCrewId?: string;
+  assignedStuntCrewIds: string[];
+  riskLevel: RiskLevel;
+  vehicleIds: string[];
+  equipmentIds: string[];
+  plannedDate?: string;
+  rehearsalDate?: string;
+  completedDate?: string;
+  status: StuntStatus;
+  safetySignedOff: boolean;
+  approvedBy?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StuntSafetyChecklist {
+  id: string;
+  stuntPlanId: string;
+  riskAssessmentDone: boolean;
+  safetyBriefingDone: boolean;
+  rehearsalDone: boolean;
+  ppeRequired: string[];
+  medicalContactRef?: string;
+  locationPermissionRef?: string;
+  safetyOfficerSignOff: boolean;
+  safetyOfficerName?: string;
+  incidentPlaceholder?: string;
+  approvalNotes?: string;
+  updatedAt: string;
+}
+
+// ── Stunt Equipment ────────────────────────────────────────────────────────────
+
+export type StuntEquipmentCategory =
+  | "crash-mat" | "wire-rig" | "air-bag" | "protective-gear"
+  | "fire-safety" | "stunt-vehicle-mod" | "underwater-gear"
+  | "rigging" | "pyrotechnics" | "other";
+
+export interface StuntEquipment {
+  id: string;
+  name: string;
+  category: StuntEquipmentCategory;
+  description?: string;
+  quantityTotal: number;
+  quantityAvailable: number;
+  condition: "excellent" | "good" | "fair" | "damaged" | "under-repair";
+  ownership: "owned" | "rented" | "borrowed";
+  vendorId?: string;
+  rentalRecordId?: string;
+  purchaseCost: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StuntEquipmentTransaction {
+  id: string;
+  equipmentId: string;
+  stuntPlanId?: string;
+  projectId: string;
+  quantity: number;
+  type: "checkout" | "checkin" | "damage-report";
+  checkedOutBy: string;
+  checkoutDate: string;
+  expectedReturnDate?: string;
+  actualReturnDate?: string;
+  conditionOnReturn?: "excellent" | "good" | "fair" | "damaged";
+  status: "active" | "returned" | "damaged";
+  notes?: string;
+  createdAt: string;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Phase A2 — Budgets & Accounts
+// ═══════════════════════════════════════════════════════════
+
+export type CurrencyCode = "INR" | "USD" | "EUR" | "GBP";
+
+export type BudgetStatus = "draft" | "approved" | "revised" | "frozen";
+
+export type ApprovalStatus =
+  | "draft"
+  | "submitted"
+  | "dept-approved"
+  | "finance-approved"
+  | "producer-approved"
+  | "rejected"
+  | "returned";
+
+export type ApprovalLevel = "department-head" | "finance" | "producer";
+
+export interface ApprovalRecord {
+  level: ApprovalLevel;
+  approverName: string;
+  decision: "approved" | "rejected" | "returned";
+  comments: string;
+  decisionDate: string;
+}
+
+export interface ProjectBudget {
+  id: string;
+  projectId: string;
+  currency: CurrencyCode;
+  baseCurrency: CurrencyCode;
+  originalApprovedAmount: number;
+  approvedAmount: number;
+  exchangeRate: number;
+  exchangeRateDate: string;
+  budgetStatus: BudgetStatus;
+  approvalStatus: ApprovalStatus;
+  approvalHistory: ApprovalRecord[];
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DepartmentBudget {
+  id: string;
+  projectBudgetId: string;
+  projectId: string;
+  departmentKey: string;
+  departmentDisplayName: string;
+  allocatedBudget: number;
+  revisedBudget: number;
+  currency: CurrencyCode;
+  approvalStatus: ApprovalStatus;
+  approvalHistory: ApprovalRecord[];
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── A7: Insurance Register ──────────────────────────────────────────────────
+
+export type InsurancePolicyType =
+  | "production"
+  | "equipment"
+  | "vehicle"
+  | "location"
+  | "liability"
+  | "cast-talent"
+  | "weather"
+  | "errors-omissions";
+
+export type InsurancePolicyStatus = "active" | "expired" | "cancelled" | "pending" | "renewed";
+
+export type InsuranceClaimStatus = "filed" | "under-review" | "approved" | "denied" | "settled" | "withdrawn";
+
+export interface InsuranceClaim {
+  id: string;
+  claimNumber: string;
+  claimDate: string;
+  incidentDate: string;
+  description: string;
+  claimedAmount: number;
+  settledAmount: number;
+  status: InsuranceClaimStatus;
+  adjusterName: string;
+  adjusterContact: string;
+  resolutionDate: string;
+  resolutionNotes: string;
+}
+
+export interface InsurancePolicy {
+  id: string;
+  policyNumber: string;
+  policyType: InsurancePolicyType;
+  provider: string;
+  providerContact: string;
+  projectId: string;
+  description: string;
+  insuredItems: string[];
+  coverageAmount: number;
+  deductible: number;
+  premiumAmount: number;
+  premiumFrequency: "annual" | "semi-annual" | "quarterly" | "monthly" | "one-time";
+  totalPremiumPaid: number;
+  startDate: string;
+  endDate: string;
+  renewalDate: string;
+  status: InsurancePolicyStatus;
+  claims: InsuranceClaim[];
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type RevisionStatus = "draft" | "submitted" | "approved" | "rejected";
+
+export interface BudgetRevision {
+  id: string;
+  projectBudgetId: string;
+  projectId: string;
+  revisionNumber: number;
+  previousAmount: number;
+  revisedAmount: number;
+  changeAmount: number;
+  changePercentage: number;
+  reason: string;
+  requestedBy: string;
+  status: RevisionStatus;
+  approvalHistory: ApprovalRecord[];
+  departmentChanges: {
+    departmentKey: string;
+    previousAmount: number;
+    revisedAmount: number;
+  }[];
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
 }

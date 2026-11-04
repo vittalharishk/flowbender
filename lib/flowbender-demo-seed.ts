@@ -35,6 +35,14 @@ import type {
   CastCandidate,
   CastCandidateStatus,
   CastCategory,
+  PurchaseOrder,
+  POLineItem,
+  POStatus,
+  POApprovalRecord,
+  POAmendment,
+  POFulfilment,
+  InsurancePolicy,
+  InsuranceClaim,
 } from "./types";
 import { demoImage } from "./demo-image";
 import { projectImageReferences } from "./project-image-references";
@@ -1107,6 +1115,32 @@ export function createFlowBenderSeedData(): AppDataCollections {
     equipmentInventory: [...baseDemo.equipmentInventory],
     vendors: [...baseDemo.vendors],
     marketingItems: [],
+    distributionAgreements: [
+      { id: "dagr-1", projectId: "p1", distributorName: "Mythri Movie Makers", channel: "theatrical", territories: ["North India", "Central India"], agreementValue: 180000000, advancePaid: 60000000, startDate: "2026-06-01", endDate: "2028-05-31", status: "active", createdAt: "2026-04-10T00:00:00Z", updatedAt: "2026-06-01T00:00:00Z" },
+      { id: "dagr-2", projectId: "p1", distributorName: "Amazon Prime Video", channel: "digital-ott", territories: ["India", "Southeast Asia", "Middle East"], agreementValue: 120000000, advancePaid: 40000000, startDate: "2026-09-01", endDate: "2029-08-31", status: "negotiating", createdAt: "2026-05-15T00:00:00Z", updatedAt: "2026-07-20T00:00:00Z" },
+      { id: "dagr-3", projectId: "p2", distributorName: "Netflix India", channel: "digital-ott", territories: ["Global"], agreementValue: 250000000, advancePaid: 100000000, startDate: "2026-08-01", endDate: "2030-07-31", status: "active", createdAt: "2026-03-01T00:00:00Z", updatedAt: "2026-08-01T00:00:00Z" },
+      { id: "dagr-4", projectId: "p2", distributorName: "Star TV Network", channel: "satellite", territories: ["India"], agreementValue: 90000000, advancePaid: 30000000, startDate: "2027-01-01", endDate: "2029-12-31", status: "pending-approval", createdAt: "2026-06-10T00:00:00Z", updatedAt: "2026-09-15T00:00:00Z" },
+      { id: "dagr-5", projectId: "p3", distributorName: "Zee Studios", channel: "theatrical", territories: ["South India"], agreementValue: 75000000, advancePaid: 25000000, startDate: "2026-07-01", endDate: "2028-06-30", status: "draft", createdAt: "2026-07-01T00:00:00Z", updatedAt: "2026-07-01T00:00:00Z" },
+    ],
+    distributionReleases: [
+      { id: "drel-1", projectId: "p1", title: "Pushpa 2 Theatrical - North India", channel: "theatrical", territory: "North India", plannedDate: "2026-12-06", status: "confirmed", createdAt: "2026-04-01T00:00:00Z" },
+      { id: "drel-2", projectId: "p1", title: "Pushpa 2 Digital Premiere", channel: "digital-ott", territory: "India", plannedDate: "2027-02-15", status: "planned", windowStart: "2027-02-15", windowEnd: "2027-03-15", createdAt: "2026-05-01T00:00:00Z" },
+      { id: "drel-3", projectId: "p2", title: "Kalki 2898 AD OTT Global", channel: "digital-ott", territory: "Global", plannedDate: "2026-11-01", status: "released", actualDate: "2026-11-01", createdAt: "2026-03-01T00:00:00Z" },
+      { id: "drel-4", projectId: "p3", title: "Devara Theatrical - South India", channel: "theatrical", territory: "South India", plannedDate: "2027-03-20", status: "planned", createdAt: "2026-06-01T00:00:00Z" },
+    ],
+    distributionRevenue: [
+      { id: "drev-1", projectId: "p1", revenueType: "advance", amount: 60000000, status: "collected", rightsDealId: "rd-p1-theatrical-north", createdAt: "2026-06-15T00:00:00Z" },
+      { id: "drev-2", projectId: "p1", revenueType: "royalty", amount: 45000000, status: "pending", dueDate: "2027-01-15", createdAt: "2026-10-01T00:00:00Z" },
+      { id: "drev-3", projectId: "p2", revenueType: "advance", amount: 100000000, status: "collected", agreementId: "dagr-3", createdAt: "2026-08-01T00:00:00Z" },
+      { id: "drev-4", projectId: "p2", revenueType: "royalty", amount: 75000000, status: "pending", dueDate: "2027-03-01", createdAt: "2026-09-01T00:00:00Z" },
+      { id: "drev-5", projectId: "p2", revenueType: "commission", amount: 30000000, status: "overdue", dueDate: "2026-10-01", createdAt: "2026-06-01T00:00:00Z" },
+      { id: "drev-6", projectId: "p3", revenueType: "advance", amount: 25000000, status: "collected", rightsDealId: "dagr-5", createdAt: "2026-07-15T00:00:00Z" },
+    ],
+    distributionSettlements: [
+      { id: "dset-1", projectId: "p1", agreementId: "dagr-1", grossRevenue: 105000000, distributorCommission: 21000000, deductions: 5000000, netPayable: 79000000, settledAmount: 60000000, status: "partial", createdAt: "2026-08-15T00:00:00Z" },
+      { id: "dset-2", projectId: "p2", agreementId: "dagr-3", grossRevenue: 175000000, distributorCommission: 35000000, deductions: 8000000, netPayable: 132000000, settledAmount: 100000000, status: "partial", createdAt: "2026-09-20T00:00:00Z" },
+      { id: "dset-3", projectId: "p2", agreementId: "dagr-4", grossRevenue: 30000000, distributorCommission: 6000000, deductions: 2000000, netPayable: 22000000, settledAmount: 0, status: "pending", createdAt: "2026-10-01T00:00:00Z" },
+    ],
     notifications: [],
 
     // Series Seasons & Episodes (Chapters for Franchise Exploration)
@@ -1878,10 +1912,60 @@ export function createFlowBenderSeedData(): AppDataCollections {
     richDprReports: [],
     postProdMilestones: [],
     calendarEvents: [],
+    crewAssignments: [],
+    remunerationAgreements: [],
+    crewPaymentRecords: [],
+    rentalVendors: [],
+    rentalRecords: [],
+    rentalPayments: [],
+    productionExpenses: [],
+    expensePayments: [],
+    officeRentals: [],
+    officeRentPayments: [],
+    maintenanceRecords: [],
+    filmLocations: [],
+    locationScouting: [],
+    locationAgreements: [],
+    locationPayments: [],
+    hotels: [],
+    hotelBookings: [],
+    hotelPayments: [],
+    trips: [],
+    travelPayments: [],
+    propItems: [],
+    propTransactions: [],
+    productionSets: [],
+    setTasks: [],
+    aiSetExtensionTasks: [],
+    aiSetExtensionVersions: [],
+    productionVehicles: [],
+    vehicleAllocations: [],
+    caravans: [],
+    caravanAllocations: [],
+    driverProfiles: [],
+    driverAssignments: [],
+    stuntPlans: [],
+    stuntSafetyChecklists: [],
+    stuntEquipment: [],
+    stuntEquipmentTransactions: [],
+    projectBudgets: [],
+    departmentBudgets: [],
+    budgetRevisions: [],
+    purchaseOrders: [],
+    reconciliationExceptions: [],
+    insurancePolicies: [],
+    equipmentAllocations: [],
+    equipmentMaintenance: [],
+    vfxVersions: [],
+    vfxReviews: [],
+    mediaAssets: [],
+    mediaVersions: [],
   };
 
   data.castCandidates = buildSeedCastCandidates();
   data.castContracts = buildSeedCastContracts();
+  data.purchaseOrders = buildSeedPurchaseOrders();
+  data.insurancePolicies = buildSeedInsurancePolicies();
 
   enrichDemoCoverage(data);
   return data;
@@ -1889,6 +1973,413 @@ export function createFlowBenderSeedData(): AppDataCollections {
 
 function buildSeedPreProdChecklist() { return []; }
 function buildSeedRichDprReports() { return []; }
+
+// ── A5: Purchase Orders seed data ──────────────────────────────────────────
+function buildSeedPurchaseOrders(): PurchaseOrder[] {
+  const now = "2026-10-28T10:00:00.000Z";
+  function li(id: string, name: string, cat: string, qty: number, unit: string, price: number, disc: number, tax: number, fulfilled: number): POLineItem {
+    const sub = qty * price * (1 - disc / 100);
+    const t = sub * (tax / 100);
+    return { id, itemName: name, description: name, category: cat, quantity: qty, unit, unitPrice: price, discount: disc, taxPercent: tax, lineSubtotal: Math.round(sub), lineTax: Math.round(t), lineTotal: Math.round(sub + t), fulfilledQty: fulfilled };
+  }
+  function totals(items: POLineItem[], rate: number) {
+    const subtotal = items.reduce((s, i) => s + i.lineSubtotal, 0);
+    const totalDiscount = items.reduce((s, i) => s + i.quantity * i.unitPrice - i.lineSubtotal, 0);
+    const totalTax = items.reduce((s, i) => s + i.lineTax, 0);
+    const grandTotal = items.reduce((s, i) => s + i.lineTotal, 0);
+    return { subtotal, totalDiscount, totalTax, grandTotal, inrTotal: Math.round(grandTotal * rate) };
+  }
+  function appr(level: string, name: string, decision: "approved" | "rejected" | "returned", comments: string, date: string, prev: POStatus, next: POStatus): POApprovalRecord {
+    return { level, approverName: name, decision, comments, decisionDate: date, previousStatus: prev, newStatus: next };
+  }
+
+  const pos: PurchaseOrder[] = [];
+
+  // ── PO1: p1 Camera Equipment (fulfilled) ──
+  const po1Items = [
+    li("po1-li1", "ARRI Alexa Mini LF Body", "camera-lighting", 2, "unit", 1500000, 0, 18, 2),
+    li("po1-li2", "Cooke Anamorphic Lens Set (6 lenses)", "camera-lighting", 1, "set", 2800000, 5, 18, 1),
+    li("po1-li3", "Steadicam Volt System", "camera-lighting", 1, "unit", 850000, 0, 18, 1),
+  ];
+  const po1T = totals(po1Items, 1);
+  pos.push({
+    id: "po1", poNumber: "PO-P1-0001", title: "Camera Equipment — Pushpa 2 Principal Photography",
+    vendorId: "rv1", projectId: "p1", department: "camera-lighting",
+    poDate: "2026-06-15", expectedDeliveryDate: "2026-07-01",
+    currency: "INR", exchangeRate: 1, paymentTerms: "Net 30",
+    deliveryAddress: "Ramoji Film City, Hyderabad", billingAddress: "Mythri Movie Makers, Jubilee Hills",
+    contactPerson: "Ravi Kishan Reddy", notes: "Priority delivery for principal photography start",
+    termsAndConditions: "Standard rental terms. Insurance included.",
+    lineItems: po1Items, ...po1T,
+    status: "fulfilled",
+    approvalHistory: [
+      appr("department-head", "Miroslaw Baszak", "approved", "Camera package approved", "2026-06-16T10:00:00Z", "submitted", "dept-approved"),
+      appr("finance", "Srinivas Rao", "approved", "Within budget allocation", "2026-06-17T11:00:00Z", "dept-approved", "finance-approved"),
+      appr("producer", "Naveen Yerneni", "approved", "Approved for Pushpa 2", "2026-06-18T09:00:00Z", "finance-approved", "producer-approved"),
+    ],
+    amendments: [], fulfilments: [
+      { id: "ful-po1-1", lineItemId: "po1-li1", quantity: 2, deliveryDate: "2026-06-28", receivedBy: "Ravi Kishan Reddy", deliveryReference: "DEL-2026-0451", notes: "Both bodies tested OK", createdAt: "2026-06-28T14:00:00Z" },
+      { id: "ful-po1-2", lineItemId: "po1-li2", quantity: 1, deliveryDate: "2026-06-29", receivedBy: "Ravi Kishan Reddy", deliveryReference: "DEL-2026-0455", notes: "All 6 lenses inspected", createdAt: "2026-06-29T10:00:00Z" },
+      { id: "ful-po1-3", lineItemId: "po1-li3", quantity: 1, deliveryDate: "2026-06-30", receivedBy: "Camera Dept", deliveryReference: "DEL-2026-0460", notes: "Steadicam calibrated", createdAt: "2026-06-30T11:00:00Z" },
+    ],
+    createdBy: "demo-user", createdAt: "2026-06-15T08:00:00Z", updatedAt: "2026-06-30T11:00:00Z",
+  });
+
+  // ── PO2: p1 Costume Materials (producer-approved, partially fulfilled) ──
+  const po2Items = [
+    li("po2-li1", "Handloom Lungi Fabric (Pushpa look)", "costume-makeup", 50, "meters", 1200, 0, 12, 30),
+    li("po2-li2", "Leather Accessories (belts, wristbands)", "costume-makeup", 25, "pieces", 3500, 10, 18, 15),
+    li("po2-li3", "Tribal Jewelry Set", "costume-makeup", 10, "sets", 15000, 0, 18, 5),
+  ];
+  const po2T = totals(po2Items, 1);
+  pos.push({
+    id: "po2", poNumber: "PO-P1-0002", title: "Costume Materials — Pushpa Character Wardrobe",
+    vendorId: "rv5", projectId: "p1", department: "costume-makeup",
+    poDate: "2026-07-01", expectedDeliveryDate: "2026-07-20",
+    currency: "INR", exchangeRate: 1, paymentTerms: "50% advance, 50% on delivery",
+    deliveryAddress: "Costume Dept, Ramoji Film City", billingAddress: "Mythri Movie Makers",
+    contactPerson: "Sheetal Sharma", notes: "Specific fabric textures approved by director",
+    termsAndConditions: "Custom orders non-returnable.",
+    lineItems: po2Items, ...po2T,
+    status: "partially-fulfilled",
+    approvalHistory: [
+      appr("department-head", "Sheetal Sharma", "approved", "Materials per approved look-book", "2026-07-02T09:00:00Z", "submitted", "dept-approved"),
+      appr("finance", "Srinivas Rao", "approved", "Costume budget OK", "2026-07-03T10:00:00Z", "dept-approved", "finance-approved"),
+      appr("producer", "Naveen Yerneni", "approved", "Go ahead", "2026-07-04T08:00:00Z", "finance-approved", "producer-approved"),
+    ],
+    amendments: [], fulfilments: [
+      { id: "ful-po2-1", lineItemId: "po2-li1", quantity: 30, deliveryDate: "2026-07-15", receivedBy: "Sheetal Sharma", deliveryReference: "DEL-2026-0520", notes: "First batch received", createdAt: "2026-07-15T10:00:00Z" },
+      { id: "ful-po2-2", lineItemId: "po2-li2", quantity: 15, deliveryDate: "2026-07-18", receivedBy: "Costume Dept", deliveryReference: "DEL-2026-0535", notes: "15 of 25 pieces delivered", createdAt: "2026-07-18T14:00:00Z" },
+      { id: "ful-po2-3", lineItemId: "po2-li3", quantity: 5, deliveryDate: "2026-07-19", receivedBy: "Costume Dept", deliveryReference: "DEL-2026-0540", notes: "Half the sets", createdAt: "2026-07-19T11:00:00Z" },
+    ],
+    createdBy: "demo-user", createdAt: "2026-07-01T08:00:00Z", updatedAt: "2026-07-19T11:00:00Z",
+  });
+
+  // ── PO3: p1 Location Materials (draft) ──
+  const po3Items = [
+    li("po3-li1", "Portable Generator 50kVA", "locations", 3, "unit", 450000, 0, 18, 0),
+    li("po3-li2", "Outdoor Lighting Towers", "locations", 6, "unit", 120000, 5, 18, 0),
+  ];
+  const po3T = totals(po3Items, 1);
+  pos.push({
+    id: "po3", poNumber: "PO-P1-0003", title: "Location Infrastructure — Forest Shoot",
+    vendorId: "rv8", projectId: "p1", department: "locations",
+    poDate: "2026-10-25", expectedDeliveryDate: "2026-11-10",
+    currency: "INR", exchangeRate: 1, paymentTerms: "Net 45",
+    deliveryAddress: "Seshachalam Forest Location Base Camp", billingAddress: "Mythri Movie Makers",
+    contactPerson: "Location Manager", notes: "Pending director approval on generator placement",
+    termsAndConditions: "Delivery to remote location — transport included.",
+    lineItems: po3Items, ...po3T,
+    status: "draft",
+    approvalHistory: [], amendments: [], fulfilments: [],
+    createdBy: "demo-user", createdAt: "2026-10-25T08:00:00Z", updatedAt: "2026-10-25T08:00:00Z",
+  });
+
+  // ── PO4: p2 VFX Workstations (finance-approved) ──
+  const po4Items = [
+    li("po4-li1", "HP Z8 G5 Workstation", "post-production", 8, "unit", 650000, 10, 18, 0),
+    li("po4-li2", "NVIDIA RTX 6000 Ada GPU", "post-production", 16, "unit", 420000, 0, 18, 0),
+    li("po4-li3", "32TB NAS Storage Array", "post-production", 2, "unit", 380000, 0, 18, 0),
+  ];
+  const po4T = totals(po4Items, 1);
+  pos.push({
+    id: "po4", poNumber: "PO-P2-0001", title: "VFX Workstations — Kalki Post-Production",
+    vendorId: "rv3", projectId: "p2", department: "post-production",
+    poDate: "2026-09-01", expectedDeliveryDate: "2026-09-20",
+    currency: "INR", exchangeRate: 1, paymentTerms: "Net 30",
+    deliveryAddress: "DNEG Hyderabad Studio", billingAddress: "Vyjayanthi Movies",
+    contactPerson: "VFX Supervisor", notes: "Specs confirmed by DNEG India team",
+    termsAndConditions: "3-year warranty. On-site support included.",
+    lineItems: po4Items, ...po4T,
+    status: "finance-approved",
+    approvalHistory: [
+      appr("department-head", "VFX Supervisor", "approved", "Specs validated for Kalki pipeline", "2026-09-02T10:00:00Z", "submitted", "dept-approved"),
+      appr("finance", "Finance Head", "approved", "Within post-prod budget", "2026-09-03T14:00:00Z", "dept-approved", "finance-approved"),
+    ],
+    amendments: [], fulfilments: [],
+    createdBy: "demo-user", createdAt: "2026-09-01T08:00:00Z", updatedAt: "2026-09-03T14:00:00Z",
+  });
+
+  // ── PO5: p2 Prosthetics & SFX (producer-approved) ──
+  const po5Items = [
+    li("po5-li1", "Ashwatthama Full Prosthetic Kit", "costume-makeup", 5, "set", 350000, 0, 18, 0),
+    li("po5-li2", "Silicone Aging Appliances (Amitabh)", "costume-makeup", 20, "pieces", 45000, 0, 18, 0),
+    li("po5-li3", "Blood & Gore SFX Consumables", "costume-makeup", 1, "lot", 280000, 0, 18, 0),
+  ];
+  const po5T = totals(po5Items, 1);
+  pos.push({
+    id: "po5", poNumber: "PO-P2-0002", title: "Prosthetics & SFX Materials — Kalki Characters",
+    vendorId: "rv12", projectId: "p2", department: "costume-makeup",
+    poDate: "2026-08-10", expectedDeliveryDate: "2026-08-30",
+    currency: "INR", exchangeRate: 1, paymentTerms: "Net 30",
+    deliveryAddress: "SFX Workshop, Ramoji Film City", billingAddress: "Vyjayanthi Movies",
+    contactPerson: "Preetisheel D'Souza", notes: "Custom prosthetics per approved character designs",
+    termsAndConditions: "Bespoke items. 50% advance required.",
+    lineItems: po5Items, ...po5T,
+    status: "producer-approved",
+    approvalHistory: [
+      appr("department-head", "Preetisheel D'Souza", "approved", "Designs finalized", "2026-08-11T09:00:00Z", "submitted", "dept-approved"),
+      appr("finance", "Finance Dept", "approved", "Approved", "2026-08-12T10:00:00Z", "dept-approved", "finance-approved"),
+      appr("producer", "C. Ashwini Dutt", "approved", "Critical for character look", "2026-08-13T08:00:00Z", "finance-approved", "producer-approved"),
+    ],
+    amendments: [], fulfilments: [],
+    createdBy: "demo-user", createdAt: "2026-08-10T08:00:00Z", updatedAt: "2026-08-13T08:00:00Z",
+  });
+
+  // ── PO6: p3 Sound Equipment (submitted — pending dept approval) ──
+  const po6Items = [
+    li("po6-li1", "Sennheiser MKH 416 Shotgun Mic", "sound-music", 4, "unit", 95000, 0, 18, 0),
+    li("po6-li2", "Sound Devices 888 Mixer-Recorder", "sound-music", 2, "unit", 580000, 0, 18, 0),
+    li("po6-li3", "DPA 4060 Lavalier Mic Kit", "sound-music", 10, "kit", 42000, 0, 18, 0),
+  ];
+  const po6T = totals(po6Items, 1);
+  pos.push({
+    id: "po6", poNumber: "PO-P3-0001", title: "Production Sound Package — Devara",
+    vendorId: "rv1", projectId: "p3", department: "sound-music",
+    poDate: "2026-10-01", expectedDeliveryDate: "2026-10-20",
+    currency: "INR", exchangeRate: 1, paymentTerms: "Net 30",
+    deliveryAddress: "NTR Studios, Hyderabad", billingAddress: "NTR Arts",
+    contactPerson: "Sound Dept Head", notes: "Replacement for damaged equipment from monsoon shoot",
+    termsAndConditions: "Standard equipment rental.",
+    lineItems: po6Items, ...po6T,
+    status: "submitted",
+    approvalHistory: [],
+    amendments: [], fulfilments: [],
+    createdBy: "demo-user", createdAt: "2026-10-01T08:00:00Z", updatedAt: "2026-10-01T08:00:00Z",
+  });
+
+  // ── PO7: p3 Art Dept Supplies (rejected) ──
+  const po7Items = [
+    li("po7-li1", "Custom Temple Set Pieces", "art-props", 1, "lot", 1800000, 0, 18, 0),
+    li("po7-li2", "Period Furniture Replicas", "art-props", 15, "unit", 75000, 0, 18, 0),
+  ];
+  const po7T = totals(po7Items, 1);
+  pos.push({
+    id: "po7", poNumber: "PO-P3-0002", title: "Set Construction — Temple Interior",
+    vendorId: "rv10", projectId: "p3", department: "art-props",
+    poDate: "2026-09-15", expectedDeliveryDate: "2026-10-05",
+    currency: "INR", exchangeRate: 1, paymentTerms: "50% advance",
+    deliveryAddress: "Ramoji Film City Set 4", billingAddress: "NTR Arts",
+    contactPerson: "Art Director", notes: "",
+    termsAndConditions: "Custom fabrication.",
+    lineItems: po7Items, ...po7T,
+    status: "rejected",
+    approvalHistory: [
+      appr("department-head", "Art Director", "approved", "Designs approved", "2026-09-16T09:00:00Z", "submitted", "dept-approved"),
+      appr("finance", "Finance", "rejected", "Exceeds budget allocation. Revise scope.", "2026-09-17T11:00:00Z", "dept-approved", "rejected"),
+    ],
+    amendments: [], fulfilments: [],
+    createdBy: "demo-user", createdAt: "2026-09-15T08:00:00Z", updatedAt: "2026-09-17T11:00:00Z",
+  });
+
+  // ── PO8: p4 Stunt Equipment (returned) ──
+  const po8Items = [
+    li("po8-li1", "Wire Rig System (4-point)", "action-stunts", 2, "set", 520000, 0, 18, 0),
+    li("po8-li2", "Crash Mats (Large)", "action-stunts", 20, "unit", 18000, 0, 18, 0),
+    li("po8-li3", "Fire Gel & Burn Suits", "action-stunts", 5, "kit", 95000, 0, 18, 0),
+  ];
+  const po8T = totals(po8Items, 1);
+  pos.push({
+    id: "po8", poNumber: "PO-P4-0001", title: "Stunt Equipment — RRR Sequel Action Sequences",
+    vendorId: "rv15", projectId: "p4", department: "action-stunts",
+    poDate: "2026-08-20", expectedDeliveryDate: "2026-09-10",
+    currency: "INR", exchangeRate: 1, paymentTerms: "Net 30",
+    deliveryAddress: "Action Set, Annapurna Studios", billingAddress: "DVV Entertainment",
+    contactPerson: "Stunt Coordinator", notes: "Safety certification required before use",
+    termsAndConditions: "Equipment must pass safety inspection.",
+    lineItems: po8Items, ...po8T,
+    status: "returned",
+    approvalHistory: [
+      appr("department-head", "Stunt Coordinator", "approved", "Equipment specs verified", "2026-08-21T09:00:00Z", "submitted", "dept-approved"),
+      appr("finance", "Finance", "returned", "Need revised quotes from alternate vendors", "2026-08-22T10:00:00Z", "dept-approved", "returned"),
+    ],
+    amendments: [], fulfilments: [],
+    createdBy: "demo-user", createdAt: "2026-08-20T08:00:00Z", updatedAt: "2026-08-22T10:00:00Z",
+  });
+
+  // ── PO9: p1 Vehicles & Transport (producer-approved, with amendment) ──
+  const po9Items = [
+    li("po9-li1", "Vanity Van (Star)", "vehicles-transport", 2, "unit", 1200000, 0, 18, 0),
+    li("po9-li2", "Production Tempo (Equipment)", "vehicles-transport", 5, "unit", 350000, 0, 18, 0),
+    li("po9-li3", "Crew Bus (45-seater)", "vehicles-transport", 3, "unit", 280000, 0, 18, 0),
+  ];
+  const po9T = totals(po9Items, 1);
+  const po9Amd: POAmendment = {
+    id: "amd-po9-1", reason: "Additional crew bus needed for extended forest schedule",
+    originalAmount: po9T.grandTotal,
+    revisedAmount: po9T.grandTotal + 330400,
+    difference: 330400,
+    requestedBy: "Production Manager",
+    status: "approved",
+    approvalHistory: [
+      appr("amendment", "Naveen Yerneni", "approved", "Approved — extended schedule confirmed", "2026-09-12T10:00:00Z", "producer-approved", "producer-approved"),
+    ],
+    createdAt: "2026-09-10T08:00:00Z",
+  };
+  pos.push({
+    id: "po9", poNumber: "PO-P1-0004", title: "Vehicle Fleet — Pushpa 2 Production",
+    vendorId: "rv9", projectId: "p1", department: "vehicles-transport",
+    poDate: "2026-09-01", expectedDeliveryDate: "2026-09-15",
+    currency: "INR", exchangeRate: 1, paymentTerms: "Monthly rental",
+    deliveryAddress: "Production Office, Hyderabad", billingAddress: "Mythri Movie Makers",
+    contactPerson: "Transport Manager", notes: "Long-term rental for entire shoot duration",
+    termsAndConditions: "Monthly rental. Fuel and driver included.",
+    lineItems: po9Items, ...po9T,
+    status: "producer-approved",
+    approvalHistory: [
+      appr("department-head", "Transport Head", "approved", "Fleet size confirmed", "2026-09-02T09:00:00Z", "submitted", "dept-approved"),
+      appr("finance", "Srinivas Rao", "approved", "Within transport budget", "2026-09-03T10:00:00Z", "dept-approved", "finance-approved"),
+      appr("producer", "Naveen Yerneni", "approved", "Approved", "2026-09-04T08:00:00Z", "finance-approved", "producer-approved"),
+    ],
+    amendments: [po9Amd], fulfilments: [],
+    createdBy: "demo-user", createdAt: "2026-09-01T08:00:00Z", updatedAt: "2026-09-12T10:00:00Z",
+  });
+
+  // ── PO10: p5 Office Supplies (dept-approved) ──
+  const po10Items = [
+    li("po10-li1", "Office Furniture Set", "production-office", 5, "set", 85000, 0, 18, 0),
+    li("po10-li2", "IT Equipment (Laptops, Monitors)", "production-office", 10, "unit", 72000, 0, 18, 0),
+  ];
+  const po10T = totals(po10Items, 1);
+  pos.push({
+    id: "po10", poNumber: "PO-P5-0001", title: "Production Office Setup",
+    vendorId: "rv4", projectId: "p5", department: "production-office",
+    poDate: "2026-10-10", expectedDeliveryDate: "2026-10-25",
+    currency: "INR", exchangeRate: 1, paymentTerms: "Net 15",
+    deliveryAddress: "Production Office, Jubilee Hills", billingAddress: "Geetha Arts",
+    contactPerson: "Office Manager", notes: "New production office setup",
+    termsAndConditions: "Standard purchase.",
+    lineItems: po10Items, ...po10T,
+    status: "dept-approved",
+    approvalHistory: [
+      appr("department-head", "Office Manager", "approved", "Standard office setup", "2026-10-11T09:00:00Z", "submitted", "dept-approved"),
+    ],
+    amendments: [], fulfilments: [],
+    createdBy: "demo-user", createdAt: "2026-10-10T08:00:00Z", updatedAt: "2026-10-11T09:00:00Z",
+  });
+
+  // ── PO11: p2 USD Foreign Currency PO (producer-approved) ──
+  const po11Items = [
+    li("po11-li1", "Motion Capture Session (DNEG London)", "post-production", 15, "days", 3500, 0, 0, 0),
+    li("po11-li2", "Facial Capture Rig Rental", "post-production", 1, "month", 12000, 0, 0, 0),
+  ];
+  const po11T = totals(po11Items, 84.5);
+  pos.push({
+    id: "po11", poNumber: "PO-P2-0003", title: "Motion Capture — DNEG London",
+    vendorId: "rv18", projectId: "p2", department: "post-production",
+    poDate: "2026-08-01", expectedDeliveryDate: "2026-09-15",
+    currency: "USD", exchangeRate: 84.5, paymentTerms: "Net 60",
+    deliveryAddress: "DNEG Studios, London", billingAddress: "Vyjayanthi Movies",
+    contactPerson: "VFX Producer", notes: "Mocap for Kalki CGI characters",
+    termsAndConditions: "International service agreement. Wire transfer.",
+    lineItems: po11Items, ...po11T,
+    status: "producer-approved",
+    approvalHistory: [
+      appr("department-head", "VFX Supervisor", "approved", "Critical for CGI pipeline", "2026-08-02T10:00:00Z", "submitted", "dept-approved"),
+      appr("finance", "Finance", "approved", "Forex budget allocated", "2026-08-03T11:00:00Z", "dept-approved", "finance-approved"),
+      appr("producer", "C. Ashwini Dutt", "approved", "Proceed", "2026-08-04T08:00:00Z", "finance-approved", "producer-approved"),
+    ],
+    amendments: [], fulfilments: [],
+    createdBy: "demo-user", createdAt: "2026-08-01T08:00:00Z", updatedAt: "2026-08-04T08:00:00Z",
+  });
+
+  // ── PO12: p6 Lighting Equipment (cancelled) ──
+  const po12Items = [
+    li("po12-li1", "ARRI SkyPanel S120-C", "camera-lighting", 6, "unit", 280000, 0, 18, 0),
+    li("po12-li2", "Tungsten Fresnel 5kW", "camera-lighting", 10, "unit", 45000, 0, 18, 0),
+  ];
+  const po12T = totals(po12Items, 1);
+  pos.push({
+    id: "po12", poNumber: "PO-P6-0001", title: "Lighting Package — Project Cancelled",
+    vendorId: "rv1", projectId: "p6", department: "camera-lighting",
+    poDate: "2026-07-15", expectedDeliveryDate: "2026-08-01",
+    currency: "INR", exchangeRate: 1, paymentTerms: "Net 30",
+    deliveryAddress: "Studio", billingAddress: "Production House",
+    contactPerson: "Gaffer", notes: "",
+    termsAndConditions: "Standard rental.",
+    lineItems: po12Items, ...po12T,
+    status: "cancelled",
+    approvalHistory: [
+      appr("department-head", "Gaffer", "approved", "Approved", "2026-07-16T09:00:00Z", "submitted", "dept-approved"),
+      appr("cancellation", "System", "rejected", "Project schedule postponed indefinitely", "2026-07-20T10:00:00Z", "dept-approved", "cancelled"),
+    ],
+    amendments: [], fulfilments: [],
+    createdBy: "demo-user", createdAt: "2026-07-15T08:00:00Z", updatedAt: "2026-07-20T10:00:00Z",
+  });
+
+  // ── PO13: p1 Props (fulfilled) ──
+  const po13Items = [
+    li("po13-li1", "Hero Sandalwood Log Props (foam core)", "art-props", 30, "unit", 8500, 0, 18, 30),
+    li("po13-li2", "Vintage Lanterns (practical)", "art-props", 15, "unit", 4200, 0, 18, 15),
+    li("po13-li3", "Tribal Weapons (rubber/safe)", "art-props", 20, "unit", 6500, 0, 18, 20),
+  ];
+  const po13T = totals(po13Items, 1);
+  pos.push({
+    id: "po13", poNumber: "PO-P1-0005", title: "Props Package — Pushpa 2 Forest Sequences",
+    vendorId: "rv10", projectId: "p1", department: "art-props",
+    poDate: "2026-07-10", expectedDeliveryDate: "2026-07-25",
+    currency: "INR", exchangeRate: 1, paymentTerms: "Net 30",
+    deliveryAddress: "Props Dept, Ramoji Film City", billingAddress: "Mythri Movie Makers",
+    contactPerson: "Props Master", notes: "All weapons must be safety-certified",
+    termsAndConditions: "Custom fabrication. Non-returnable.",
+    lineItems: po13Items, ...po13T,
+    status: "fulfilled",
+    approvalHistory: [
+      appr("department-head", "Art Director", "approved", "Props per storyboard", "2026-07-11T09:00:00Z", "submitted", "dept-approved"),
+      appr("finance", "Srinivas Rao", "approved", "OK", "2026-07-12T10:00:00Z", "dept-approved", "finance-approved"),
+      appr("producer", "Naveen Yerneni", "approved", "Approved", "2026-07-13T08:00:00Z", "finance-approved", "producer-approved"),
+    ],
+    amendments: [], fulfilments: [
+      { id: "ful-po13-1", lineItemId: "po13-li1", quantity: 30, deliveryDate: "2026-07-22", receivedBy: "Props Master", deliveryReference: "DEL-2026-0610", notes: "All 30 logs delivered", createdAt: "2026-07-22T10:00:00Z" },
+      { id: "ful-po13-2", lineItemId: "po13-li2", quantity: 15, deliveryDate: "2026-07-23", receivedBy: "Props Master", deliveryReference: "DEL-2026-0615", notes: "Lanterns tested — all working", createdAt: "2026-07-23T11:00:00Z" },
+      { id: "ful-po13-3", lineItemId: "po13-li3", quantity: 20, deliveryDate: "2026-07-24", receivedBy: "Props Master", deliveryReference: "DEL-2026-0620", notes: "Safety cert attached", createdAt: "2026-07-24T14:00:00Z" },
+    ],
+    createdBy: "demo-user", createdAt: "2026-07-10T08:00:00Z", updatedAt: "2026-07-24T14:00:00Z",
+  });
+
+  // ── PO14: p4 Location Equipment (draft) ──
+  const po14Items = [
+    li("po14-li1", "Weather Protection Canopies", "locations", 8, "unit", 65000, 0, 18, 0),
+    li("po14-li2", "Portable Toilet Units", "locations", 12, "unit", 35000, 0, 18, 0),
+  ];
+  const po14T = totals(po14Items, 1);
+  pos.push({
+    id: "po14", poNumber: "PO-P4-0002", title: "Location Infrastructure — RRR Sequel Outdoor Shoot",
+    vendorId: "rv8", projectId: "p4", department: "locations",
+    poDate: "2026-10-28", expectedDeliveryDate: "2026-11-15",
+    currency: "INR", exchangeRate: 1, paymentTerms: "Net 30",
+    deliveryAddress: "Location TBD", billingAddress: "DVV Entertainment",
+    contactPerson: "Location Manager", notes: "Pending final location confirmation",
+    termsAndConditions: "Rental. Delivery and pickup included.",
+    lineItems: po14Items, ...po14T,
+    status: "draft",
+    approvalHistory: [], amendments: [], fulfilments: [],
+    createdBy: "demo-user", createdAt: now, updatedAt: now,
+  });
+
+  // ── PO15: p7 Catering (submitted) ──
+  const po15Items = [
+    li("po15-li1", "Daily Crew Meals (200 pax)", "production-office", 45, "day", 65000, 0, 5, 0),
+    li("po15-li2", "Star Vanity Catering (premium)", "production-office", 45, "day", 15000, 0, 5, 0),
+  ];
+  const po15T = totals(po15Items, 1);
+  pos.push({
+    id: "po15", poNumber: "PO-P7-0001", title: "Catering Services — Full Production Schedule",
+    vendorId: "rv20", projectId: "p7", department: "production-office",
+    poDate: "2026-10-20", expectedDeliveryDate: "2026-12-15",
+    currency: "INR", exchangeRate: 1, paymentTerms: "Weekly billing",
+    deliveryAddress: "On-set catering area", billingAddress: "Production Office",
+    contactPerson: "Production Manager", notes: "Vegetarian + non-veg options required",
+    termsAndConditions: "Weekly billing cycle. Menu approval required.",
+    lineItems: po15Items, ...po15T,
+    status: "submitted",
+    approvalHistory: [],
+    amendments: [], fulfilments: [],
+    createdBy: "demo-user", createdAt: "2026-10-20T08:00:00Z", updatedAt: "2026-10-20T08:00:00Z",
+  });
+
+  return pos;
+}
 
 // â”€â”€ Real Telugu star casting pipeline (demo data) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function buildSeedCastCandidates(): CastCandidate[] {
@@ -2317,3 +2808,232 @@ function buildSeedCastContracts(): import("./types").CastContract[] {
   ];
 }
 
+// ── A7: Insurance Policies seed data ──────────────────────────────────────────
+function buildSeedInsurancePolicies(): InsurancePolicy[] {
+  const now = "2026-10-28T10:00:00.000Z";
+  function claim(id: string, num: string, claimDate: string, incidentDate: string, desc: string, claimed: number, settled: number, status: InsuranceClaim["status"], adjuster: string, resDate: string, resNotes: string): InsuranceClaim {
+    return { id, claimNumber: num, claimDate, incidentDate, description: desc, claimedAmount: claimed, settledAmount: settled, status, adjusterName: adjuster, adjusterContact: "+91 98400 50000", resolutionDate: resDate, resolutionNotes: resNotes };
+  }
+
+  return [
+    {
+      id: "ins1", policyNumber: "PI-P1-2026-001", policyType: "production",
+      provider: "New India Assurance Co.", providerContact: "+91 40 2323 5001",
+      projectId: "p1", description: "Comprehensive production insurance covering cast illness, set damage, weather delays and force majeure",
+      insuredItems: ["Principal photography", "Post-production deliverables", "Weather delay coverage", "Force majeure"],
+      coverageAmount: 500000000, deductible: 5000000, premiumAmount: 12500000,
+      premiumFrequency: "one-time", totalPremiumPaid: 12500000,
+      startDate: "2026-04-01", endDate: "2027-06-30", renewalDate: "2027-06-01",
+      status: "active",
+      claims: [
+        claim("cl1", "CLM-P1-001", "2026-08-15", "2026-08-12", "Monsoon damage to forest set at Maredumilli — partial rebuild required", 8500000, 7200000, "settled", "Rajesh Menon", "2026-09-20", "Settled at 85% after deductible. Set rebuild verified by surveyor."),
+      ],
+      notes: "Mythri Movie Makers standard production cover. Renewal required before post-production completion.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins2", policyNumber: "EQ-P1-2026-001", policyType: "equipment",
+      provider: "ICICI Lombard", providerContact: "+91 40 6666 7001",
+      projectId: "p1", description: "Camera, lighting and grip equipment insurance — Pushpa 2 shoot",
+      insuredItems: ["ARRI ALEXA LF (3 units)", "Cooke S7/i prime set", "Dolly + crane rigs", "Steadicam fleet"],
+      coverageAmount: 80000000, deductible: 500000, premiumAmount: 2400000,
+      premiumFrequency: "annual", totalPremiumPaid: 2400000,
+      startDate: "2026-04-01", endDate: "2027-03-31", renewalDate: "2027-03-01",
+      status: "active",
+      claims: [],
+      notes: "Covers all rented and owned camera/lighting equipment on set.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins3", policyNumber: "VH-P1-2026-001", policyType: "vehicle",
+      provider: "Bajaj Allianz", providerContact: "+91 40 2222 3001",
+      projectId: "p1", description: "Production vehicle fleet insurance — caravans, picture cars, transport",
+      insuredItems: ["Vanity vans (5)", "Picture cars (8)", "Transport trucks (3)", "Generator trucks (2)"],
+      coverageAmount: 30000000, deductible: 200000, premiumAmount: 900000,
+      premiumFrequency: "annual", totalPremiumPaid: 900000,
+      startDate: "2026-04-01", endDate: "2027-03-31", renewalDate: "2027-03-01",
+      status: "active",
+      claims: [
+        claim("cl2", "CLM-P1-002", "2026-09-10", "2026-09-08", "Picture car collision during chase sequence rehearsal — minor body damage", 350000, 0, "under-review", "Suresh Babu", "", "Adjuster visit scheduled for next week."),
+      ],
+      notes: "",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins4", policyNumber: "LC-P1-2026-001", policyType: "location",
+      provider: "National Insurance Co.", providerContact: "+91 40 2345 6001",
+      projectId: "p1", description: "Location damage liability — all Pushpa 2 exterior shoot locations",
+      insuredItems: ["Maredumilli forest locations", "Ramoji Film City sets", "Tirupati temple exterior", "Vizag port area"],
+      coverageAmount: 100000000, deductible: 1000000, premiumAmount: 3000000,
+      premiumFrequency: "one-time", totalPremiumPaid: 3000000,
+      startDate: "2026-04-01", endDate: "2027-06-30", renewalDate: "2027-06-01",
+      status: "active",
+      claims: [],
+      notes: "Covers restoration costs for all permitted shoot locations.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins5", policyNumber: "CT-P1-2026-001", policyType: "cast-talent",
+      provider: "New India Assurance Co.", providerContact: "+91 40 2323 5001",
+      projectId: "p1", description: "Key person insurance — lead cast and director",
+      insuredItems: ["Allu Arjun (lead)", "Rashmika Mandanna (lead)", "Fahadh Faasil (lead)", "Sukumar (director)"],
+      coverageAmount: 1000000000, deductible: 10000000, premiumAmount: 25000000,
+      premiumFrequency: "one-time", totalPremiumPaid: 25000000,
+      startDate: "2026-04-01", endDate: "2027-06-30", renewalDate: "2027-06-01",
+      status: "active",
+      claims: [],
+      notes: "Covers production losses from key talent unavailability due to injury, illness or death.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins6", policyNumber: "PI-P2-2026-001", policyType: "production",
+      provider: "Oriental Insurance", providerContact: "+91 40 2777 8001",
+      projectId: "p2", description: "Comprehensive production insurance — Kalki 2898 AD Part 2",
+      insuredItems: ["Principal photography", "VFX pipeline", "Stunt sequences", "Weather delays"],
+      coverageAmount: 750000000, deductible: 7500000, premiumAmount: 18750000,
+      premiumFrequency: "one-time", totalPremiumPaid: 18750000,
+      startDate: "2026-05-01", endDate: "2027-12-31", renewalDate: "2027-12-01",
+      status: "active",
+      claims: [],
+      notes: "Vyjayanthi Movies — higher coverage for VFX-heavy production. Sequel production insurance.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins7", policyNumber: "EQ-P2-2026-001", policyType: "equipment",
+      provider: "ICICI Lombard", providerContact: "+91 40 6666 7001",
+      projectId: "p2", description: "Camera, mocap and VFX hardware insurance — Kalki 2",
+      insuredItems: ["ARRI ALEXA 65 (2 units)", "Mocap suit fleet (40 units)", "LED Volume wall", "Server farm"],
+      coverageAmount: 200000000, deductible: 2000000, premiumAmount: 6000000,
+      premiumFrequency: "annual", totalPremiumPaid: 6000000,
+      startDate: "2026-05-01", endDate: "2027-04-30", renewalDate: "2027-04-01",
+      status: "active",
+      claims: [
+        claim("cl3", "CLM-P2-001", "2026-07-20", "2026-07-18", "LED volume panel failure during mocap shoot — 6 panels replaced", 4500000, 4200000, "settled", "Priya Sharma", "2026-08-25", "Manufacturer defect confirmed. Full replacement minus deductible."),
+      ],
+      notes: "Special rider for LED volume wall — replacement value ₹15 Cr.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins8", policyNumber: "LB-P2-2026-001", policyType: "liability",
+      provider: "HDFC Ergo", providerContact: "+91 40 3333 4001",
+      projectId: "p2", description: "Third-party liability — stunt sequences and public area shoots",
+      insuredItems: ["Stunt crew liability", "Public area shoot liability", "Extras/crowd scene coverage"],
+      coverageAmount: 200000000, deductible: 2000000, premiumAmount: 5000000,
+      premiumFrequency: "one-time", totalPremiumPaid: 5000000,
+      startDate: "2026-05-01", endDate: "2027-12-31", renewalDate: "2027-12-01",
+      status: "active",
+      claims: [],
+      notes: "Mandatory for Hyderabad outdoor shoots per GHMC permit requirements.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins9", policyNumber: "PI-P3-2026-001", policyType: "production",
+      provider: "New India Assurance Co.", providerContact: "+91 40 2323 5001",
+      projectId: "p3", description: "Comprehensive production insurance — Devara",
+      insuredItems: ["Principal photography", "Underwater sequences", "Weather delays", "Set construction"],
+      coverageAmount: 400000000, deductible: 4000000, premiumAmount: 10000000,
+      premiumFrequency: "one-time", totalPremiumPaid: 10000000,
+      startDate: "2026-03-01", endDate: "2027-03-31", renewalDate: "2027-03-01",
+      status: "active",
+      claims: [
+        claim("cl4", "CLM-P3-001", "2026-06-25", "2026-06-22", "Underwater camera housing leak during ocean sequence — camera damaged", 6200000, 5800000, "settled", "Venkat Reddy", "2026-08-10", "Camera written off. Settlement minus deductible processed."),
+        claim("cl5", "CLM-P3-002", "2026-10-05", "2026-10-02", "Cyclone warning forced 4-day shoot cancellation at Vizag port", 3500000, 0, "filed", "Pending Assignment", "", ""),
+      ],
+      notes: "NTR Arts production. Special rider for water/underwater sequences.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins10", policyNumber: "WX-P3-2026-001", policyType: "weather",
+      provider: "Bajaj Allianz", providerContact: "+91 40 2222 3001",
+      projectId: "p3", description: "Parametric weather insurance — Vizag coastal shoot days",
+      insuredItems: ["Coastal shoot schedule (45 days)", "Rain delay coverage", "Cyclone coverage"],
+      coverageAmount: 50000000, deductible: 500000, premiumAmount: 3750000,
+      premiumFrequency: "one-time", totalPremiumPaid: 3750000,
+      startDate: "2026-06-01", endDate: "2026-12-31", renewalDate: "",
+      status: "active",
+      claims: [],
+      notes: "Triggers automatically when rainfall exceeds 50mm/day at registered shoot location.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins11", policyNumber: "PI-P4-2026-001", policyType: "production",
+      provider: "Oriental Insurance", providerContact: "+91 40 2777 8001",
+      projectId: "p4", description: "Comprehensive production insurance — Game Changer",
+      insuredItems: ["Principal photography", "Song sequences", "Overseas schedule"],
+      coverageAmount: 350000000, deductible: 3500000, premiumAmount: 8750000,
+      premiumFrequency: "one-time", totalPremiumPaid: 8750000,
+      startDate: "2026-03-01", endDate: "2027-06-30", renewalDate: "2027-06-01",
+      status: "active",
+      claims: [],
+      notes: "Sri Venkateswara Creations. Overseas shoot rider included.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins12", policyNumber: "EO-P4-2026-001", policyType: "errors-omissions",
+      provider: "HDFC Ergo", providerContact: "+91 40 3333 4001",
+      projectId: "p4", description: "E&O insurance — Game Changer distribution clearance",
+      insuredItems: ["Script clearance", "Title clearance", "Music rights", "Distribution IP"],
+      coverageAmount: 100000000, deductible: 1000000, premiumAmount: 2500000,
+      premiumFrequency: "one-time", totalPremiumPaid: 2500000,
+      startDate: "2026-06-01", endDate: "2029-05-31", renewalDate: "2029-05-01",
+      status: "active",
+      claims: [],
+      notes: "Required by international distributors. 3-year term.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins13", policyNumber: "PI-P5-2025-001", policyType: "production",
+      provider: "National Insurance Co.", providerContact: "+91 40 2345 6001",
+      projectId: "p5", description: "Production insurance — Salaar Part 2 (pre-production phase)",
+      insuredItems: ["Pre-production materials", "Script development", "Location scouting"],
+      coverageAmount: 150000000, deductible: 1500000, premiumAmount: 3750000,
+      premiumFrequency: "one-time", totalPremiumPaid: 3750000,
+      startDate: "2025-06-01", endDate: "2026-05-31", renewalDate: "",
+      status: "expired",
+      claims: [],
+      notes: "Expired. Production schedule TBD — renewal pending confirmation of shoot dates.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins14", policyNumber: "CT-P5-2026-001", policyType: "cast-talent",
+      provider: "New India Assurance Co.", providerContact: "+91 40 2323 5001",
+      projectId: "p5", description: "Key person insurance — Prabhas and director Prashanth Neel",
+      insuredItems: ["Prabhas (lead)", "Prashanth Neel (director)"],
+      coverageAmount: 800000000, deductible: 8000000, premiumAmount: 20000000,
+      premiumFrequency: "one-time", totalPremiumPaid: 0,
+      startDate: "2026-11-01", endDate: "2027-10-31", renewalDate: "2027-10-01",
+      status: "pending",
+      claims: [],
+      notes: "Premium quote received. Awaiting shoot schedule confirmation before binding.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins15", policyNumber: "PI-P7-2026-001", policyType: "production",
+      provider: "ICICI Lombard", providerContact: "+91 40 6666 7001",
+      projectId: "p7", description: "Comprehensive production insurance — Spirit",
+      insuredItems: ["Principal photography", "Action sequences", "Night shoots"],
+      coverageAmount: 400000000, deductible: 4000000, premiumAmount: 10000000,
+      premiumFrequency: "one-time", totalPremiumPaid: 10000000,
+      startDate: "2026-06-01", endDate: "2027-09-30", renewalDate: "2027-09-01",
+      status: "active",
+      claims: [],
+      notes: "UV Creations. Prabhas action-heavy project — stunt rider included.",
+      createdAt: now, updatedAt: now,
+    },
+    {
+      id: "ins16", policyNumber: "LB-P7-2026-001", policyType: "liability",
+      provider: "Bajaj Allianz", providerContact: "+91 40 2222 3001",
+      projectId: "p7", description: "Third-party liability — Spirit action sequences and public shoots",
+      insuredItems: ["Stunt crew", "Public location shoots", "Pyrotechnics coverage"],
+      coverageAmount: 150000000, deductible: 1500000, premiumAmount: 3750000,
+      premiumFrequency: "one-time", totalPremiumPaid: 3750000,
+      startDate: "2026-06-01", endDate: "2027-09-30", renewalDate: "2027-09-01",
+      status: "active",
+      claims: [
+        claim("cl6", "CLM-P7-001", "2026-09-28", "2026-09-25", "Minor stunt crew injury during wire work rehearsal — medical expenses", 180000, 180000, "settled", "Amit Desai", "2026-10-15", "Full settlement. Crew member recovered. Safety review completed."),
+      ],
+      notes: "",
+      createdAt: now, updatedAt: now,
+    },
+  ];
+}

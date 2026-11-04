@@ -18,6 +18,7 @@ import {
   HardDrive,
   CheckCircle,
   Globe,
+  Calculator,
   LucideIcon,
 } from "lucide-react";
 
@@ -66,6 +67,7 @@ export const navigation: NavGroup[] = [
   {
     title: "Business",
     items: [
+      { label: "Budgets & Accounts", href: "/dashboard/accounts", icon: Calculator, permission: "finance.view" },
       { label: "Finance", href: "/dashboard/finance", icon: IndianRupee, permission: "finance.view" },
       { label: "Post Production", href: "/dashboard/post-production", icon: Scissors, permission: "post_production.view" },
       { label: "Subtitles", href: "/dashboard/subtitles", icon: Globe, permission: "post_production.view" },
@@ -93,7 +95,7 @@ export function getWorkspaceTitle(pathname: string): string {
   if (projectModule) {
     const titles: Record<string, string> = {
       script: "Script", scenes: "Scenes", schedule: "Schedule", "call-sheets": "Call Sheets",
-      cast: "Cast", crew: "Crew", production: "Production", finance: "Finance",
+      cast: "Cast", crew: "Crew", production: "Production", accounts: "Budgets & Accounts", finance: "Finance",
       "post-production": "Post Production", distribution: "Distribution",
       vfx: "VFX", locations: "Locations", media: "Media", attendance: "Attendance", subtitles: "Subtitles",
       equipment: "Equipment",

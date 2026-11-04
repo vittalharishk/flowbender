@@ -1,6 +1,6 @@
 "use client";
 
-import type { Project, Script, ScriptBlock, ScriptDraftVersion, ScriptScene, ScriptStatus, ScriptType } from "./types";
+import type { Project, Script, ScriptBlock, ScriptDraftVersion, ScriptScene, ScriptStatus, ScriptType, Shot, ScriptReference } from "./types";
 import { getAppDataSlice, updateAppDataSlice, useAppDataSlice } from "./app-data-store";
 
 const id = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -35,6 +35,7 @@ export function createScript(input: CreateScriptInput): Script {
     draftName: input.draftName?.trim() ?? "First Draft", draftNumber: input.draftNumber?.trim() ?? "1",
     status: input.status ?? "Concept", notes: input.notes?.trim() ?? "", createdAt: now, updatedAt: now,
     createdBy: "Production Team", archived: false, blocks: [], scenes: [], versions: [], linkedSceneIds: [],
+    shots: [], references: [],
   };
   updateAppDataSlice("scripts", (current) => [script, ...current]);
   return script;
@@ -144,6 +145,99 @@ export function createScriptVersion(scriptId: string, input: Pick<ScriptDraftVer
     revisionDate: new Date().toISOString(), createdBy: "Production Team", blocks: script.blocks, scenes: script.scenes };
   updateScript(scriptId, { versions: [version, ...script.versions], draftName: input.name, draftNumber: String(version.number), status: input.status });
   return version;
+}
+
+// ── Shot CRUD ──
+
+export function addShot(scriptId: string, sceneId: string, input: Omit<Shot, "id">): Shot | undefined {
+  const script = getScript(scriptId);
+  if (!script) return;
+  const shot: Shot = { ...input, id: id("shot") };
+  updateScript(scriptId, { shots: [...(script.shots ?? []), shot] });
+  return shot;
+}
+
+export function updateShot(scriptId: string, shotId: string, updates: Partial<Shot>) {
+  const script = getScript(scriptId);
+  if (!script) return;
+  updateScript(scriptId, { shots: (script.shots ?? []).map((s) => s.id === shotId ? { ...s, ...updates } : s) });
+}
+
+export function removeShot(scriptId: string, shotId: string) {
+  const script = getScript(scriptId);
+  if (!script) return;
+  updateScript(scriptId, { shots: (script.shots ?? []).filter((s) => s.id !== shotId) });
+}
+
+// ── Reference CRUD ──
+
+export function addReference(scriptId: string, input: Omit<ScriptReference, "id" | "createdAt">): ScriptReference | undefined {
+  const script = getScript(scriptId);
+  if (!script) return;
+  const ref: ScriptReference = { ...input, id: id("ref"), createdAt: new Date().toISOString() };
+  updateScript(scriptId, { references: [...(script.references ?? []), ref] });
+  return ref;
+}
+
+export function updateReference(scriptId: string, refId: string, updates: Partial<ScriptReference>) {
+  const script = getScript(scriptId);
+  if (!script) return;
+  updateScript(scriptId, { references: (script.references ?? []).map((r) => r.id === refId ? { ...r, ...updates } : r) });
+}
+
+export function removeReference(scriptId: string, refId: string) {
+  const script = getScript(scriptId);
+  if (!script) return;
+  updateScript(scriptId, { references: (script.references ?? []).filter((r) => r.id !== refId) });
+}
+
+// ── Version management ──
+
+export function restoreScriptVersion(scriptId: string, versionId: string) {
+  const script = getScript(scriptId);
+  if (!script) return;
+  const version = script.versions.find((v) => v.id === versionId);
+  if (!version) return;
+  const snapshot: ScriptDraftVersion = {
+    id: id("version"),
+    number: Math.max(0, ...script.versions.map((v) => v.number)) + 1,
+    name: `Restored from V${version.number} — ${version.name}`,
+    revisionDate: new Date().toISOString(),
+    createdBy: "Production Team",
+    notes: `Restored from version ${version.number} (${version.name})`,
+    status: version.status,
+    blocks: script.blocks,
+    scenes: script.scenes,
+  };
+  updateScript(scriptId, {
+    blocks: version.blocks,
+    scenes: version.scenes,
+    status: version.status,
+    versions: [snapshot, ...script.versions],
+    draftName: version.name,
+    draftNumber: String(snapshot.number),
+  });
+  return snapshot;
+}
+
+export function deleteScriptVersion(scriptId: string, versionId: string) {
+  const script = getScript(scriptId);
+  if (!script) return;
+  updateScript(scriptId, { versions: script.versions.filter((v) => v.id !== versionId) });
+}
+
+export function updateScriptVersion(scriptId: string, versionId: string, updates: Partial<Pick<ScriptDraftVersion, "name" | "notes">>) {
+  const script = getScript(scriptId);
+  if (!script) return;
+  updateScript(scriptId, { versions: script.versions.map((v) => v.id === versionId ? { ...v, ...updates } : v) });
+}
+
+export function reorderScriptScenes(scriptId: string, sceneIds: string[]) {
+  const script = getScript(scriptId);
+  if (!script) return;
+  const ordered = sceneIds.map((sid) => script.scenes.find((s) => s.id === sid)).filter(Boolean) as ScriptScene[];
+  const remaining = script.scenes.filter((s) => !sceneIds.includes(s.id));
+  updateScript(scriptId, { scenes: [...ordered, ...remaining] });
 }
 
 export function useScripts() { return useAppDataSlice("scripts"); }

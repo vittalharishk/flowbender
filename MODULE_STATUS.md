@@ -55,6 +55,38 @@
 
 ## Module 4 — Production Crew Depts
 
+**Phase 1 (Crew Departments & Remuneration) — ✅ IMPLEMENTED & AUDITED (2026-10-31)**
+- 9 department structure, 36 crew members, 36 assignments, 36 remuneration agreements, 36 payment records
+- ₹131.76M total payable | ₹84.3M paid | ₹47.5M outstanding
+- CrewDepartmentsWorkspace: Dashboard / Departments / Crew / Remuneration tabs
+- Global + project-scoped pages: `/dashboard/crew`, `/dashboard/projects/[id]/crew`
+
+**Phase 2 (Rentals & Vendor Management) — ✅ IMPLEMENTED & AUDITED (2026-10-31)**
+- 20 rental vendors (13 categories), 35 rental records (all 7 projects), 45 payment records
+- ₹7.62 Cr total rental cost | ₹5.27 Cr paid | ₹2.35 Cr outstanding | ₹10.85L deposits held
+- RentalsWorkspace: Dashboard / Rental Register / Vendors / Payments / Returns & Overdue tabs
+- Separate `rentalVendors`/`rentalRecords`/`rentalPayments` collections — legacy `vendors` untouched
+- Overpayment guard, status workflow, deposit tracking (not counted as expense)
+
+**Phase 3 (Expenses & Production Office) — ✅ IMPLEMENTED & AUDITED (2026-10-31)**
+- 40 production expenses (38 active, 2 rejected), 28 expense payments, 5 office rentals, 22 rent payments, 20 maintenance records
+- ₹1.19 Cr total expenses | ₹1.08 Cr paid | ₹10.84L outstanding | ₹32.85L total rent paid | ₹1.96L maintenance costs
+- ExpensesWorkspace: Dashboard / Expense Register / Office Rent / Maintenance / Payments / Reports tabs
+- Separate collections: `productionExpenses`, `expensePayments`, `officeRentals`, `officeRentPayments`, `maintenanceRecords`
+- Approval workflow (draft→pending→approved→paid), overpayment guard, deposit separation
+
+**Phase 4 (Locations, Boarding & Travel) — ✅ IMPLEMENTED & AUDITED (2026-10-31)**
+- 18 film locations (10 categories), 12 scouting records, 15 agreements, 22 location payments
+- 8 hotels, 25 hotel bookings (cast + crew), 30 hotel payments
+- 20 trips (8 travel categories), 20 travel payments
+- LocationsWorkspace: Dashboard / Locations / Scouting & Permissions / Boarding/Hotels / Travel/Trips / Payments & Reports
+- Separate collections: `filmLocations`, `locationScouting`, `locationAgreements`, `locationPayments`, `hotels`, `hotelBookings`, `hotelPayments`, `trips`, `travelPayments`
+- Stores: `lib/location-store.ts`, `lib/hotel-store.ts`, `lib/travel-store.ts`
+- Financial totals (corrected): Location ₹9.80 Cr agreed / ₹9.06 Cr paid / ₹74.5 L outstanding | Hotel ₹1.61 Cr | Travel ₹37.4L
+- Audit fixes: 11 locationAgreements and 11 hotelBookings had totalPaid incorrectly including security deposit — fixed; 1 seed overpayment (la11/lp21) corrected
+
+**Phases 5–7 — PENDING (not yet started)**
+
 The app has a single `CrewMember` record with one department enum (16 values) and a free-text `role` field. There are no per-department entities for Remunerations, Rentals or Expenses.
 
 **Pay tracking:** day rate × days, paid amount, payment status — per crew member only. No milestones, no weekly/package rates, no allowances.

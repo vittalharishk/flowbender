@@ -1,106 +1,159 @@
-import type { CrewMember, CrewDepartment, CrewAvailability } from "./types";
-import {
-  getAppDataSlice,
-  updateAppDataSlice,
-  useAppDataSelector,
-  useAppDataSlice,
-} from "./app-data-store";
+"use client";
+import { useAppDataSlice, updateAppDataSlice } from "@/lib/app-data-store";
+import type {
+  CrewMember,
+  CrewAssignment,
+  RemunerationAgreement,
+  CrewPaymentRecord,
+  RemunerationPaymentStatus,
+} from "@/lib/types";
 
-export const crewDepartmentLabels: Record<CrewDepartment, string> = {
-  direction: "Direction", production: "Production", camera: "Camera", art: "Art",
-  costume: "Costume", makeup: "Makeup", sound: "Sound", lighting: "Lighting",
-  vfx: "VFX", editing: "Editing", di: "DI", dubbing: "Dubbing",
-  "production-design": "Production Design", transport: "Transport",
-  accounts: "Accounts", publicity: "Publicity",
+// ─── Crew Members ──────────────────────────────────────────────────────────
+
+export function useCrewMembers(projectId?: string): CrewMember[] {
+  const crew = useAppDataSlice("crewMembers") ?? [];
+  return projectId ? crew.filter(c => c.projectId === projectId) : crew;
+}
+
+export function addCrewMember(member: Omit<CrewMember, "id">): CrewMember {
+  const newMember = { ...member, id: `cm-${Date.now()}` } as CrewMember;
+  updateAppDataSlice("crewMembers", crew => [...crew, newMember]);
+  return newMember;
+}
+
+export function updateCrewMember(id: string, updates: Partial<CrewMember>) {
+  updateAppDataSlice("crewMembers", crew =>
+    crew.map(c => c.id === id ? { ...c, ...updates } : c)
+  );
+}
+
+// ─── Crew Assignments ──────────────────────────────────────────────────────
+
+export function useCrewAssignments(projectId?: string): CrewAssignment[] {
+  const assignments = useAppDataSlice("crewAssignments") ?? [];
+  return projectId ? assignments.filter(a => a.projectId === projectId) : assignments;
+}
+
+export function addCrewAssignment(assignment: Omit<CrewAssignment, "id">) {
+  const newA: CrewAssignment = { ...assignment, id: `ca-${Date.now()}` };
+  updateAppDataSlice("crewAssignments", list => [...list, newA]);
+}
+
+export function updateCrewAssignment(id: string, updates: Partial<CrewAssignment>) {
+  updateAppDataSlice("crewAssignments", list =>
+    list.map(a => a.id === id ? { ...a, ...updates } : a)
+  );
+}
+
+// ─── Remuneration Agreements ───────────────────────────────────────────────
+
+export function useRemunerationAgreements(projectId?: string): RemunerationAgreement[] {
+  const items = useAppDataSlice("remunerationAgreements") ?? [];
+  return projectId ? items.filter(r => r.projectId === projectId) : items;
+}
+
+export function addRemunerationAgreement(
+  agreement: Omit<RemunerationAgreement, "id" | "createdAt">
+): RemunerationAgreement {
+  const newA: RemunerationAgreement = {
+    ...agreement,
+    id: `rem-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+  updateAppDataSlice("remunerationAgreements", list => [...list, newA]);
+  return newA;
+}
+
+export function updateRemunerationAgreement(id: string, updates: Partial<RemunerationAgreement>) {
+  updateAppDataSlice("remunerationAgreements", list =>
+    list.map(r => r.id === id ? { ...r, ...updates } : r)
+  );
+}
+
+// ─── Payment Records ───────────────────────────────────────────────────────
+
+export function useCrewPaymentRecords(agreementId?: string): CrewPaymentRecord[] {
+  const records = useAppDataSlice("crewPaymentRecords") ?? [];
+  return agreementId ? records.filter(p => p.agreementId === agreementId) : records;
+}
+
+export function recordPaymentAndUpdateAgreement(
+  agreementId: string,
+  payment: Omit<CrewPaymentRecord, "id" | "createdAt" | "agreementId">
+) {
+  const now = new Date().toISOString();
+  const newPayment: CrewPaymentRecord = {
+    ...payment,
+    agreementId,
+    id: `pay-${Date.now()}`,
+    createdAt: now,
+  };
+  updateAppDataSlice("crewPaymentRecords", records => [...records, newPayment]);
+
+  // Update agreement advancePaid + status
+  updateAppDataSlice("remunerationAgreements", agreements =>
+    agreements.map(ag => {
+      if (ag.id !== agreementId) return ag;
+      const newPaid = ag.advancePaid + payment.amount;
+      const newStatus: RemunerationPaymentStatus =
+        newPaid >= ag.totalPayable ? "paid" :
+        newPaid > 0 ? "partially-paid" : "pending";
+      return { ...ag, advancePaid: newPaid, status: newStatus };
+    })
+  );
+}
+
+// ─── Calculations ──────────────────────────────────────────────────────────
+
+export function calcRemunerationSummary(agreements: RemunerationAgreement[]) {
+  return {
+    totalAgreed: agreements.reduce((s, a) => s + a.totalPayable, 0),
+    totalPaid: agreements.reduce((s, a) => s + a.advancePaid, 0),
+    totalPending: agreements.reduce((s, a) => s + (a.totalPayable - a.advancePaid), 0),
+    byStatus: agreements.reduce((acc, a) => {
+      acc[a.status] = (acc[a.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>),
+  };
+}
+
+export function formatINR(amount: number): string {
+  return "₹" + amount.toLocaleString("en-IN");
+}
+
+// ─── Compatibility aliases (used by existing crew UI components) ────────────
+
+export const useCrewByProject = useCrewMembers;
+
+export function useCrewMember(id: string): CrewMember | undefined {
+  const all = useAppDataSlice("crewMembers") ?? [];
+  return all.find(c => c.id === id);
+}
+export const createCrew = addCrewMember;
+export const updateCrew = updateCrewMember;
+
+export const crewDepartmentLabels: Record<string, string> = {
+  camera: "Camera", direction: "Direction", editing: "Editing",
+  sound: "Sound", art: "Art", vfx: "VFX", "production-design": "Production Design",
+  costume: "Costume", makeup: "Makeup", action: "Action", location: "Locations",
+  transport: "Transport", accounts: "Accounts", publicity: "Publicity",
+  lighting: "Lighting", di: "DI", dubbing: "Dubbing", production: "Production",
 };
 
-export const crewDepartmentColors: Record<CrewDepartment, string> = {
-  direction: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  production: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  camera: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
-  art: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  costume: "bg-pink-500/10 text-pink-400 border-pink-500/20",
-  makeup: "bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20",
-  sound: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  lighting: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  vfx: "bg-violet-500/10 text-violet-400 border-violet-500/20",
-  editing: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
-  di: "bg-teal-500/10 text-teal-400 border-teal-500/20",
-  dubbing: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-  "production-design": "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  transport: "bg-stone-500/10 text-stone-400 border-stone-500/20",
-  accounts: "bg-lime-500/10 text-lime-400 border-lime-500/20",
-  publicity: "bg-red-500/10 text-red-400 border-red-500/20",
+export const crewDepartmentColors: Record<string, string> = {
+  camera: "bg-blue-500/20 text-blue-300", direction: "bg-violet-500/20 text-violet-300",
+  editing: "bg-cyan-500/20 text-cyan-300", sound: "bg-green-500/20 text-green-300",
+  art: "bg-orange-500/20 text-orange-300", vfx: "bg-pink-500/20 text-pink-300",
+  "production-design": "bg-amber-500/20 text-amber-300",
 };
 
-export const availabilityLabels: Record<CrewAvailability, string> = {
+export const availabilityLabels: Record<string, string> = {
   available: "Available", "on-set": "On Set", "on-leave": "On Leave", unavailable: "Unavailable",
 };
 
-export const availabilityColors: Record<CrewAvailability, string> = {
-  available: "text-emerald-400 bg-emerald-500/10",
-  "on-set": "text-amber-400 bg-amber-500/10",
-  "on-leave": "text-blue-400 bg-blue-500/10",
-  unavailable: "text-red-400 bg-red-500/10",
+export const availabilityColors: Record<string, string> = {
+  available: "bg-emerald-500/20 text-emerald-300",
+  "on-set": "bg-blue-500/20 text-blue-300",
+  "on-leave": "bg-amber-500/20 text-amber-300",
+  unavailable: "bg-red-500/20 text-red-300",
 };
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  return parts.length > 1
-    ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-    : name.slice(0, 2).toUpperCase();
-}
-
-function nextCrewId(members: CrewMember[]) {
-  return members.reduce((highest, member) => {
-    const match = member.id.match(/^cr(\d+)$/);
-    return match ? Math.max(highest, Number(match[1])) : highest;
-  }, 0) + 1;
-}
-
-export function getCrewMembers(): CrewMember[] { return getAppDataSlice("crewMembers"); }
-export function getCrewByProject(projectId: string): CrewMember[] {
-  return getCrewMembers().filter((member) => member.projectId === projectId);
-}
-export function getCrewById(id: string): CrewMember | undefined {
-  return getCrewMembers().find((member) => member.id === id);
-}
-
-export interface CreateCrewInput {
-  name: string; department: CrewDepartment; role: string; projectId: string;
-  projectTitle: string; email: string; phone: string; agency?: string;
-  dayRate: number; totalDays: number; notes: string;
-  profileImage?: string | null;
-}
-
-export function createCrew(input: CreateCrewInput): CrewMember {
-  const member: CrewMember = {
-    id: `cr${nextCrewId(getCrewMembers())}`, name: input.name, initials: initials(input.name),
-    department: input.department, role: input.role, projectId: input.projectId,
-    projectTitle: input.projectTitle, email: input.email, phone: input.phone,
-    agency: input.agency, contractStatus: "pending", paymentStatus: "pending",
-    dayRate: input.dayRate, totalDays: input.totalDays, daysWorked: 0, totalPaid: 0,
-    availability: "available", notes: input.notes, joinedDate: new Date().toISOString().slice(0, 10),
-    profileImage: input.profileImage ?? null,
-  };
-  updateAppDataSlice("crewMembers", (current) => [member, ...current]);
-  return member;
-}
-
-export function updateCrew(id: string, updates: Partial<Omit<CrewMember, "id">>): CrewMember | undefined {
-  let updatedMember: CrewMember | undefined;
-  updateAppDataSlice("crewMembers", (current) => current.map((member) => {
-    if (member.id !== id) return member;
-    updatedMember = { ...member, ...updates };
-    return updatedMember;
-  }));
-  return updatedMember;
-}
-
-export function useCrewMembers() { return useAppDataSlice("crewMembers"); }
-export function useCrewByProject(projectId: string) {
-  return useAppDataSelector((data) => data.crewMembers.filter((member) => member.projectId === projectId));
-}
-export function useCrewMember(id: string) {
-  return useAppDataSelector((data) => data.crewMembers.find((member) => member.id === id));
-}

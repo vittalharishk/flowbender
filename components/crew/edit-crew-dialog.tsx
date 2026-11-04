@@ -99,7 +99,7 @@ export function EditCrewDialog({ member, open, onOpenChange, onSaved }: Props) {
         notes: notes.trim(),
         profileImage,
       });
-      if (!updated) throw new Error("This crew member no longer exists.");
+      // updateCrew returns void; remove falsy check
       onOpenChange(false);
       onSaved();
     } catch (cause) {

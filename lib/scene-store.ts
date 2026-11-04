@@ -390,6 +390,10 @@ export function createScene(input: CreateSceneInput): Scene {
   return scene;
 }
 
+export function deleteScene(sceneId: string) {
+  updateAppDataSlice("scenes", (current) => current.filter((s) => s.id !== sceneId));
+}
+
 export function useAllScenes() {
   return useAppDataSlice("scenes");
 }

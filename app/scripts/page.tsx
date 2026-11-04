@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { Archive, Copy, FileText, Plus, Search, Trash2 } from "lucide-react";
 import { useProjects } from "@/lib/project-store";
 import { archiveScript, createScript, deleteScript, duplicateScript, useScripts } from "@/lib/script-store";
-import type { ScriptStatus, ScriptType } from "@/lib/types";
+import type { Script, ScriptStatus, ScriptType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import "@/lib/persistence-bootstrap";
 
 const types: ScriptType[] = ["Feature Film", "OTT Series", "OTT Episode", "TV Series", "TV Episode", "Short Film", "Music Video", "Other"];
+// Main screenplays first, then most recently updated
+const byMainThenRecent = (a: Script, b: Script) =>
+  Number(!!b.isMain) - Number(!!a.isMain) || b.updatedAt.localeCompare(a.updatedAt);
+
 const statuses: ScriptStatus[] = ["Concept", "First Draft", "Second Draft", "Revised Draft", "Production Draft", "Shooting Draft", "Locked", "Archived"];
 
 export default function ScriptsPage() {
@@ -34,7 +38,7 @@ export default function ScriptsPage() {
     return haystack.includes(query.toLowerCase()) &&
       (status === "all" || script.status === status) &&
       (projectFilter === "all" || script.projectId === projectFilter);
-  }), [scripts, projects, query, status, projectFilter]);
+  }).sort(byMainThenRecent), [scripts, projects, query, status, projectFilter]);
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -70,7 +74,7 @@ export default function ScriptsPage() {
       <div className="hidden grid-cols-[minmax(0,2fr)_1fr_1fr_90px_110px_140px] gap-4 border-b bg-muted/40 px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground md:grid"><span>Script</span><span>Type</span><span>Version</span><span>Scenes</span><span>Status</span><span>Actions</span></div>
       {filtered.length === 0 && <div className="p-12 text-center text-sm text-muted-foreground"><FileText className="mx-auto mb-3 h-8 w-8 opacity-50" />No scripts found. Create your first script to begin a breakdown.</div>}
       {filtered.map((script) => <div key={script.id} className="grid gap-3 border-b px-5 py-4 last:border-0 md:grid-cols-[minmax(0,2fr)_1fr_1fr_90px_110px_140px] md:items-center md:gap-4">
-        <div className="min-w-0"><Link href={`/scripts/${script.id}`} className="font-medium hover:text-primary">{script.title}</Link><p className="truncate text-xs text-muted-foreground">{projects.find((p) => p.id === script.projectId)?.title ?? "Unassigned"} · {script.language}{script.writer && ` · ${script.writer}`}</p></div>
+        <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><Link href={`/scripts/${script.id}`} className="font-medium hover:text-primary">{script.title}</Link>{script.isMain && <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-500">Main</span>}</div><p className="truncate text-xs text-muted-foreground">{projects.find((p) => p.id === script.projectId)?.title ?? "Unassigned"} · {script.language}{script.writer && ` · ${script.writer}`}</p></div>
         <span className="text-sm text-muted-foreground">{script.type}</span><span className="text-sm">{script.draftName} v{script.draftNumber}</span><span className="text-sm">{script.scenes.length}</span><span className="w-fit rounded-full bg-muted px-2 py-1 text-xs">{script.status}</span>
         <div className="flex gap-1"><Button asChild size="sm" variant="outline"><Link href={`/scripts/${script.id}`}>Open</Link></Button><Button size="icon" variant="ghost" title="Duplicate" onClick={() => duplicateScript(script.id)}><Copy className="h-4 w-4" /></Button><Button size="icon" variant="ghost" title="Archive" onClick={() => archiveScript(script.id)}><Archive className="h-4 w-4" /></Button><Button size="icon" variant="ghost" title="Delete" onClick={() => window.confirm(`Delete ${script.title}? This cannot be undone.`) && deleteScript(script.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button></div>
       </div>)}

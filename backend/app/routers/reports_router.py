@@ -1,8 +1,8 @@
-"""Reports router — aggregation endpoints (no CRUD base)."""
+"""Reports router — aggregation endpoints and saved report configs."""
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +11,8 @@ from ..auth.dependencies import CurrentUser, require_any
 from ..models.finance import ProjectBudget, DepartmentBudget, BudgetLineItem
 from ..models.crew_departments import SetTask, ProductionSet
 from ..models.distribution import DistributionRevenue
+from ..models.report_config import ReportConfig
+from ..schemas.report_config import ReportConfigCreate, ReportConfigResponse
 
 router = APIRouter()
 
@@ -159,3 +161,58 @@ async def distribution_summary(
             for row in source_result
         ],
     }
+
+
+# ── Report Config CRUD ──────────────────────────────────────────────────────
+
+
+@router.get("/configs", response_model=list[ReportConfigResponse])
+async def list_report_configs(
+    db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser = Depends(require_any),
+):
+    result = await db.execute(
+        select(ReportConfig)
+        .where(ReportConfig.user_id == current_user.user_id)
+        .order_by(ReportConfig.updated_at.desc())
+    )
+    return result.scalars().all()
+
+
+@router.post("/configs", response_model=ReportConfigResponse, status_code=status.HTTP_201_CREATED)
+async def create_report_config(
+    data: ReportConfigCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser = Depends(require_any),
+):
+    config = ReportConfig(
+        organization_id=current_user.organization_id,
+        user_id=current_user.user_id,
+        name=data.name,
+        category=data.category,
+        config=data.config,
+        description=data.description,
+    )
+    db.add(config)
+    await db.commit()
+    await db.refresh(config)
+    return config
+
+
+@router.delete("/configs/{config_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_report_config(
+    config_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser = Depends(require_any),
+):
+    result = await db.execute(
+        select(ReportConfig).where(
+            ReportConfig.id == config_id,
+            ReportConfig.user_id == current_user.user_id,
+        )
+    )
+    config = result.scalar_one_or_none()
+    if not config:
+        raise HTTPException(status_code=404, detail="Report config not found")
+    await db.delete(config)
+    await db.commit()

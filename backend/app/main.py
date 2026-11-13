@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from .config import get_settings
-from .database import engine, Base
+from .database import engine, Base, create_all_tables
 from .routers import (
     auth_router,
     projects_router,
@@ -36,12 +36,22 @@ from .routers import (
     organizations_router,
     users_router,
 )
+from .routers import (
+    business_router,
+    teams_router,
+    post_production_ext_router,
+    distribution_ext_router,
+    receivables_router,
+)
+from .models import *  # noqa: F401,F403 — ensure all models registered
 
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if settings.DATABASE_URL.startswith("sqlite"):
+        await create_all_tables()
     yield
     await engine.dispose()
 
@@ -110,6 +120,13 @@ app.include_router(distribution_router.router, prefix="/api/v1/distribution", ta
 # Reports & Settings
 app.include_router(reports_router.router, prefix="/api/v1/reports", tags=["Reports"])
 app.include_router(settings_router.router, prefix="/api/v1/settings", tags=["Settings"])
+
+# F1-F4 New Routers
+app.include_router(business_router.router, prefix="/api/v1/business", tags=["Business"])
+app.include_router(teams_router.router, prefix="/api/v1/teams", tags=["Teams"])
+app.include_router(post_production_ext_router.router, prefix="/api/v1/post-production-ext", tags=["Post-Production Extended"])
+app.include_router(distribution_ext_router.router, prefix="/api/v1/distribution-ext", tags=["Distribution Extended"])
+app.include_router(receivables_router.router, prefix="/api/v1/receivables", tags=["Receivables"])
 
 
 @app.get("/api/v1/health")

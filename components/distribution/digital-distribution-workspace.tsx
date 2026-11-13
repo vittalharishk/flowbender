@@ -1,0 +1,83 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { Monitor, FileText, IndianRupee, TrendingUp } from "lucide-react";
+import { useDistributionAgreements } from "@/lib/distribution-store";
+import { useProjects } from "@/lib/project-store";
+import { formatINR } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/app/page-header";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge } from "@/components/app/status-badge";
+import { DataTable, type DataTableColumn } from "@/components/app/data-table";
+import { EmptyState } from "@/components/app/empty-state";
+
+export function DigitalDistributionWorkspace() {
+  const projects = useProjects();
+  const [projectId, setProjectId] = useState("all");
+  const pid = projectId === "all" ? undefined : projectId;
+
+  const allAgreements = useDistributionAgreements(pid);
+
+  const agreements = useMemo(
+    () => allAgreements.filter((a) => a.channel === "digital-ott"),
+    [allAgreements]
+  );
+
+  const totalAgreements = agreements.length;
+  const totalRevenue = useMemo(() => agreements.reduce((s, a) => s + a.agreementValue, 0), [agreements]);
+  const activeDeals = useMemo(() => agreements.filter((a) => a.status === "active").length, [agreements]);
+
+  type Agreement = (typeof agreements)[number];
+  const columns: DataTableColumn<Agreement>[] = [
+    { key: "platform", header: "Platform", cell: (r) => <span className="font-medium">{r.distributorName}</span>, sortValue: (r) => r.distributorName },
+    { key: "territory", header: "Territory", cell: (r) => <span className="max-w-[200px] truncate block">{r.territories.join(", ")}</span> },
+    { key: "value", header: "Agreement Value", cell: (r) => <span className="font-mono">{formatINR(r.agreementValue)}</span>, sortValue: (r) => r.agreementValue, align: "right" },
+    { key: "status", header: "Status", cell: (r) => <StatusBadge status={r.status} />, sortValue: (r) => r.status },
+    { key: "start", header: "Start Date", cell: (r) => <span className="text-muted-foreground">{r.startDate}</span>, sortValue: (r) => r.startDate },
+    { key: "end", header: "End Date", cell: (r) => <span className="text-muted-foreground">{r.endDate}</span>, sortValue: (r) => r.endDate },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        as="h1"
+        title="Digital / OTT Distribution"
+        description="Manage digital and OTT platform distribution agreements."
+        icon={Monitor}
+        badge={pid ? <Badge variant="outline" className="text-xs">{projects.find((p) => p.id === pid)?.title}</Badge> : undefined}
+        actions={
+          <div>
+            <Label htmlFor="digital-project-filter" className="sr-only">Project</Label>
+            <Select value={projectId} onValueChange={setProjectId}>
+              <SelectTrigger id="digital-project-filter" aria-label="Filter by project" className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All projects</SelectItem>
+                {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        }
+      />
+
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        <StatCard label="Total Agreements" value={String(totalAgreements)} icon={FileText} />
+        <StatCard label="Revenue" value={formatINR(totalRevenue)} icon={IndianRupee} />
+        <StatCard label="Active Deals" value={String(activeDeals)} icon={TrendingUp} />
+      </div>
+
+      {agreements.length === 0 ? (
+        <EmptyState title="No digital agreements" description="No digital/OTT distribution agreements found." icon={Monitor} />
+      ) : (
+        <Card>
+          <CardContent className="pt-4">
+            <DataTable columns={columns} rows={agreements} rowKey={(r) => r.id} caption="Digital distribution agreements" />
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

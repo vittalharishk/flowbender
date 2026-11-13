@@ -10,7 +10,6 @@ from typing import Any, Optional
 from sqlalchemy import (
     Date,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Index,
@@ -20,7 +19,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSON, UUID
+from .compat import PortableUUID, PortableJSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
@@ -49,15 +48,15 @@ class EquipmentItem(Base):
     __tablename__ = "equipment_items"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -65,10 +64,7 @@ class EquipmentItem(Base):
     category: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     serial_number: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(
-        Enum(
-            "available", "allocated", "in-use", "maintenance", "retired",
-            name="equipment_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="available",
     )
@@ -108,20 +104,20 @@ class EquipmentAllocation(Base):
     __tablename__ = "equipment_allocations"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     equipment_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("equipment_items.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -150,15 +146,15 @@ class EquipmentMaintenance(Base):
     __tablename__ = "equipment_maintenance"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     equipment_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("equipment_items.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -193,15 +189,15 @@ class CameraCard(Base):
     __tablename__ = "camera_cards"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -237,15 +233,15 @@ class StorageDevice(Base):
     __tablename__ = "storage_devices"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -282,20 +278,20 @@ class FootageMetadata(Base):
     __tablename__ = "footage_metadata"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
     camera_card_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("camera_cards.id", ondelete="SET NULL"),
         nullable=True,
     )
@@ -328,15 +324,15 @@ class MediaAsset(Base):
     __tablename__ = "media_assets"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -346,7 +342,7 @@ class MediaAsset(Base):
     file_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
     file_size_mb: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     status: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    tags: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    tags: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -374,15 +370,15 @@ class MediaVersion(Base):
     __tablename__ = "media_versions"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     media_asset_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("media_assets.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -414,15 +410,15 @@ class VfxShot(Base):
     __tablename__ = "vfx_shots"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -430,10 +426,7 @@ class VfxShot(Base):
     sequence: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(
-        Enum(
-            "pending", "in-progress", "review", "approved", "final",
-            name="vfx_shot_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="pending",
     )
@@ -477,15 +470,15 @@ class VfxVersion(Base):
     __tablename__ = "vfx_versions"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     vfx_shot_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("vfx_shots.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -516,29 +509,26 @@ class VfxReview(Base):
     __tablename__ = "vfx_reviews"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     vfx_shot_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("vfx_shots.id", ondelete="CASCADE"),
         nullable=False,
     )
     vfx_version_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("vfx_versions.id", ondelete="SET NULL"),
         nullable=True,
     )
     reviewer: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(
-        Enum(
-            "pending", "approved", "revision-requested", "rejected",
-            name="vfx_review_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="pending",
     )

@@ -10,7 +10,6 @@ from typing import Optional
 from sqlalchemy import (
     Date,
     DateTime,
-    Enum,
     ForeignKey,
     Index,
     Integer,
@@ -19,8 +18,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import JSON as JSONB
+from .compat import PortableUUID, PortableJSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
@@ -37,15 +35,15 @@ class CrewMember(Base):
     __tablename__ = "crew_members"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -53,25 +51,7 @@ class CrewMember(Base):
     initials: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     profile_image: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     department: Mapped[Optional[str]] = mapped_column(
-        Enum(
-            "direction",
-            "production",
-            "camera",
-            "art",
-            "costume",
-            "makeup",
-            "sound",
-            "lighting",
-            "vfx",
-            "editing",
-            "di",
-            "dubbing",
-            "production-design",
-            "transport",
-            "accounts",
-            "publicity",
-            name="crew_department_enum",
-        ),
+        String(50),
         nullable=True,
     )
     role: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -91,13 +71,7 @@ class CrewMember(Base):
         Numeric(precision=18, scale=2), nullable=True, server_default="0"
     )
     availability: Mapped[Optional[str]] = mapped_column(
-        Enum(
-            "available",
-            "on-set",
-            "on-leave",
-            "unavailable",
-            name="crew_availability_enum",
-        ),
+        String(50),
         nullable=True,
     )
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -136,20 +110,20 @@ class CrewAssignment(Base):
     __tablename__ = "crew_assignments"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     crew_member_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("crew_members.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -176,20 +150,20 @@ class RemunerationAgreement(Base):
     __tablename__ = "remuneration_agreements"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     crew_member_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("crew_members.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -201,7 +175,7 @@ class RemunerationAgreement(Base):
     total_payable: Mapped[Optional[Decimal]] = mapped_column(
         Numeric(precision=18, scale=2), nullable=True
     )
-    payment_schedule: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    payment_schedule: Mapped[Optional[dict]] = mapped_column(PortableJSON(), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -228,20 +202,20 @@ class CrewPaymentRecord(Base):
     __tablename__ = "crew_payment_records"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     crew_member_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("crew_members.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )

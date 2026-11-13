@@ -10,7 +10,6 @@ from typing import Optional
 from sqlalchemy import (
     Date,
     DateTime,
-    Enum,
     ForeignKey,
     Index,
     Numeric,
@@ -18,8 +17,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import JSON as JSONB
+from .compat import PortableUUID, PortableJSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
@@ -38,15 +36,15 @@ class CastMember(Base):
     __tablename__ = "cast_members"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -54,15 +52,7 @@ class CastMember(Base):
     character: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     character_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     category: Mapped[Optional[str]] = mapped_column(
-        Enum(
-            "lead",
-            "supporting",
-            "character-artist",
-            "guest",
-            "child-artist",
-            "special-appearance",
-            name="cast_category_enum",
-        ),
+        String(50),
         nullable=True,
     )
     avatar_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -71,25 +61,13 @@ class CastMember(Base):
     email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     agency: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    languages: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
+    languages: Mapped[Optional[list]] = mapped_column(PortableJSON(), nullable=True)
     contract_status: Mapped[Optional[str]] = mapped_column(
-        Enum(
-            "signed",
-            "negotiating",
-            "pending",
-            "expired",
-            name="cast_contract_status_enum",
-        ),
+        String(50),
         nullable=True,
     )
     payment_status: Mapped[Optional[str]] = mapped_column(
-        Enum(
-            "paid",
-            "partial",
-            "pending",
-            "overdue",
-            name="cast_payment_status_enum",
-        ),
+        String(50),
         nullable=True,
     )
     total_fee: Mapped[Optional[Decimal]] = mapped_column(
@@ -130,20 +108,20 @@ class CastContract(Base):
     __tablename__ = "cast_contracts"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     cast_member_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("cast_members.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -151,7 +129,7 @@ class CastContract(Base):
         Numeric(precision=18, scale=2), nullable=True
     )
     status: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    milestones: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    milestones: Mapped[Optional[dict]] = mapped_column(PortableJSON(), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -176,22 +154,22 @@ class CharacterProfile(Base):
     __tablename__ = "character_profiles"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     tier: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    linked_cast_ids: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
+    linked_cast_ids: Mapped[Optional[list]] = mapped_column(PortableJSON(), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -212,20 +190,20 @@ class CastCandidate(Base):
     __tablename__ = "cast_candidates"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
     character_profile_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("character_profiles.id", ondelete="SET NULL"),
         nullable=True,
     )
@@ -233,15 +211,7 @@ class CastCandidate(Base):
     email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     status: Mapped[Optional[str]] = mapped_column(
-        Enum(
-            "shortlisted",
-            "auditioned",
-            "callback",
-            "selected",
-            "rejected",
-            "withdrawn",
-            name="candidate_status_enum",
-        ),
+        String(50),
         nullable=True,
     )
     audition_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
@@ -269,27 +239,21 @@ class ArtistAvailability(Base):
     __tablename__ = "artist_availabilities"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     cast_member_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("cast_members.id", ondelete="CASCADE"),
         nullable=False,
     )
     date: Mapped[date] = mapped_column(Date, nullable=False)
     status: Mapped[str] = mapped_column(
-        Enum(
-            "available",
-            "booked",
-            "tentative",
-            "unavailable",
-            name="availability_status_enum",
-        ),
+        String(50),
         nullable=False,
     )
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -308,20 +272,20 @@ class CastDecisionLogEntry(Base):
     __tablename__ = "cast_decision_log_entries"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
     candidate_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("cast_candidates.id", ondelete="CASCADE"),
         nullable=False,
     )

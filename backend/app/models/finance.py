@@ -19,7 +19,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSON, UUID
+from .compat import PortableUUID, PortableJSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
@@ -47,13 +47,13 @@ class ProjectBudget(Base):
     __tablename__ = "project_budgets"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
+        PortableUUID(), ForeignKey("projects.id"), nullable=False
     )
     total_budget: Mapped[Optional[Decimal]] = mapped_column(Numeric(16, 2))
     status: Mapped[str] = mapped_column(
@@ -85,16 +85,16 @@ class DepartmentBudget(Base):
     __tablename__ = "department_budgets"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_budget_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("project_budgets.id"), nullable=False
+        PortableUUID(), ForeignKey("project_budgets.id"), nullable=False
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
+        PortableUUID(), ForeignKey("projects.id"), nullable=False
     )
     department: Mapped[Optional[str]] = mapped_column(String(100))
     allocated: Mapped[Optional[Decimal]] = mapped_column(Numeric(16, 2))
@@ -124,13 +124,13 @@ class BudgetRevision(Base):
     __tablename__ = "budget_revisions"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_budget_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("project_budgets.id"), nullable=False
+        PortableUUID(), ForeignKey("project_budgets.id"), nullable=False
     )
     revision_number: Mapped[int] = mapped_column(Integer, nullable=False)
     previous_total: Mapped[Optional[Decimal]] = mapped_column(Numeric(16, 2))
@@ -153,13 +153,13 @@ class BudgetLineItem(Base):
     __tablename__ = "budget_line_items"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
+        PortableUUID(), ForeignKey("projects.id"), nullable=False
     )
     category: Mapped[Optional[str]] = mapped_column(String(100))
     description: Mapped[Optional[str]] = mapped_column(Text)
@@ -190,21 +190,21 @@ class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
+        PortableUUID(), ForeignKey("projects.id"), nullable=False
     )
     po_number: Mapped[Optional[str]] = mapped_column(String(100))
     vendor_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("vendors.id"), nullable=True
+        PortableUUID(), ForeignKey("vendors.id"), nullable=True
     )
     vendor_name: Mapped[Optional[str]] = mapped_column(String(255))
     department: Mapped[Optional[str]] = mapped_column(String(100))
-    items: Mapped[Optional[dict]] = mapped_column(JSON)
+    items: Mapped[Optional[dict]] = mapped_column(PortableJSON())
     subtotal: Mapped[Optional[Decimal]] = mapped_column(Numeric(16, 2))
     discount_percent: Mapped[float] = mapped_column(Float, default=0)
     discount_amount: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=0)
@@ -239,20 +239,20 @@ class Vendor(Base):
     __tablename__ = "vendors"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     category: Mapped[Optional[str]] = mapped_column(String(100))
     contact_person: Mapped[Optional[str]] = mapped_column(String(255))
     email: Mapped[Optional[str]] = mapped_column(String(255))
     phone: Mapped[Optional[str]] = mapped_column(String(50))
-    address: Mapped[Optional[dict]] = mapped_column(JSON)
+    address: Mapped[Optional[dict]] = mapped_column(PortableJSON())
     gst_number: Mapped[Optional[str]] = mapped_column(String(50))
     pan_number: Mapped[Optional[str]] = mapped_column(String(50))
-    bank_details: Mapped[Optional[dict]] = mapped_column(JSON)
+    bank_details: Mapped[Optional[dict]] = mapped_column(PortableJSON())
     payment_terms: Mapped[Optional[str]] = mapped_column(String(255))
     credit_limit: Mapped[Optional[Decimal]] = mapped_column(Numeric(16, 2))
     outstanding_balance: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=0)
@@ -285,13 +285,13 @@ class InsurancePolicy(Base):
     __tablename__ = "insurance_policies"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
+        PortableUUID(), ForeignKey("projects.id"), nullable=False
     )
     policy_number: Mapped[Optional[str]] = mapped_column(String(100))
     provider: Mapped[Optional[str]] = mapped_column(String(255))
@@ -329,13 +329,13 @@ class InsuranceClaim(Base):
     __tablename__ = "insurance_claims"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     policy_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("insurance_policies.id"), nullable=False
+        PortableUUID(), ForeignKey("insurance_policies.id"), nullable=False
     )
     claim_number: Mapped[Optional[str]] = mapped_column(String(100))
     incident_date: Mapped[Optional[date]] = mapped_column(Date)
@@ -374,19 +374,19 @@ class ExpenseItem(Base):
     __tablename__ = "expense_items"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
+        PortableUUID(), ForeignKey("projects.id"), nullable=False
     )
     category: Mapped[Optional[str]] = mapped_column(String(100))
     description: Mapped[Optional[str]] = mapped_column(Text)
     amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(16, 2))
     vendor_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("vendors.id"), nullable=True
+        PortableUUID(), ForeignKey("vendors.id"), nullable=True
     )
     status: Mapped[str] = mapped_column(
         String(30), default="pending", nullable=False
@@ -411,13 +411,13 @@ class PayrollEntry(Base):
     __tablename__ = "payroll_entries"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
+        PortableUUID(), ForeignKey("projects.id"), nullable=False
     )
     person_id: Mapped[Optional[str]] = mapped_column(String(100))
     person_type: Mapped[Optional[str]] = mapped_column(String(50))

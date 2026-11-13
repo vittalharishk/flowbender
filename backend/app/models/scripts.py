@@ -8,7 +8,6 @@ from typing import Optional
 
 from sqlalchemy import (
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Index,
@@ -17,8 +16,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import JSON as JSONB
+from .compat import PortableUUID, PortableJSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
@@ -34,15 +32,15 @@ class Script(Base):
     __tablename__ = "scripts"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -52,8 +50,8 @@ class Script(Base):
     dialogues_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     format: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     status: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    content: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    scenes: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    content: Mapped[Optional[dict]] = mapped_column(PortableJSON(), nullable=True)
+    scenes: Mapped[Optional[dict]] = mapped_column(PortableJSON(), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -81,21 +79,21 @@ class ScriptVersion(Base):
     __tablename__ = "script_versions"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     script_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("scripts.id", ondelete="CASCADE"),
         nullable=False,
     )
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     label: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    content: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    content: Mapped[Optional[dict]] = mapped_column(PortableJSON(), nullable=True)
     created_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -115,15 +113,15 @@ class Scene(Base):
     __tablename__ = "scenes"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -134,19 +132,12 @@ class Scene(Base):
     time_of_day: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     int_ext: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     status: Mapped[Optional[str]] = mapped_column(
-        Enum(
-            "pending",
-            "scheduled",
-            "shooting",
-            "completed",
-            "cut",
-            name="scene_status_enum",
-        ),
+        String(50),
         nullable=True,
     )
     page_count: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    characters: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
-    props: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)
+    characters: Mapped[Optional[list]] = mapped_column(PortableJSON(), nullable=True)
+    props: Mapped[Optional[list]] = mapped_column(PortableJSON(), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(

@@ -12,6 +12,7 @@ import { RolesProbableTab } from "@/components/cast/roles-probable-tab";
 import { CastingDashboardTab } from "@/components/cast/casting-dashboard-tab";
 import { ContractsTab } from "@/components/cast/contracts-tab";
 import { AvailabilityTab } from "@/components/cast/availability-tab";
+import { LeadsSupportingTab } from "@/components/cast/leads-supporting-tab";
 
 export default function GlobalCastPage() {
   const members = useCastMembers();
@@ -60,6 +61,7 @@ export default function GlobalCastPage() {
         <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="members">Cast Members</TabsTrigger>
           <TabsTrigger value="roles">Roles &amp; Probable</TabsTrigger>
+          <TabsTrigger value="leads">Leads &amp; Supporting</TabsTrigger>
           <TabsTrigger value="casting">Casting</TabsTrigger>
           <TabsTrigger value="contracts">Contracts</TabsTrigger>
           <TabsTrigger value="availability">Availability</TabsTrigger>
@@ -76,6 +78,9 @@ export default function GlobalCastPage() {
         </TabsContent>
         <TabsContent value="roles">
           <RolesProbableTab key={projectFilter} projectId={scopedProjectId} />
+        </TabsContent>
+        <TabsContent value="leads">
+          <LeadsSupportingTab key={projectFilter} projectId={scopedProjectId} />
         </TabsContent>
         <TabsContent value="casting">
           <CastingDashboardTab key={projectFilter} projectId={scopedProjectId} />

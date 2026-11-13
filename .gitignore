@@ -27,6 +27,20 @@ yarn-error.log*
 .env
 .env*.local
 
+# databases (local dev data must never be committed)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# build artifacts
+tsconfig.tsbuildinfo
+__pycache__/
+*.pyc
+
+# logs
+*.log
+
 # vercel
 .vercel
 

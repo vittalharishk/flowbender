@@ -149,12 +149,64 @@ function storeAccessToken(token: string, remember: boolean) {
   (remember ? window.localStorage : window.sessionStorage).setItem(TOKEN_KEY, token);
 }
 
+const REFRESH_KEY = "showrunners.refresh_token";
+
+function getRefreshToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(REFRESH_KEY);
+}
+
+function storeRefreshToken(token: string) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(REFRESH_KEY, token);
+}
+
+function clearRefreshToken() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(REFRESH_KEY);
+}
+
+let _refreshPromise: Promise<boolean> | null = null;
+
+async function tryRefreshTokens(): Promise<boolean> {
+  const refresh = getRefreshToken();
+  if (!refresh) return false;
+  try {
+    const res = await fetch(`${API_URL}/api/v1/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refresh }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    storeAccessToken(data.access_token, true);
+    storeRefreshToken(data.refresh_token);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
   const token = getAccessToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers });
+  let response = await fetch(`${API_URL}${path}`, { ...init, headers });
+
+  if (response.status === 401 && AUTH_MODE === "api" && token) {
+    if (!_refreshPromise) _refreshPromise = tryRefreshTokens();
+    const refreshed = await _refreshPromise;
+    _refreshPromise = null;
+    if (refreshed) {
+      const retryHeaders = new Headers(init.headers);
+      retryHeaders.set("Content-Type", "application/json");
+      const newToken = getAccessToken();
+      if (newToken) retryHeaders.set("Authorization", `Bearer ${newToken}`);
+      response = await fetch(`${API_URL}${path}`, { ...init, headers: retryHeaders });
+    }
+  }
+
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     throw new Error(body?.detail ?? `Request failed with status ${response.status}`);
@@ -170,11 +222,12 @@ export async function login(email: string, password: string, remember = true): P
     storeAccessToken(`${LOCAL_TOKEN_PREFIX}${account.user.id}`, remember);
     return account.user;
   }
-  const token = await request<TokenResponse>("/api/v1/auth/login", {
+  const tokenRes = await request<{ access_token: string; refresh_token: string }>("/api/v1/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
-  storeAccessToken(token.access_token, remember);
+  storeAccessToken(tokenRes.access_token, remember);
+  storeRefreshToken(tokenRes.refresh_token);
   return request<AuthUser>("/api/v1/auth/me");
 }
 
@@ -194,6 +247,7 @@ export async function logout() {
     await request<void>("/api/v1/auth/logout", { method: "POST" });
   } finally {
     clearAccessToken();
+    clearRefreshToken();
   }
 }
 

@@ -9,12 +9,14 @@ import {
   Clock,
   Download,
   Film,
+  GanttChart,
   HardDrive,
   IndianRupee,
   LayoutDashboard,
   Megaphone,
   Palette,
   Shield,
+  Sliders,
   Users,
   Wand2,
 } from "lucide-react";
@@ -33,8 +35,14 @@ import { BudgetExpenseReport } from "./budget-expense-report";
 import { DepartmentSummaryReport } from "./department-summary-report";
 import { InsuranceSummaryReport } from "./insurance-summary-report";
 import { DistributionReport } from "./distribution-report";
+import { ExecutiveOverviewReport } from "./executive-overview-report";
+import { GanttChartReport } from "./gantt-chart-report";
+import { CustomReportBuilder } from "./custom-report-builder";
 
 type ReportCategory =
+  | "executive-overview"
+  | "gantt-chart"
+  | "custom-reports"
   | "project-performance"
   | "production-progress"
   | "daily-production"
@@ -56,6 +64,9 @@ interface CategoryDef {
 }
 
 const CATEGORIES: CategoryDef[] = [
+  { key: "executive-overview", label: "Executive Overview", icon: LayoutDashboard, description: "Portfolio-level KPIs, project health, and financial summary" },
+  { key: "gantt-chart", label: "Gantt Chart", icon: GanttChart, description: "Timeline view of all projects with phase breakdowns" },
+  { key: "custom-reports", label: "Custom Reports", icon: Sliders, description: "Build, save, and export custom reports" },
   { key: "project-performance", label: "Project Performance", icon: LayoutDashboard, description: "Budget, progress, and risk indicators per project" },
   { key: "production-progress", label: "Production Progress", icon: Film, description: "Scene completion, shoot days, and schedule status" },
   { key: "daily-production", label: "Daily Production (DPR)", icon: ClipboardList, description: "Shoot-day reports, attendance, and production notes" },
@@ -70,16 +81,19 @@ const CATEGORIES: CategoryDef[] = [
   { key: "distribution", label: "Distribution", icon: Megaphone, description: "Rights deals, revenue, territories, and collections" },
 ];
 
+const STANDALONE_TABS: ReportCategory[] = ["executive-overview", "gantt-chart", "custom-reports"];
+
 export function ReportsWorkspace() {
-  const [activeCategory, setActiveCategory] = useState<ReportCategory>("project-performance");
+  const [activeCategory, setActiveCategory] = useState<ReportCategory>("executive-overview");
   const filterState = useReportFilters();
 
   const activeDef = CATEGORIES.find((c) => c.key === activeCategory)!;
+  const showFilters = !STANDALONE_TABS.includes(activeCategory);
 
   return (
     <div className="space-y-4">
       <PageHeader
-        as="h2"
+        as="h1"
         title="Reports & Analytics"
         description="Production, finance, asset, and operational intelligence across all modules."
         icon={BarChart3}
@@ -110,13 +124,15 @@ export function ReportsWorkspace() {
         })}
       </div>
 
-      {/* Filters */}
-      <ReportFilterBar
-        {...filterState}
-        showDepartment={["department", "budget-expense", "production-progress"].includes(activeCategory)}
-        showStatus={["cast-crew", "equipment", "vfx", "media", "insurance"].includes(activeCategory)}
-        statuses={getStatusesForCategory(activeCategory)}
-      />
+      {/* Filters — hidden for standalone tabs */}
+      {showFilters && (
+        <ReportFilterBar
+          {...filterState}
+          showDepartment={["department", "budget-expense", "production-progress"].includes(activeCategory)}
+          showStatus={["cast-crew", "equipment", "vfx", "media", "insurance"].includes(activeCategory)}
+          statuses={getStatusesForCategory(activeCategory)}
+        />
+      )}
 
       {/* Report content */}
       <ReportContent category={activeCategory} filters={filterState.filters} projectName={filterState.projectName} />
@@ -175,6 +191,12 @@ function ReportContent({
   const pid = filters.projectId === "all" ? undefined : filters.projectId;
 
   switch (category) {
+    case "executive-overview":
+      return <ExecutiveOverviewReport />;
+    case "gantt-chart":
+      return <GanttChartReport />;
+    case "custom-reports":
+      return <CustomReportBuilder />;
     case "project-performance":
       return <ProjectPerformanceReport projectId={pid} filters={filters} projectName={projectName} />;
     case "production-progress":

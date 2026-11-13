@@ -74,9 +74,9 @@ export function ActiveProductions({ projects }: ActiveProductionsProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <h4 className="font-semibold truncate group-hover:text-primary transition-colors">
+                      <p className="font-semibold truncate group-hover:text-primary transition-colors">
                         {project.title}
-                      </h4>
+                      </p>
                       <p className="text-xs text-muted-foreground mt-0.5">{project.genre}</p>
                     </div>
                     <ProductionBadge status={project.status} />

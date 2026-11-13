@@ -10,7 +10,6 @@ from sqlalchemy import (
     Boolean,
     Date,
     DateTime,
-    Enum,
     ForeignKey,
     Index,
     Integer,
@@ -18,7 +17,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSON, UUID
+from .compat import PortableUUID, PortableJSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..database import Base
@@ -35,15 +34,15 @@ class ProductionTask(Base):
     __tablename__ = "production_tasks"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -51,18 +50,12 @@ class ProductionTask(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     category: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(
-        Enum(
-            "pending", "in-progress", "completed", "blocked",
-            name="production_task_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="pending",
     )
     priority: Mapped[str] = mapped_column(
-        Enum(
-            "low", "medium", "high", "urgent",
-            name="production_task_priority_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="medium",
     )
@@ -93,15 +86,15 @@ class PreProdChecklistItem(Base):
     __tablename__ = "pre_prod_checklist_items"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -133,36 +126,36 @@ class DprReport(Base):
     __tablename__ = "dpr_reports"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
     shoot_day_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("shoot_days.id", ondelete="SET NULL"),
         nullable=True,
     )
     date: Mapped[date] = mapped_column(Date, nullable=False)
     day_number: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[str] = mapped_column(
-        Enum("draft", "submitted", "approved", name="dpr_report_status_enum"),
+        String(50),
         nullable=False,
         server_default="draft",
     )
-    scenes_planned: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
-    scenes_completed: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
-    cast_present: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    scenes_planned: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
+    scenes_completed: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
+    cast_present: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
     crew_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     weather: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    delays: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    delays: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     submitted_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     submitted_at: Mapped[Optional[datetime]] = mapped_column(
@@ -190,32 +183,22 @@ class CalendarEvent(Base):
     __tablename__ = "calendar_events"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=True,
     )
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     category: Mapped[str] = mapped_column(
-        Enum(
-            "table-read",
-            "crew-meeting",
-            "rehearsal",
-            "delivery-deadline",
-            "cast-meeting",
-            "location-scouting",
-            "dubbing-session",
-            "general",
-            name="calendar_event_category_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="general",
     )
@@ -225,10 +208,7 @@ class CalendarEvent(Base):
         Boolean, nullable=False, server_default="false"
     )
     status: Mapped[str] = mapped_column(
-        Enum(
-            "scheduled", "completed", "cancelled",
-            name="calendar_event_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="scheduled",
     )

@@ -19,7 +19,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSON, UUID
+from .compat import PortableUUID, PortableJSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
@@ -42,13 +42,13 @@ class RightsDeal(Base):
     __tablename__ = "rights_deals"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
+        PortableUUID(), ForeignKey("projects.id"), nullable=False
     )
     territory: Mapped[Optional[str]] = mapped_column(String(100))
     distributor: Mapped[Optional[str]] = mapped_column(String(255))
@@ -88,20 +88,20 @@ class DistributionAgreement(Base):
     __tablename__ = "distribution_agreements"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
+        PortableUUID(), ForeignKey("projects.id"), nullable=False
     )
     distributor_name: Mapped[Optional[str]] = mapped_column(String(255))
     channel: Mapped[str] = mapped_column(
         String(30), nullable=False
     )  # theatrical / ott / satellite / digital / audio
-    territories: Mapped[Optional[dict]] = mapped_column(JSON)
-    languages: Mapped[Optional[dict]] = mapped_column(JSON)
+    territories: Mapped[Optional[dict]] = mapped_column(PortableJSON())
+    languages: Mapped[Optional[dict]] = mapped_column(PortableJSON())
     agreement_value: Mapped[Optional[Decimal]] = mapped_column(Numeric(16, 2))
     advance_paid: Mapped[Optional[Decimal]] = mapped_column(Numeric(16, 2))
     start_date: Mapped[Optional[date]] = mapped_column(Date)
@@ -109,9 +109,9 @@ class DistributionAgreement(Base):
     status: Mapped[str] = mapped_column(
         String(30), default="draft", nullable=False
     )  # draft / negotiating / pending-approval / active / expired / terminated / cancelled
-    revenue_sharing: Mapped[Optional[dict]] = mapped_column(JSON)
+    revenue_sharing: Mapped[Optional[dict]] = mapped_column(PortableJSON())
     payment_terms: Mapped[Optional[str]] = mapped_column(Text)
-    document_urls: Mapped[Optional[dict]] = mapped_column(JSON)
+    document_urls: Mapped[Optional[dict]] = mapped_column(PortableJSON())
     notes: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -141,16 +141,16 @@ class DistributionRelease(Base):
     __tablename__ = "distribution_releases"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
+        PortableUUID(), ForeignKey("projects.id"), nullable=False
     )
     agreement_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("distribution_agreements.id"), nullable=True
+        PortableUUID(), ForeignKey("distribution_agreements.id"), nullable=True
     )
     release_date: Mapped[Optional[date]] = mapped_column(Date)
     territory: Mapped[Optional[str]] = mapped_column(String(100))
@@ -191,19 +191,19 @@ class DistributionRevenue(Base):
     __tablename__ = "distribution_revenues"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
+        PortableUUID(), ForeignKey("projects.id"), nullable=False
     )
     agreement_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("distribution_agreements.id"), nullable=True
+        PortableUUID(), ForeignKey("distribution_agreements.id"), nullable=True
     )
     release_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("distribution_releases.id"), nullable=True
+        PortableUUID(), ForeignKey("distribution_releases.id"), nullable=True
     )
     source: Mapped[Optional[str]] = mapped_column(String(100))
     territory: Mapped[Optional[str]] = mapped_column(String(100))
@@ -248,16 +248,16 @@ class DistributionSettlement(Base):
     __tablename__ = "distribution_settlements"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False
+        PortableUUID(), ForeignKey("projects.id"), nullable=False
     )
     agreement_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("distribution_agreements.id"), nullable=True
+        PortableUUID(), ForeignKey("distribution_agreements.id"), nullable=True
     )
     counterparty_name: Mapped[Optional[str]] = mapped_column(String(255))
     settlement_type: Mapped[str] = mapped_column(
@@ -266,7 +266,7 @@ class DistributionSettlement(Base):
     period_start: Mapped[Optional[date]] = mapped_column(Date)
     period_end: Mapped[Optional[date]] = mapped_column(Date)
     gross_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(16, 2))
-    deductions: Mapped[Optional[dict]] = mapped_column(JSON)
+    deductions: Mapped[Optional[dict]] = mapped_column(PortableJSON())
     net_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(16, 2))
     advance_adjusted: Mapped[Decimal] = mapped_column(Numeric(16, 2), default=0)
     amount_payable: Mapped[Optional[Decimal]] = mapped_column(Numeric(16, 2))

@@ -20,6 +20,17 @@ import {
   Globe,
   Calculator,
   LucideIcon,
+  Briefcase,
+  Building2,
+  Rocket,
+  Mic2,
+  Music2,
+  PlayCircle,
+  Image,
+  TrendingUp,
+  Receipt,
+  Video,
+  UsersRound,
 } from "lucide-react";
 
 export interface NavItem {
@@ -63,21 +74,34 @@ export const navigation: NavGroup[] = [
       { label: "Media", href: "/dashboard/media", icon: HardDrive, permission: "production.view" },
       { label: "VFX", href: "/dashboard/vfx", icon: Zap, permission: "production.view" },
       { label: "Post Production", href: "/dashboard/post-production", icon: Scissors, permission: "post_production.view" },
+      { label: "Editing", href: "/dashboard/editing", icon: Video, permission: "post_production.view" },
+      { label: "Dubbing", href: "/dashboard/dubbing", icon: Mic2, permission: "post_production.view" },
+      { label: "BGM", href: "/dashboard/bgm", icon: Music2, permission: "post_production.view" },
       { label: "Subtitles", href: "/dashboard/subtitles", icon: Globe, permission: "post_production.view" },
+      { label: "Trailers", href: "/dashboard/trailers", icon: PlayCircle, permission: "post_production.view" },
+      { label: "Publicity", href: "/dashboard/publicity", icon: Image, permission: "post_production.view" },
+      { label: "Marketing", href: "/dashboard/marketing", icon: TrendingUp, permission: "post_production.view" },
       { label: "Distribution", href: "/dashboard/distribution", icon: Megaphone, permission: "distribution.view" },
     ],
   },
   {
-    title: "Finance",
+    title: "Finance & Business",
     items: [
       { label: "Budgets & Accounts", href: "/dashboard/accounts", icon: Calculator, permission: "finance.view" },
       { label: "Finance", href: "/dashboard/finance", icon: IndianRupee, permission: "finance.view" },
+      { label: "Invoices", href: "/dashboard/invoices", icon: FileText, permission: "finance.view" },
+      { label: "Business", href: "/dashboard/business", icon: Briefcase, permission: "finance.view" },
+      { label: "Release", href: "/dashboard/release", icon: Rocket, permission: "distribution.view" },
+      { label: "Receivables", href: "/dashboard/receivables", icon: Receipt, permission: "finance.view" },
       { label: "Reports", href: "/dashboard/reports", icon: BarChart3, permission: "reports.view" },
     ],
   },
   {
-    title: "System",
-    items: [{ label: "Settings", href: "/dashboard/settings", icon: Settings }],
+    title: "Organization",
+    items: [
+      { label: "Teams", href: "/dashboard/teams", icon: UsersRound },
+      { label: "Settings", href: "/dashboard/settings", icon: Settings },
+    ],
   },
 ];
 
@@ -92,7 +116,10 @@ const projectModuleTitles: Record<string, string> = {
   cast: "Cast", crew: "Crew", production: "Production", accounts: "Budgets & Accounts", finance: "Finance",
   "post-production": "Post Production", "pre-production": "Pre-Production", distribution: "Distribution",
   vfx: "VFX", locations: "Locations", media: "Media", attendance: "Attendance", subtitles: "Subtitles",
-  equipment: "Equipment",
+  equipment: "Equipment", editing: "Editing", dubbing: "Dubbing", bgm: "BGM", trailers: "Trailers",
+  publicity: "Publicity", marketing: "Marketing", business: "Business", teams: "Teams",
+  receivables: "Receivables", release: "Release", invoices: "Invoices", investors: "Investors", loans: "Loans", branding: "Branding",
+  tranches: "Tranches", territories: "Territories", digital: "Digital", satellite: "Satellite",
 };
 
 const detailLabels: Record<string, string> = {

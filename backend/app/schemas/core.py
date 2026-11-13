@@ -108,3 +108,23 @@ class TokenResponse(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class BootstrapRequest(BaseModel):
+    org_name: str
+    email: EmailStr
+    password: str
+    first_name: str
+    last_name: Optional[str] = None
+
+
+class BootstrapResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    message: str

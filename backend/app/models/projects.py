@@ -10,7 +10,6 @@ from typing import Optional
 from sqlalchemy import (
     Date,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Index,
@@ -20,7 +19,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from .compat import PortableUUID, PortableJSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
@@ -34,36 +33,20 @@ class Project(Base):
     __tablename__ = "projects"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     type: Mapped[str] = mapped_column(
-        Enum(
-            "feature-film",
-            "series",
-            "short-film",
-            "music-video",
-            "documentary",
-            "commercial",
-            name="project_type_enum",
-        ),
+        String(50),
         nullable=False,
     )
     status: Mapped[str] = mapped_column(
-        Enum(
-            "development",
-            "pre-production",
-            "production",
-            "post-production",
-            "completed",
-            "on-hold",
-            name="project_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="development",
     )

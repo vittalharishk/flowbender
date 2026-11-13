@@ -9,7 +9,6 @@ from typing import Optional
 from sqlalchemy import (
     Date,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Index,
@@ -17,7 +16,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from .compat import PortableUUID, PortableJSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..database import Base
@@ -34,41 +33,25 @@ class PostProductionItem(Base):
     __tablename__ = "post_production_items"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     department: Mapped[str] = mapped_column(
-        Enum(
-            "editing",
-            "color-grading",
-            "sound-design",
-            "music",
-            "vfx",
-            "dubbing",
-            "subtitles",
-            "di",
-            "foley",
-            "mix",
-            "other",
-            name="post_prod_department_enum",
-        ),
+        String(50),
         nullable=False,
     )
     status: Mapped[str] = mapped_column(
-        Enum(
-            "not-started", "in-progress", "review", "approved", "completed",
-            name="post_prod_item_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="not-started",
     )
@@ -103,15 +86,15 @@ class PostProdMilestone(Base):
     __tablename__ = "post_prod_milestones"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -119,10 +102,7 @@ class PostProdMilestone(Base):
     department: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     date: Mapped[date] = mapped_column(Date, nullable=False)
     status: Mapped[str] = mapped_column(
-        Enum(
-            "pending", "in-progress", "completed", "overdue",
-            name="post_prod_milestone_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="pending",
     )
@@ -151,32 +131,26 @@ class DeliverableItem(Base):
     __tablename__ = "deliverable_items"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     type: Mapped[str] = mapped_column(
-        Enum(
-            "master", "trailer", "poster", "subtitle", "audio", "document", "other",
-            name="deliverable_type_enum",
-        ),
+        String(50),
         nullable=False,
     )
     format: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     status: Mapped[str] = mapped_column(
-        Enum(
-            "pending", "in-progress", "delivered", "approved",
-            name="deliverable_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="pending",
     )
@@ -205,24 +179,21 @@ class SubtitleLanguage(Base):
     __tablename__ = "subtitle_languages"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
     language: Mapped[str] = mapped_column(String(100), nullable=False)
     status: Mapped[str] = mapped_column(
-        Enum(
-            "pending", "in-progress", "review", "completed",
-            name="subtitle_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="pending",
     )

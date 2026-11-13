@@ -10,8 +10,8 @@ from typing import Optional
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    Integer,
     DateTime,
-    Enum,
     ForeignKey,
     Index,
     String,
@@ -19,8 +19,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import JSON as JSONB
+from .compat import PortableUUID, PortableJSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
@@ -38,19 +37,19 @@ class Organization(Base):
     __tablename__ = "organizations"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     legal_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     gst_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     pan_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    address: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    address: Mapped[Optional[dict]] = mapped_column(PortableJSON(), nullable=True)
     default_currency: Mapped[str] = mapped_column(
         String(10), nullable=False, server_default="INR"
     )
     fiscal_year_start: Mapped[Optional[int]] = mapped_column(nullable=True)
-    settings: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    settings: Mapped[Optional[dict]] = mapped_column(PortableJSON(), nullable=True)
     tier: Mapped[str] = mapped_column(
         String(50), nullable=False, server_default="free"
     )
@@ -82,16 +81,16 @@ class Branch(Base):
     __tablename__ = "branches"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    address: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    address: Mapped[Optional[dict]] = mapped_column(PortableJSON(), nullable=True)
     phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     is_headquarters: Mapped[bool] = mapped_column(
@@ -121,15 +120,15 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     branch_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("branches.id", ondelete="SET NULL"),
         nullable=True,
     )
@@ -140,19 +139,11 @@ class User(Base):
     phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     avatar_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     role: Mapped[str] = mapped_column(
-        Enum(
-            "owner",
-            "admin",
-            "manager",
-            "accountant",
-            "staff",
-            "viewer",
-            name="user_role_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="staff",
     )
-    permissions: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    permissions: Mapped[Optional[dict]] = mapped_column(PortableJSON(), nullable=True)
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="true"
     )
@@ -191,10 +182,10 @@ class UserSession(Base):
     __tablename__ = "user_sessions"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -224,23 +215,23 @@ class UserSession(Base):
 class AuditLog(Base):
     __tablename__ = "audit_logs"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
     action: Mapped[str] = mapped_column(String(50), nullable=False)
     table_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     record_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    old_values: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    new_values: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    changes: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    old_values: Mapped[Optional[dict]] = mapped_column(PortableJSON(), nullable=True)
+    new_values: Mapped[Optional[dict]] = mapped_column(PortableJSON(), nullable=True)
+    changes: Mapped[Optional[dict]] = mapped_column(PortableJSON(), nullable=True)
     ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
     user_agent: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 

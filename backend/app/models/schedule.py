@@ -9,7 +9,6 @@ from typing import Any, Optional
 from sqlalchemy import (
     Date,
     DateTime,
-    Enum,
     ForeignKey,
     Index,
     Integer,
@@ -18,7 +17,7 @@ from sqlalchemy import (
     Time,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSON, UUID
+from .compat import PortableUUID, PortableJSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
@@ -36,33 +35,30 @@ class ScheduleEntry(Base):
     __tablename__ = "schedule_entries"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
     date: Mapped[date] = mapped_column(Date, nullable=False)
     call_time: Mapped[Optional[time]] = mapped_column(Time, nullable=True)
     location: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    scenes: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    scenes: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
     shoot_day_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     total_shoot_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     call_sheet_status: Mapped[Optional[str]] = mapped_column(
-        Enum("published", "draft", "pending", name="call_sheet_status_enum"),
+        String(50),
         nullable=True,
     )
     status: Mapped[str] = mapped_column(
-        Enum(
-            "scheduled", "shooting", "completed", "postponed",
-            name="schedule_entry_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="scheduled",
     )
@@ -88,15 +84,15 @@ class ShootDay(Base):
     __tablename__ = "shoot_days"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -104,15 +100,12 @@ class ShootDay(Base):
     date: Mapped[date] = mapped_column(Date, nullable=False)
     location: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     status: Mapped[str] = mapped_column(
-        Enum(
-            "scheduled", "in-progress", "completed", "cancelled",
-            name="shoot_day_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="scheduled",
     )
-    scenes_planned: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
-    scenes_completed: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    scenes_planned: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
+    scenes_completed: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     weather: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -142,20 +135,20 @@ class CallSheet(Base):
     __tablename__ = "call_sheets"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
     shoot_day_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("shoot_days.id", ondelete="SET NULL"),
         nullable=True,
     )
@@ -164,19 +157,16 @@ class CallSheet(Base):
     call_time: Mapped[Optional[time]] = mapped_column(Time, nullable=True)
     location: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     status: Mapped[str] = mapped_column(
-        Enum(
-            "draft", "review", "published", "revised", "completed",
-            name="call_sheet_doc_status_enum",
-        ),
+        String(50),
         nullable=False,
         server_default="draft",
     )
-    cast_call: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
-    crew_call: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
-    transport: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
-    catering: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
-    props: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
-    safety: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
+    cast_call: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
+    crew_call: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
+    transport: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
+    catering: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
+    props: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
+    safety: Mapped[Optional[Any]] = mapped_column(PortableJSON(), nullable=True)
     special_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     revision_number: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="0"
@@ -208,29 +198,26 @@ class AttendanceRecord(Base):
     __tablename__ = "attendance_records"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
     date: Mapped[date] = mapped_column(Date, nullable=False)
     person_id: Mapped[str] = mapped_column(String(255), nullable=False)
     person_type: Mapped[str] = mapped_column(
-        Enum("cast", "crew", name="person_type_enum"),
+        String(50),
         nullable=False,
     )
     status: Mapped[str] = mapped_column(
-        Enum(
-            "present", "absent", "half-day", "late", "excused",
-            name="attendance_status_enum",
-        ),
+        String(50),
         nullable=False,
     )
     check_in_time: Mapped[Optional[datetime]] = mapped_column(
@@ -259,15 +246,15 @@ class CateringAdjustment(Base):
     __tablename__ = "catering_adjustments"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PortableUUID(),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )

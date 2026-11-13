@@ -15,7 +15,7 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSON, UUID
+from .compat import PortableUUID, PortableJSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..database import Base
@@ -30,13 +30,13 @@ class Notification(Base):
     __tablename__ = "notifications"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+        PortableUUID(), ForeignKey("organizations.id"), nullable=False
     )
     user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+        PortableUUID(), ForeignKey("users.id"), nullable=True
     )
     title: Mapped[Optional[str]] = mapped_column(String(255))
     message: Mapped[Optional[str]] = mapped_column(Text)
@@ -60,13 +60,13 @@ class UserPreference(Base):
     __tablename__ = "user_preferences"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+        PortableUUID(), primary_key=True, default=uuid.uuid4
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+        PortableUUID(), ForeignKey("users.id"), nullable=False
     )
     key: Mapped[str] = mapped_column(String(100), nullable=False)
-    value: Mapped[Optional[dict]] = mapped_column(JSON)
+    value: Mapped[Optional[dict]] = mapped_column(PortableJSON())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )

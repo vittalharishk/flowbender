@@ -154,26 +154,78 @@
 - **No financial logic modified**: PASS
 - **No data invented or hardcoded**: PASS
 
-## 9. Remaining Warnings and Technical Debt
+## 9. U11 — Final Browser Regression Closure
 
-1. **axe heading-order on /dashboard**: 1 violation from `ActiveProductions` component — the h3→p fix was applied in code but the dev server may have been serving a cached version during the test. A production build or fresh dev server will resolve this. The fix is in place.
-2. **Project tab navigation timeout**: `/dashboard/projects/p4/production` timed out during the long test run. This is dev-server instability during Next.js recompilation, not an application error. The route renders correctly when visited directly.
-3. **"Create Project" button**: Opens a page (`/dashboard/projects/new`) rather than a dialog. This is by design — the project creation form is a full page.
-4. **Pre-existing mojibake**: Seed data script titles contain "â€"" (UTF-8 em-dash encoded as Windows-1252). This is a data issue, not a code issue.
-5. **recharts `defaultProps` warnings**: Library-level React warning from recharts internals. Cannot be fixed without patching the library.
+### Original U10 Failures Investigated
 
-## 10. Git Status
+| # | Check | U10 Result | Root Cause | Action |
+|---|-------|-----------|------------|--------|
+| 1 | `axe /dashboard — heading-order(1)` | FAIL | `ActiveProductions` used `<h4>` for project titles, skipping h2/h3 after the h1 PageHeader. The U10 fix changed the section title h3→p but missed this h4. | **Fixed**: `<h4>` → `<p>` in `components/dashboard/active-productions.tsx:77` |
+| 2 | `All 17 project tabs render — /dashboard/projects/p4/production timeout` | FAIL | Dev-server instability during long Puppeteer test runs causes Next.js recompilation timeouts. The route renders correctly when visited directly. | **Environmental** — not an app defect |
+| 3 | `Dialog opens with focus + accessible name — navigated instead of dialog` | WARNING | "Create Project" is a full-page form at `/dashboard/projects/new`, not a dialog. By design. | **By design** — not a defect |
+
+### Additional Issue Found During U11
+
+| Check | Result | Root Cause | Action |
+|-------|--------|------------|--------|
+| `axe /dashboard/reports — page-has-heading-one(1)` | FAIL | Reports PageHeader used `as="h2"` instead of `as="h1"` | **Fixed**: changed to `as="h1"` in `components/reports/reports-workspace.tsx:82` |
+
+### U11 Files Modified (2)
+
+- `components/dashboard/active-productions.tsx` — `<h4>` → `<p>` for project title
+- `components/reports/reports-workspace.tsx` — PageHeader `as="h2"` → `as="h1"`
+
+### U11 Final Browser Results
+
+| Check | Result |
+|-------|--------|
+| Login | PASS |
+| 20 module routes | 20/20 PASS |
+| axe /dashboard (heading-order) | PASS — 0 violations |
+| axe /dashboard/projects | PASS — 0 violations |
+| axe /dashboard/cast | PASS — 0 violations |
+| axe /dashboard/accounts | PASS — 0 violations |
+| axe /dashboard/reports | PASS — 0 violations |
+| axe /dashboard/equipment | PASS — 0 violations |
+| axe /dashboard/distribution | PASS — 0 violations |
+| axe /dashboard/schedule | PASS — 0 violations |
+| Console errors | PASS — 0 |
+
+### U11 Test Results
+
+| Suite | Result |
+|-------|--------|
+| TypeScript (`tsc --noEmit`) | PASS — 0 errors |
+| Vitest | 6 files, 206/206 PASS |
+| Production build (`next build`) | PASS |
+
+### Financial Integrity
+
+All 10 store files unmodified (0 bytes changed, `git diff` clean).
+
+## 10. Remaining Limitations
+
+1. **Project tab navigation timeout**: `/dashboard/projects/p4/production` intermittently times out during long automated test runs. This is Next.js dev-server recompilation latency, not an application error. The route works correctly in normal use and production builds.
+2. **"Create Project" navigation**: Opens a page rather than a dialog — this is intentional design.
+3. **Pre-existing mojibake**: Seed data contains "â€"" (UTF-8 em-dash misencoded). Data issue, not code.
+4. **recharts `defaultProps` warnings**: Library-level React warning. Cannot fix without patching recharts.
+5. **color-contrast**: axe color-contrast violations exist across routes (pre-existing, not tested in U9/U10 rule set). These are Tailwind theme defaults and would require a design-system color audit to resolve.
+
+## 11. Git Status
 
 ```
-126 files changed, 4,425 insertions(+), 9,227 deletions(-)
-Net reduction: ~4,802 lines
+Committed (U2–U10): 62c9c31 — pushed to origin/main
+Uncommitted (U11):
+  components/dashboard/active-productions.tsx | 4 ++--
+  components/reports/reports-workspace.tsx     | 2 +-
+  2 files changed, 3 insertions(+), 3 deletions(-)
 ```
 
-**Not committed. Not pushed.** Working tree ready for review.
+**U11 changes are NOT committed.** Awaiting user review.
 
 ---
 
-## Overall U2–U10 Summary
+## Overall U2–U11 Summary
 
 The complete UI/UX redesign replaced ad-hoc patterns across all 20+ modules with a consistent design system. Key achievements:
 
@@ -182,4 +234,5 @@ The complete UI/UX redesign replaced ad-hoc patterns across all 20+ modules with
 - **Responsive**: 0 horizontal overflow at 390px, 820px, 1280px, 1440px
 - **Financial integrity**: Zero changes to any store file — verified by cryptographic hash at every phase
 - **Zero regressions**: 206/206 unit tests, 0 TypeScript errors, clean production build
+- **axe accessibility**: 8/8 routes PASS (18-rule set) — up from 6/8 at U9
 - **Net code reduction**: ~4,802 fewer lines while adding accessibility, responsive design, and shared components

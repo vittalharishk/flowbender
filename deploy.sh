@@ -6,6 +6,7 @@ echo "Pulling latest code from origin main..."
 git pull origin main
 
 echo "Installing any new dependencies if needed..."
+cd frontend
 npm install
 
 echo "Checking PM2 process..."

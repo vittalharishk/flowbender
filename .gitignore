@@ -1,5 +1,5 @@
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.js
 .yarn/*
@@ -10,12 +10,15 @@
 !.yarn/versions
 
 # next.js
-/.next/
-/.next-dev/
-/out/
+.next/
+.next-dev/
+out/
 
 # production
 /build
+
+# session scratch
+/scratchpad/
 
 # debug
 npm-debug.log*

@@ -4,7 +4,6 @@ import { useParams, usePathname } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
   User,
   Clapperboard,
   Building2,
@@ -103,18 +102,9 @@ export default function ProjectWorkspaceLayout({
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-0">
-      {/* Back link */}
-      <Link
-        href="/dashboard/projects"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        All Projects
-      </Link>
-
+    <div className="space-y-0">
       {/* Hero Header */}
-      <div className="rounded-2xl border bg-card overflow-hidden mb-0 shadow-sm">
+      <div className="mb-0 overflow-hidden rounded-xl border bg-card">
         <div className="relative h-36 sm:h-48 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-800 to-indigo-950">
           {(project.bannerImage || project.posterImage) && (
             <img
@@ -203,7 +193,7 @@ export default function ProjectWorkspaceLayout({
         {/* Tab bar */}
         <div className="border-t">
           <ScrollArea className="w-full">
-            <nav className="flex px-4 sm:px-6 min-w-max">
+            <nav aria-label="Project sections" className="flex min-w-max px-4 sm:px-6">
               {projectTabs.map((tab) => {
                 const active = isActive(tab.segment);
                 const Icon = tab.icon;
@@ -213,13 +203,13 @@ export default function ProjectWorkspaceLayout({
                     href={basePath + tab.segment}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+                      "flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500",
                       active
                         ? "border-amber-500 text-amber-400"
-                        : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
+                        : "border-transparent text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground"
                     )}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                     {tab.label}
                   </Link>
                 );

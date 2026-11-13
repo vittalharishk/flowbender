@@ -240,7 +240,7 @@ export function AddCrewDialog({ open, onOpenChange, projectId, projectTitle, onC
 
           <div className="flex justify-end gap-3 pt-2 border-t">
             <Button type="button" variant="outline" onClick={() => { reset(); onOpenChange(false); }}>Cancel</Button>
-            <Button type="submit" disabled={saving || projects.length === 0} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white">
+            <Button variant="primary" type="submit" disabled={saving || projects.length === 0}>
               {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
               {saving ? "Adding..." : "Add Crew Member"}
             </Button>

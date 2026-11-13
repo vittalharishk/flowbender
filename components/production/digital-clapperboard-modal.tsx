@@ -653,7 +653,7 @@ export function DigitalClapperboardModal({
 
             {/* Switch Active Project */}
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 hidden sm:inline">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-400 hidden sm:inline">
                 Film:
               </span>
               <div className="relative">
@@ -677,7 +677,7 @@ export function DigitalClapperboardModal({
 
             <Badge
               variant="outline"
-              className="border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] hidden md:inline-flex"
+              className="border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs hidden md:inline-flex"
             >
               {activeProject?.productionHouse || "Studio"}
             </Badge>
@@ -753,7 +753,7 @@ export function DigitalClapperboardModal({
           <div className="mb-4 flex flex-col sm:flex-row items-center justify-between rounded-xl border-2 border-amber-500/50 bg-black/95 px-5 py-3.5 shadow-[0_0_30px_rgba(245,158,11,0.18)]">
             <div className="flex items-center gap-2">
               <span className="flex h-3 w-3 rounded-full bg-red-500 animate-ping" />
-              <span className="text-[11px] font-mono tracking-widest text-zinc-300 font-bold uppercase">
+              <span className="text-xs font-mono tracking-widest text-zinc-300 font-bold uppercase">
                 REC · SMPTE TIMECODE
               </span>
             </div>
@@ -764,7 +764,7 @@ export function DigitalClapperboardModal({
             </div>
 
             <div className="flex items-center gap-2 text-xs font-mono">
-              <span className="text-zinc-500 text-[10px] uppercase">FPS:</span>
+              <span className="text-zinc-500 text-xs uppercase">FPS:</span>
               <select
                 value={fps}
                 onChange={(e) => setFps(e.target.value as typeof fps)}
@@ -801,7 +801,7 @@ export function DigitalClapperboardModal({
               </div>
 
               {selectedSceneHeading && (
-                <span className="text-[11px] text-amber-300 font-mono truncate max-w-full sm:max-w-xs">
+                <span className="text-xs text-amber-300 font-mono truncate max-w-full sm:max-w-xs">
                   {selectedSceneHeading}
                 </span>
               )}
@@ -815,12 +815,12 @@ export function DigitalClapperboardModal({
               {/* ROLL */}
               <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">ROLL</span>
+                  <span className="text-xs font-bold tracking-widest text-zinc-400 uppercase">ROLL</span>
                   {/* Camera Unit Selector */}
                   <select
                     value={cameraUnit}
                     onChange={(e) => setCameraUnit(e.target.value as typeof cameraUnit)}
-                    className="rounded border border-zinc-700 bg-zinc-800 px-1 py-0.5 text-[10px] font-bold text-amber-300 focus:outline-none"
+                    className="rounded border border-zinc-700 bg-zinc-800 px-1 py-0.5 text-xs font-bold text-amber-300 focus:outline-none"
                   >
                     <option value="A-CAM">A-CAM</option>
                     <option value="B-CAM">B-CAM</option>
@@ -839,11 +839,11 @@ export function DigitalClapperboardModal({
               {/* SCENE */}
               <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 relative">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold tracking-widest text-amber-400 uppercase">SCENE</span>
+                  <span className="text-xs font-bold tracking-widest text-amber-400 uppercase">SCENE</span>
                   <button
                     id="slate-btn-scene-plus"
                     onClick={incrementScene}
-                    className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 hover:bg-amber-500/30 transition-colors"
+                    className="rounded bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-300 hover:bg-amber-500/30 transition-colors"
                     title="Advance to Next Scene Letter (e.g. 14A -> 14B)"
                   >
                     +1
@@ -860,19 +860,19 @@ export function DigitalClapperboardModal({
               {/* TAKE */}
               <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-2.5 relative">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold tracking-widest text-emerald-400 uppercase">TAKE</span>
+                  <span className="text-xs font-bold tracking-widest text-emerald-400 uppercase">TAKE</span>
                   <div className="flex gap-1">
                     <button
                       id="slate-btn-take-minus"
                       onClick={() => setTake((t) => Math.max(1, t - 1))}
-                      className="rounded bg-zinc-800 px-1 text-[10px] text-zinc-400 hover:text-white"
+                      className="rounded bg-zinc-800 px-1 text-xs text-zinc-400 hover:text-white"
                     >
                       <Minus className="h-3 w-3" />
                     </button>
                     <button
                       id="slate-btn-take-plus"
                       onClick={() => setTake((t) => t + 1)}
-                      className="rounded bg-emerald-500/20 px-1.5 text-[10px] font-bold text-emerald-300 hover:bg-emerald-500/30"
+                      className="rounded bg-emerald-500/20 px-1.5 text-xs font-bold text-emerald-300 hover:bg-emerald-500/30"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
@@ -887,7 +887,7 @@ export function DigitalClapperboardModal({
             {/* Row 2: Production, Director, Camera / DoP */}
             <div className="grid sm:grid-cols-3 gap-3 py-3 border-b border-zinc-800 text-xs">
               <div>
-                <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase">PRODUCTION</span>
+                <span className="text-xs font-bold tracking-wider text-zinc-500 uppercase">PRODUCTION</span>
                 <input
                   type="text"
                   value={production}
@@ -896,7 +896,7 @@ export function DigitalClapperboardModal({
                 />
               </div>
               <div>
-                <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase">DIRECTOR</span>
+                <span className="text-xs font-bold tracking-wider text-zinc-500 uppercase">DIRECTOR</span>
                 <input
                   type="text"
                   value={director}
@@ -905,7 +905,7 @@ export function DigitalClapperboardModal({
                 />
               </div>
               <div>
-                <span className="text-[10px] font-bold tracking-wider text-zinc-500 uppercase">CAMERA / DoP</span>
+                <span className="text-xs font-bold tracking-wider text-zinc-500 uppercase">CAMERA / DoP</span>
                 <input
                   type="text"
                   value={camera}
@@ -967,7 +967,7 @@ export function DigitalClapperboardModal({
 
               {/* Filter Selector */}
               <div className="flex items-center justify-between rounded-lg border border-zinc-700 bg-zinc-800/80 px-2 py-1 text-xs">
-                <span className="text-[10px] text-zinc-500 font-bold uppercase mr-1 shrink-0">FILTER:</span>
+                <span className="text-xs text-zinc-500 font-bold uppercase mr-1 shrink-0">FILTER:</span>
                 <select
                   id="slate-select-filter"
                   value={filter}
@@ -988,22 +988,22 @@ export function DigitalClapperboardModal({
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-zinc-800/60 text-xs">
               <div className="flex items-center gap-2">
                 <Camera className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
-                <span className="text-[10px] text-zinc-500 uppercase font-bold">RIG:</span>
+                <span className="text-xs text-zinc-500 uppercase font-bold">RIG:</span>
                 <input
                   type="text"
                   value={cameraModel}
                   onChange={(e) => setCameraModel(e.target.value)}
-                  className="w-full text-zinc-300 font-mono text-[11px] bg-transparent focus:outline-none truncate border-b border-zinc-800 focus:border-amber-400"
+                  className="w-full text-zinc-300 font-mono text-xs bg-transparent focus:outline-none truncate border-b border-zinc-800 focus:border-amber-400"
                 />
               </div>
               <div className="flex items-center gap-2">
                 <Video className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
-                <span className="text-[10px] text-zinc-500 uppercase font-bold">LENS:</span>
+                <span className="text-xs text-zinc-500 uppercase font-bold">LENS:</span>
                 <input
                   type="text"
                   value={lens}
                   onChange={(e) => setLens(e.target.value)}
-                  className="w-full text-zinc-300 font-mono text-[11px] bg-transparent focus:outline-none truncate border-b border-zinc-800 focus:border-amber-400"
+                  className="w-full text-zinc-300 font-mono text-xs bg-transparent focus:outline-none truncate border-b border-zinc-800 focus:border-amber-400"
                 />
               </div>
             </div>
@@ -1012,13 +1012,13 @@ export function DigitalClapperboardModal({
           {/* MAIN ACTION BUTTON: BIG CLAP / MARK */}
           <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="text-xs text-zinc-500 flex items-center gap-2">
-              <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-[10px] font-mono text-zinc-300">Space</kbd>
+              <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-xs font-mono text-zinc-300">Space</kbd>
               <span>to Mark</span>
               <span>·</span>
-              <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-[10px] font-mono text-zinc-300">T</kbd>
+              <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-xs font-mono text-zinc-300">T</kbd>
               <span>Take</span>
               <span>·</span>
-              <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-[10px] font-mono text-zinc-300">S</kbd>
+              <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-xs font-mono text-zinc-300">S</kbd>
               <span>Scene</span>
             </div>
 
@@ -1066,12 +1066,12 @@ export function DigitalClapperboardModal({
                     <span className="font-mono font-bold text-amber-400 shrink-0">Sc. {log.scene}</span>
                     <span className="font-mono font-bold text-white shrink-0">Tk. {log.take}</span>
                     <span className="font-mono text-zinc-400 shrink-0">{log.timecode}</span>
-                    <Badge variant="outline" className="border-zinc-700 text-[10px] hidden sm:inline-flex shrink-0">
+                    <Badge variant="outline" className="border-zinc-700 text-xs hidden sm:inline-flex shrink-0">
                       {log.cameraUnit}
                     </Badge>
                     <Badge
                       variant="outline"
-                      className={`text-[10px] hidden sm:inline-flex shrink-0 ${
+                      className={`text-xs hidden sm:inline-flex shrink-0 ${
                         log.setting === "EXT"
                           ? "border-cyan-500/40 text-cyan-400 bg-cyan-500/10"
                           : "border-orange-500/40 text-orange-400 bg-orange-500/10"
@@ -1081,7 +1081,7 @@ export function DigitalClapperboardModal({
                     </Badge>
                     <Badge
                       variant="outline"
-                      className={`text-[10px] hidden md:inline-flex shrink-0 ${
+                      className={`text-xs hidden md:inline-flex shrink-0 ${
                         log.soundMode === "SYNC"
                           ? "border-emerald-500/40 text-emerald-400 bg-emerald-500/10"
                           : "border-zinc-700 text-zinc-400"
@@ -1089,7 +1089,7 @@ export function DigitalClapperboardModal({
                     >
                       {log.soundMode || "SYNC"}
                     </Badge>
-                    <span className="text-[11px] text-zinc-400 truncate hidden lg:inline">
+                    <span className="text-xs text-zinc-400 truncate hidden lg:inline">
                       {log.project} {log.sceneHeading ? `· ${log.sceneHeading}` : ""}
                     </span>
                   </div>
@@ -1097,7 +1097,7 @@ export function DigitalClapperboardModal({
                   <div className="flex items-center gap-1.5 shrink-0 ml-2">
                     <button
                       onClick={() => updateLogStatus(log.id, "circle")}
-                      className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition-all ${
+                      className={`rounded px-1.5 py-0.5 text-xs font-bold transition-all ${
                         log.status === "circle"
                           ? "bg-amber-500 text-black shadow-sm"
                           : "text-zinc-400 hover:text-amber-300"
@@ -1108,7 +1108,7 @@ export function DigitalClapperboardModal({
                     </button>
                     <button
                       onClick={() => updateLogStatus(log.id, "good")}
-                      className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition-all ${
+                      className={`rounded px-1.5 py-0.5 text-xs font-bold transition-all ${
                         log.status === "good" ? "bg-emerald-600 text-white" : "text-zinc-400 hover:text-emerald-300"
                       }`}
                     >
@@ -1116,7 +1116,7 @@ export function DigitalClapperboardModal({
                     </button>
                     <button
                       onClick={() => updateLogStatus(log.id, "ng")}
-                      className={`rounded px-1.5 py-0.5 text-[10px] font-bold transition-all ${
+                      className={`rounded px-1.5 py-0.5 text-xs font-bold transition-all ${
                         log.status === "ng" ? "bg-red-700 text-white" : "text-zinc-400 hover:text-red-300"
                       }`}
                     >

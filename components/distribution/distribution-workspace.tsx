@@ -2,106 +2,32 @@
 
 import { useState, useMemo } from "react";
 import {
-  BarChart3,
-  Globe,
-  IndianRupee,
-  Megaphone,
-  FileText,
   AlertTriangle,
   CheckCircle2,
-  Clock,
+  FileText,
   Film,
-  Layers,
+  IndianRupee,
+  Megaphone,
   TrendingUp,
 } from "lucide-react";
 import {
   BarChart, Bar, PieChart, Pie, Cell,
-  ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from "recharts";
 import { useRightsDeals, useDistributionAgreements, useDistributionReleases, useDistributionRevenue, useDistributionSettlements, useDeliverables, calcDistributionStats } from "@/lib/distribution-store";
 import { useProjects } from "@/lib/project-store";
 import { formatINR } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const COLORS = ["#f59e0b", "#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
-
-function KpiCard({ label, value, icon: Icon, tone = "text-foreground" }: { label: string; value: string; icon: typeof Megaphone; tone?: string }) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">{label}</span>
-          <Icon className="w-4 h-4 text-muted-foreground" />
-        </div>
-        <p className={`text-xl font-semibold mt-2 ${tone}`}>{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function dealStatusColor(status: string) {
-  switch (status) {
-    case "signed": return "border-emerald-500/30 text-emerald-500 bg-emerald-500/10";
-    case "negotiating": return "border-amber-500/30 text-amber-500 bg-amber-500/10";
-    case "open": return "border-blue-500/30 text-blue-500 bg-blue-500/10";
-    default: return "border-muted-foreground/30 text-muted-foreground bg-muted/30";
-  }
-}
-
-function agreementStatusColor(status: string) {
-  switch (status) {
-    case "active": return "border-emerald-500/30 text-emerald-500 bg-emerald-500/10";
-    case "negotiating": case "pending-approval": return "border-amber-500/30 text-amber-500 bg-amber-500/10";
-    case "draft": return "border-blue-500/30 text-blue-500 bg-blue-500/10";
-    case "expired": case "terminated": case "cancelled": return "border-red-500/30 text-red-500 bg-red-500/10";
-    default: return "border-muted-foreground/30 text-muted-foreground bg-muted/30";
-  }
-}
-
-function releaseStatusColor(status: string) {
-  switch (status) {
-    case "released": return "border-emerald-500/30 text-emerald-500 bg-emerald-500/10";
-    case "confirmed": return "border-blue-500/30 text-blue-500 bg-blue-500/10";
-    case "planned": return "border-amber-500/30 text-amber-500 bg-amber-500/10";
-    case "postponed": return "border-red-500/30 text-red-500 bg-red-500/10";
-    case "cancelled": return "border-muted-foreground/30 text-muted-foreground bg-muted/30";
-    default: return "";
-  }
-}
-
-function collectionStatusColor(status: string) {
-  switch (status) {
-    case "collected": return "border-emerald-500/30 text-emerald-500 bg-emerald-500/10";
-    case "pending": case "partial": return "border-amber-500/30 text-amber-500 bg-amber-500/10";
-    case "overdue": case "disputed": return "border-red-500/30 text-red-500 bg-red-500/10";
-    default: return "border-muted-foreground/30 text-muted-foreground bg-muted/30";
-  }
-}
-
-function deliverableStatusColor(status: string) {
-  switch (status) {
-    case "delivered": return "border-emerald-500/30 text-emerald-500 bg-emerald-500/10";
-    case "ready": return "border-blue-500/30 text-blue-500 bg-blue-500/10";
-    case "in-progress": return "border-amber-500/30 text-amber-500 bg-amber-500/10";
-    case "pending": return "border-muted-foreground/30 text-muted-foreground bg-muted/30";
-    default: return "";
-  }
-}
-
-function EmptyState({ message }: { message: string }) {
-  return (
-    <Card>
-      <CardContent className="p-8 text-center text-muted-foreground">
-        <FileText className="w-8 h-8 mx-auto mb-2 opacity-40" />
-        <p className="text-sm">{message}</p>
-      </CardContent>
-    </Card>
-  );
-}
+import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/app/page-header";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge } from "@/components/app/status-badge";
+import { DataTable, type DataTableColumn } from "@/components/app/data-table";
+import { ChartContainer, seriesColors } from "@/components/app/chart-container";
+import { EmptyState } from "@/components/app/empty-state";
 
 export function DistributionWorkspace() {
   const projects = useProjects();
@@ -146,41 +72,92 @@ export function DistributionWorkspace() {
     return deals.filter((d) => d.rightsType === rightsFilter);
   }, [deals, rightsFilter]);
 
+  /* DataTable column definitions */
+  type Deal = (typeof deals)[number];
+  const dealColumns: DataTableColumn<Deal>[] = [
+    { key: "territory", header: "Territory", cell: (r) => <span className="font-medium">{r.territory}</span>, sortValue: (r) => r.territory },
+    { key: "distributor", header: "Distributor", cell: (r) => r.distributor, sortValue: (r) => r.distributor },
+    { key: "type", header: "Type", cell: (r) => <span className="capitalize">{r.rightsType}</span>, sortValue: (r) => r.rightsType },
+    { key: "status", header: "Status", cell: (r) => <StatusBadge status={r.status} />, sortValue: (r) => r.status },
+    { key: "mg", header: "MG", cell: (r) => <span className="font-mono">{formatINR(r.minimumGuarantee)}</span>, sortValue: (r) => r.minimumGuarantee, align: "right" },
+    { key: "advance", header: "Advance", cell: (r) => <span className="font-mono">{formatINR(r.advanceReceived)}</span>, sortValue: (r) => r.advanceReceived, align: "right" },
+    { key: "balance", header: "Balance", cell: (r) => <span className="font-mono">{formatINR(r.minimumGuarantee - r.advanceReceived)}</span>, sortValue: (r) => r.minimumGuarantee - r.advanceReceived, align: "right" },
+    { key: "delivery", header: "Delivery", cell: (r) => <StatusBadge status={r.deliveryStatus} />, sortValue: (r) => r.deliveryStatus },
+  ];
+
+  type Agreement = (typeof agreements)[number];
+  const agreementColumns: DataTableColumn<Agreement>[] = [
+    { key: "dist", header: "Distributor", cell: (r) => <span className="font-medium">{r.distributorName}</span>, sortValue: (r) => r.distributorName },
+    { key: "channel", header: "Channel", cell: (r) => <span className="capitalize">{r.channel.replace("-", " ")}</span>, sortValue: (r) => r.channel },
+    { key: "territories", header: "Territories", cell: (r) => <span className="max-w-[200px] truncate block">{r.territories.join(", ")}</span> },
+    { key: "value", header: "Value", cell: (r) => <span className="font-mono">{formatINR(r.agreementValue)}</span>, sortValue: (r) => r.agreementValue, align: "right" },
+    { key: "advance", header: "Advance", cell: (r) => <span className="font-mono">{formatINR(r.advancePaid)}</span>, sortValue: (r) => r.advancePaid, align: "right" },
+    { key: "status", header: "Status", cell: (r) => <StatusBadge status={r.status} />, sortValue: (r) => r.status },
+    { key: "start", header: "Start", cell: (r) => <span className="text-muted-foreground">{r.startDate}</span>, sortValue: (r) => r.startDate },
+    { key: "end", header: "End", cell: (r) => <span className="text-muted-foreground">{r.endDate}</span>, sortValue: (r) => r.endDate },
+  ];
+
+  type Release = (typeof releases)[number];
+  const releaseColumns: DataTableColumn<Release>[] = [
+    { key: "title", header: "Title", cell: (r) => <span className="font-medium">{r.title}</span>, sortValue: (r) => r.title },
+    { key: "channel", header: "Channel", cell: (r) => <span className="capitalize">{r.channel.replace("-", " ")}</span>, sortValue: (r) => r.channel },
+    { key: "territory", header: "Territory", cell: (r) => r.territory, sortValue: (r) => r.territory },
+    { key: "planned", header: "Planned", cell: (r) => <span className="text-muted-foreground">{r.plannedDate}</span>, sortValue: (r) => r.plannedDate },
+    { key: "actual", header: "Actual", cell: (r) => <span className="text-muted-foreground">{r.actualDate || "—"}</span>, sortValue: (r) => r.actualDate || "" },
+    { key: "window", header: "Window", cell: (r) => <span className="text-muted-foreground text-xs">{r.windowStart && r.windowEnd ? `${r.windowStart} – ${r.windowEnd}` : "—"}</span> },
+    { key: "status", header: "Status", cell: (r) => <StatusBadge status={r.status} />, sortValue: (r) => r.status },
+  ];
+
+  type Revenue = (typeof revenue)[number];
+  const revenueColumns: DataTableColumn<Revenue>[] = [
+    { key: "type", header: "Type", cell: (r) => <span className="capitalize">{r.revenueType.replace("-", " ")}</span>, sortValue: (r) => r.revenueType },
+    { key: "amount", header: "Amount", cell: (r) => <span className="font-mono">{formatINR(r.amount)}</span>, sortValue: (r) => r.amount, align: "right" },
+    { key: "territory", header: "Territory", cell: (r) => r.territory || "—", sortValue: (r) => r.territory || "" },
+    { key: "channel", header: "Channel", cell: (r) => <span className="capitalize">{r.channel?.replace("-", " ") || "—"}</span>, sortValue: (r) => r.channel || "" },
+    { key: "due", header: "Due Date", cell: (r) => <span className="text-muted-foreground">{r.dueDate || "—"}</span>, sortValue: (r) => r.dueDate || "" },
+    { key: "status", header: "Status", cell: (r) => <StatusBadge status={r.status} />, sortValue: (r) => r.status },
+    { key: "ref", header: "Reference", cell: (r) => <span className="text-muted-foreground">{r.referenceNumber || "—"}</span> },
+  ];
+
+  type Deliverable = (typeof deliverables)[number];
+  const deliverableColumns: DataTableColumn<Deliverable>[] = [
+    { key: "name", header: "Name", cell: (r) => <span className="font-medium">{r.name}</span>, sortValue: (r) => r.name },
+    { key: "format", header: "Format", cell: (r) => r.format, sortValue: (r) => r.format },
+    { key: "territory", header: "Territory", cell: (r) => r.territory, sortValue: (r) => r.territory },
+    { key: "due", header: "Due Date", cell: (r) => <span className="text-muted-foreground">{r.dueDate}</span>, sortValue: (r) => r.dueDate },
+    { key: "status", header: "Status", cell: (r) => <StatusBadge status={r.status} />, sortValue: (r) => r.status },
+  ];
+
   return (
-    <div className="space-y-4 max-w-[1400px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div className="flex gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/10 flex items-center justify-center shrink-0">
-            <Megaphone className="w-5 h-5 text-amber-500" />
-          </div>
+    <div className="space-y-4">
+      <PageHeader
+        as="h1"
+        title="Distribution & Rights"
+        description="Manage territories, rights, agreements, releases, revenue, and deliverables."
+        icon={Megaphone}
+        badge={pid ? <Badge variant="outline" className="text-xs">{projects.find((p) => p.id === pid)?.title}</Badge> : undefined}
+        actions={
           <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-2xl font-bold">Distribution & Rights</h2>
-              {pid && <Badge variant="outline" className="text-xs">{projects.find((p) => p.id === pid)?.title}</Badge>}
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage territories, rights, agreements, releases, revenue, and deliverables.
-            </p>
+            <Label htmlFor="dist-project-filter" className="sr-only">Project</Label>
+            <Select value={projectId} onValueChange={setProjectId}>
+              <SelectTrigger id="dist-project-filter" aria-label="Filter by project" className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All projects</SelectItem>
+                {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
-        </div>
-        <Select value={projectId} onValueChange={setProjectId}>
-          <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All projects</SelectItem>
-            {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+        }
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-        <KpiCard label="Total Rights Value" value={formatINR(stats.totalMG)} icon={IndianRupee} tone="text-emerald-400" />
-        <KpiCard label="Advance Received" value={formatINR(stats.totalAdvance)} icon={TrendingUp} tone="text-cyan-400" />
-        <KpiCard label="Receivable" value={formatINR(stats.totalReceivable)} icon={IndianRupee} tone="text-amber-400" />
-        <KpiCard label="Signed Deals" value={String(stats.signedDeals)} icon={CheckCircle2} />
-        <KpiCard label="Active Agreements" value={String(activeAgreements)} icon={FileText} />
-        <KpiCard label="Upcoming Releases" value={String(upcomingReleases)} icon={Film} />
+        <StatCard label="Total Rights Value" value={formatINR(stats.totalMG)} icon={IndianRupee} />
+        <StatCard label="Advance Received" value={formatINR(stats.totalAdvance)} icon={TrendingUp} />
+        <StatCard label="Receivable" value={formatINR(stats.totalReceivable)} icon={IndianRupee} />
+        <StatCard label="Signed Deals" value={String(stats.signedDeals)} icon={CheckCircle2} />
+        <StatCard label="Active Agreements" value={String(activeAgreements)} icon={FileText} />
+        <StatCard label="Upcoming Releases" value={String(upcomingReleases)} icon={Film} />
       </div>
 
       {/* Tabs */}
@@ -194,40 +171,40 @@ export function DistributionWorkspace() {
           <TabsTrigger value="deliverables">Deliverables</TabsTrigger>
         </TabsList>
 
-        {/* ── Overview ─────────────────────────────────── */}
+        {/* Overview */}
         <TabsContent value="overview" className="space-y-4 mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
-              <CardHeader><CardTitle className="text-base">Deals by Rights Type</CardTitle></CardHeader>
+              <CardHeader><div className="text-base font-semibold leading-none tracking-tight">Deals by Rights Type</div></CardHeader>
               <CardContent>
                 {channelChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={280}>
+                  <ChartContainer label="Deals by rights type chart" height={280}>
                     <PieChart>
                       <Pie data={channelChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, value }) => `${name} (${value})`}>
-                        {channelChartData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        {channelChartData.map((_, i) => <Cell key={i} fill={seriesColors[i % seriesColors.length]} />)}
                       </Pie>
                       <Tooltip />
                     </PieChart>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 ) : <p className="text-sm text-muted-foreground text-center py-8">No deals data</p>}
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader><CardTitle className="text-base">Top Territories by MG (₹ Cr)</CardTitle></CardHeader>
+              <CardHeader><div className="text-base font-semibold leading-none tracking-tight">Top Territories by MG (INR Cr)</div></CardHeader>
               <CardContent>
                 {territoryChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={280}>
+                  <ChartContainer label="Top territories by MG chart" height={280}>
                     <BarChart data={territoryChartData} layout="vertical" margin={{ left: 10, right: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                       <XAxis type="number" tick={{ fontSize: 11 }} />
                       <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 10 }} />
                       <Tooltip formatter={(v: number) => `₹${v} Cr`} />
                       <Legend />
-                      <Bar dataKey="MG" fill="#f59e0b" radius={[0, 4, 4, 0]} />
-                      <Bar dataKey="Advance" fill="#10b981" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="MG" fill={seriesColors[0]} radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="Advance" fill={seriesColors[2]} radius={[0, 4, 4, 0]} />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 ) : <p className="text-sm text-muted-foreground text-center py-8">No territory data</p>}
               </CardContent>
             </Card>
@@ -238,7 +215,7 @@ export function DistributionWorkspace() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {stats.expiringAgreements.length > 0 && (
                 <Card className="border-amber-500/30">
-                  <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-500" /> Expiring Agreements (30 days)</CardTitle></CardHeader>
+                  <CardHeader><div className="text-base font-semibold leading-none tracking-tight flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-500" aria-hidden="true" /> Expiring Agreements (30 days)</div></CardHeader>
                   <CardContent className="space-y-2">
                     {stats.expiringAgreements.map((a) => (
                       <div key={a.id} className="flex justify-between items-center text-sm p-2 rounded bg-amber-500/5">
@@ -251,7 +228,7 @@ export function DistributionWorkspace() {
               )}
               {stats.overdueCollections.length > 0 && (
                 <Card className="border-red-500/30">
-                  <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-red-500" /> Overdue Collections</CardTitle></CardHeader>
+                  <CardHeader><div className="text-base font-semibold leading-none tracking-tight flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-red-500" aria-hidden="true" /> Overdue Collections</div></CardHeader>
                   <CardContent className="space-y-2">
                     {stats.overdueCollections.map((r) => (
                       <div key={r.id} className="flex justify-between items-center text-sm p-2 rounded bg-red-500/5">
@@ -266,11 +243,12 @@ export function DistributionWorkspace() {
           )}
         </TabsContent>
 
-        {/* ── Rights & Deals ───────────────────────────── */}
+        {/* Rights & Deals */}
         <TabsContent value="rights" className="space-y-4 mt-4">
           <div className="flex items-center gap-3">
+            <Label htmlFor="rights-type-filter" className="sr-only">Filter by rights type</Label>
             <Select value={rightsFilter} onValueChange={setRightsFilter}>
-              <SelectTrigger className="w-48"><SelectValue placeholder="Filter by type" /></SelectTrigger>
+              <SelectTrigger id="rights-type-filter" className="w-48"><SelectValue placeholder="Filter by type" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All types</SelectItem>
                 {["theatrical", "satellite", "digital", "audio", "dubbed", "remake", "broadcast", "ancillary"].map((t) => (
@@ -280,179 +258,54 @@ export function DistributionWorkspace() {
             </Select>
             <span className="text-xs text-muted-foreground">{filteredDeals.length} deal{filteredDeals.length !== 1 ? "s" : ""}</span>
           </div>
-          {filteredDeals.length === 0 ? <EmptyState message="No rights deals found for the selected filters." /> : (
+          {filteredDeals.length === 0 ? <EmptyState title="No rights deals" description="No rights deals found for the selected filters." icon={FileText} /> : (
             <Card>
-              <CardContent className="p-0 overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="px-4 py-3 font-medium">Territory</th>
-                      <th className="px-4 py-3 font-medium">Distributor</th>
-                      <th className="px-4 py-3 font-medium">Type</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
-                      <th className="px-4 py-3 font-medium text-right">MG</th>
-                      <th className="px-4 py-3 font-medium text-right">Advance</th>
-                      <th className="px-4 py-3 font-medium text-right">Balance</th>
-                      <th className="px-4 py-3 font-medium">Delivery</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredDeals.map((d) => (
-                      <tr key={d.id} className="border-b hover:bg-muted/30">
-                        <td className="px-4 py-3 font-medium">{d.territory}</td>
-                        <td className="px-4 py-3">{d.distributor}</td>
-                        <td className="px-4 py-3 capitalize">{d.rightsType}</td>
-                        <td className="px-4 py-3"><Badge variant="outline" className={`text-xs ${dealStatusColor(d.status)}`}>{d.status}</Badge></td>
-                        <td className="px-4 py-3 text-right font-mono">{formatINR(d.minimumGuarantee)}</td>
-                        <td className="px-4 py-3 text-right font-mono">{formatINR(d.advanceReceived)}</td>
-                        <td className="px-4 py-3 text-right font-mono">{formatINR(d.minimumGuarantee - d.advanceReceived)}</td>
-                        <td className="px-4 py-3"><Badge variant="outline" className={`text-xs ${d.deliveryStatus === "complete" ? "text-emerald-500" : d.deliveryStatus === "partial" ? "text-amber-500" : "text-muted-foreground"}`}>{d.deliveryStatus}</Badge></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <CardContent className="pt-4">
+                <DataTable columns={dealColumns} rows={filteredDeals} rowKey={(r) => r.id} caption="Rights deals" />
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
-        {/* ── Agreements ───────────────────────────────── */}
+        {/* Agreements */}
         <TabsContent value="agreements" className="space-y-4 mt-4">
-          {agreements.length === 0 ? <EmptyState message="No distribution agreements found. Agreements will appear here once created." /> : (
+          {agreements.length === 0 ? <EmptyState title="No agreements" description="No distribution agreements found. Agreements will appear here once created." icon={FileText} /> : (
             <Card>
-              <CardContent className="p-0 overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="px-4 py-3 font-medium">Distributor</th>
-                      <th className="px-4 py-3 font-medium">Channel</th>
-                      <th className="px-4 py-3 font-medium">Territories</th>
-                      <th className="px-4 py-3 font-medium text-right">Value</th>
-                      <th className="px-4 py-3 font-medium text-right">Advance</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
-                      <th className="px-4 py-3 font-medium">Start</th>
-                      <th className="px-4 py-3 font-medium">End</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {agreements.map((a) => (
-                      <tr key={a.id} className="border-b hover:bg-muted/30">
-                        <td className="px-4 py-3 font-medium">{a.distributorName}</td>
-                        <td className="px-4 py-3 capitalize">{a.channel.replace("-", " ")}</td>
-                        <td className="px-4 py-3 max-w-[200px] truncate">{a.territories.join(", ")}</td>
-                        <td className="px-4 py-3 text-right font-mono">{formatINR(a.agreementValue)}</td>
-                        <td className="px-4 py-3 text-right font-mono">{formatINR(a.advancePaid)}</td>
-                        <td className="px-4 py-3"><Badge variant="outline" className={`text-xs ${agreementStatusColor(a.status)}`}>{a.status}</Badge></td>
-                        <td className="px-4 py-3 text-muted-foreground">{a.startDate}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{a.endDate}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <CardContent className="pt-4">
+                <DataTable columns={agreementColumns} rows={agreements} rowKey={(r) => r.id} caption="Distribution agreements" />
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
-        {/* ── Releases ─────────────────────────────────── */}
+        {/* Releases */}
         <TabsContent value="releases" className="space-y-4 mt-4">
-          {releases.length === 0 ? <EmptyState message="No releases scheduled. Release plans will appear here once created." /> : (
+          {releases.length === 0 ? <EmptyState title="No releases" description="No releases scheduled. Release plans will appear here once created." icon={Film} /> : (
             <Card>
-              <CardContent className="p-0 overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="px-4 py-3 font-medium">Title</th>
-                      <th className="px-4 py-3 font-medium">Channel</th>
-                      <th className="px-4 py-3 font-medium">Territory</th>
-                      <th className="px-4 py-3 font-medium">Planned</th>
-                      <th className="px-4 py-3 font-medium">Actual</th>
-                      <th className="px-4 py-3 font-medium">Window</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {releases.map((r) => (
-                      <tr key={r.id} className="border-b hover:bg-muted/30">
-                        <td className="px-4 py-3 font-medium">{r.title}</td>
-                        <td className="px-4 py-3 capitalize">{r.channel.replace("-", " ")}</td>
-                        <td className="px-4 py-3">{r.territory}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{r.plannedDate}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{r.actualDate || "—"}</td>
-                        <td className="px-4 py-3 text-muted-foreground text-xs">{r.windowStart && r.windowEnd ? `${r.windowStart} – ${r.windowEnd}` : "—"}</td>
-                        <td className="px-4 py-3"><Badge variant="outline" className={`text-xs ${releaseStatusColor(r.status)}`}>{r.status}</Badge></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <CardContent className="pt-4">
+                <DataTable columns={releaseColumns} rows={releases} rowKey={(r) => r.id} caption="Distribution releases" />
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
-        {/* ── Revenue ──────────────────────────────────── */}
+        {/* Revenue */}
         <TabsContent value="revenue" className="space-y-4 mt-4">
-          {revenue.length === 0 ? <EmptyState message="No revenue records found. Revenue and collection records will appear here." /> : (
+          {revenue.length === 0 ? <EmptyState title="No revenue records" description="No revenue records found. Revenue and collection records will appear here." icon={IndianRupee} /> : (
             <Card>
-              <CardContent className="p-0 overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="px-4 py-3 font-medium">Type</th>
-                      <th className="px-4 py-3 font-medium text-right">Amount</th>
-                      <th className="px-4 py-3 font-medium">Territory</th>
-                      <th className="px-4 py-3 font-medium">Channel</th>
-                      <th className="px-4 py-3 font-medium">Due Date</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
-                      <th className="px-4 py-3 font-medium">Reference</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {revenue.map((r) => (
-                      <tr key={r.id} className="border-b hover:bg-muted/30">
-                        <td className="px-4 py-3 capitalize">{r.revenueType.replace("-", " ")}</td>
-                        <td className="px-4 py-3 text-right font-mono">{formatINR(r.amount)}</td>
-                        <td className="px-4 py-3">{r.territory || "—"}</td>
-                        <td className="px-4 py-3 capitalize">{r.channel?.replace("-", " ") || "—"}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{r.dueDate || "—"}</td>
-                        <td className="px-4 py-3"><Badge variant="outline" className={`text-xs ${collectionStatusColor(r.status)}`}>{r.status}</Badge></td>
-                        <td className="px-4 py-3 text-muted-foreground">{r.referenceNumber || "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <CardContent className="pt-4">
+                <DataTable columns={revenueColumns} rows={revenue} rowKey={(r) => r.id} caption="Revenue records" />
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
-        {/* ── Deliverables ─────────────────────────────── */}
+        {/* Deliverables */}
         <TabsContent value="deliverables" className="space-y-4 mt-4">
-          {deliverables.length === 0 ? <EmptyState message="No deliverables found for the selected project." /> : (
+          {deliverables.length === 0 ? <EmptyState title="No deliverables" description="No deliverables found for the selected project." icon={FileText} /> : (
             <Card>
-              <CardContent className="p-0 overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="px-4 py-3 font-medium">Name</th>
-                      <th className="px-4 py-3 font-medium">Format</th>
-                      <th className="px-4 py-3 font-medium">Territory</th>
-                      <th className="px-4 py-3 font-medium">Due Date</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {deliverables.map((d) => (
-                      <tr key={d.id} className="border-b hover:bg-muted/30">
-                        <td className="px-4 py-3 font-medium">{d.name}</td>
-                        <td className="px-4 py-3">{d.format}</td>
-                        <td className="px-4 py-3">{d.territory}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{d.dueDate}</td>
-                        <td className="px-4 py-3"><Badge variant="outline" className={`text-xs ${deliverableStatusColor(d.status)}`}>{d.status}</Badge></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <CardContent className="pt-4">
+                <DataTable columns={deliverableColumns} rows={deliverables} rowKey={(r) => r.id} caption="Deliverables" />
               </CardContent>
             </Card>
           )}

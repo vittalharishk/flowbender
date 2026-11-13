@@ -10,13 +10,7 @@ import {
   availabilityLabels,
   availabilityColors,
 } from "@/lib/crew-store";
-
-const contractColors: Record<string, string> = {
-  signed: "text-emerald-400",
-  negotiating: "text-amber-400",
-  pending: "text-muted-foreground",
-  expired: "text-red-400",
-};
+import { StatusBadge } from "@/components/app/status-badge";
 
 function fmtShort(v: number) {
   return formatINR(v);
@@ -45,7 +39,7 @@ export function CrewListRow({ member, projectScope }: Props) {
         </div>
 
         <div className="w-32 shrink-0 hidden sm:block">
-          <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full border", crewDepartmentColors[member.department])}>
+          <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full border", crewDepartmentColors[member.department])}>
             {crewDepartmentLabels[member.department]}
           </span>
         </div>
@@ -58,21 +52,19 @@ export function CrewListRow({ member, projectScope }: Props) {
         )}
 
         <div className="w-24 shrink-0 hidden md:block">
-          <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full", availabilityColors[member.availability])}>
+          <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", availabilityColors[member.availability])}>
             {availabilityLabels[member.availability]}
           </span>
         </div>
 
-        <div className="w-24 shrink-0 hidden md:flex items-center gap-1 text-xs">
-          <FileSignature className="w-3 h-3 text-muted-foreground" />
-          <span className={contractColors[member.contractStatus]}>
-            {member.contractStatus.charAt(0).toUpperCase() + member.contractStatus.slice(1)}
-          </span>
+        <div className="hidden w-28 shrink-0 items-center gap-1 text-xs md:flex">
+          <FileSignature className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <StatusBadge status={member.contractStatus} className="px-1.5 py-0 text-xs" />
         </div>
 
-        <div className="ml-auto text-right shrink-0">
-          <p className="text-sm font-semibold">{fmtShort(member.dayRate)}/day</p>
-          <p className="text-[11px] text-muted-foreground">
+        <div className="ml-auto shrink-0 text-right">
+          <p className="text-sm font-semibold tabular-nums">{fmtShort(member.dayRate)}/day</p>
+          <p className="text-xs text-muted-foreground">
             {member.daysWorked}/{member.totalDays} days
           </p>
         </div>

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -58,7 +59,7 @@ function AlertsBanner({ alerts }: { alerts: BudgetAlert[] }) {
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>{a.message}</span>
           {a.metric === "utilization" && (
-            <Badge variant="outline" className="ml-auto text-[10px]">{a.value.toFixed(1)}%</Badge>
+            <Badge variant="outline" className="ml-auto text-xs">{a.value.toFixed(1)}%</Badge>
           )}
         </div>
       ))}
@@ -113,9 +114,7 @@ function ProjectBudgetsSubTab({ projectId }: Props) {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm">{project?.title ?? pb.projectId}</CardTitle>
                   <div className="flex items-center gap-1">
-                    <Badge className={`text-[10px] ${BUDGET_STATUS_COLORS[pb.budgetStatus] ?? ""}`}>
-                      {statusLabel(pb.budgetStatus)}
-                    </Badge>
+                    <StatusBadge status={String(pb.budgetStatus)} label={statusLabel(pb.budgetStatus)} className="text-xs" />
                   </div>
                 </div>
               </CardHeader>
@@ -174,13 +173,11 @@ function ProjectBudgetsSubTab({ projectId }: Props) {
                       <span>{pb.currency}</span>
                     </div>
                     <div className="flex items-center gap-1 pt-1">
-                      <Badge className={`text-[10px] ${APPROVAL_STATUS_COLORS[pb.approvalStatus] ?? ""}`}>
-                        {statusLabel(pb.approvalStatus)}
-                      </Badge>
+                      <StatusBadge status={String(pb.approvalStatus)} label={statusLabel(pb.approvalStatus)} className="text-xs" />
                     </div>
                     <div className="flex flex-wrap gap-1 pt-1">
                       {pb.budgetStatus === "draft" && (
-                        <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => {
+                        <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => {
                           setEditingId(pb.id);
                           setEditAmount(String(pb.approvedAmount));
                           setEditNotes(pb.notes);
@@ -189,24 +186,24 @@ function ProjectBudgetsSubTab({ projectId }: Props) {
                         </Button>
                       )}
                       {pb.approvalStatus === "draft" && (
-                        <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => submitBudgetForApproval(pb.id)}>
+                        <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => submitBudgetForApproval(pb.id)}>
                           <Send className="w-3 h-3 mr-1" />Submit
                         </Button>
                       )}
                       {pb.approvalStatus === "returned" && (
-                        <Button size="sm" variant="outline" className="h-6 text-[10px] text-blue-400" onClick={() => resubmitReturnedBudget(pb.id)}>
+                        <Button size="sm" variant="outline" className="h-6 text-xs text-blue-400" onClick={() => resubmitReturnedBudget(pb.id)}>
                           <RotateCcw className="w-3 h-3 mr-1" />Resubmit as Draft
                         </Button>
                       )}
                       {["submitted", "dept-approved", "finance-approved"].includes(pb.approvalStatus) && (
                         <>
-                          <Button size="sm" variant="outline" className="h-6 text-[10px] text-emerald-400" onClick={() => setApprovalDialog({ id: pb.id, action: "approve" })}>
+                          <Button size="sm" variant="outline" className="h-6 text-xs text-emerald-400" onClick={() => setApprovalDialog({ id: pb.id, action: "approve" })}>
                             <CheckCircle2 className="w-3 h-3 mr-1" />Approve
                           </Button>
-                          <Button size="sm" variant="outline" className="h-6 text-[10px] text-red-400" onClick={() => setApprovalDialog({ id: pb.id, action: "reject" })}>
+                          <Button size="sm" variant="outline" className="h-6 text-xs text-red-400" onClick={() => setApprovalDialog({ id: pb.id, action: "reject" })}>
                             <XCircle className="w-3 h-3 mr-1" />Reject
                           </Button>
-                          <Button size="sm" variant="outline" className="h-6 text-[10px] text-orange-400" onClick={() => setApprovalDialog({ id: pb.id, action: "return" })}>
+                          <Button size="sm" variant="outline" className="h-6 text-xs text-orange-400" onClick={() => setApprovalDialog({ id: pb.id, action: "return" })}>
                             <RotateCcw className="w-3 h-3 mr-1" />Return
                           </Button>
                         </>
@@ -337,8 +334,8 @@ function DepartmentAllocationsSubTab({ projectId }: Props) {
                         <td className="p-3" />
                         <td className="p-3">
                           <div className="flex gap-1">
-                            <Button size="sm" className="h-6 text-[10px]" onClick={handleSaveAllocation}>Save</Button>
-                            <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => setEditingId(null)}>Cancel</Button>
+                            <Button size="sm" className="h-6 text-xs" onClick={handleSaveAllocation}>Save</Button>
+                            <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setEditingId(null)}>Cancel</Button>
                           </div>
                         </td>
                       </tr>
@@ -356,13 +353,11 @@ function DepartmentAllocationsSubTab({ projectId }: Props) {
                         {variance >= 0 ? "+" : ""}{formatCompactINR(variance)}
                       </td>
                       <td className="p-3">
-                        <Badge className={`text-[10px] ${APPROVAL_STATUS_COLORS[db.approvalStatus] ?? ""}`}>
-                          {statusLabel(db.approvalStatus)}
-                        </Badge>
+                        <StatusBadge status={String(db.approvalStatus)} label={statusLabel(db.approvalStatus)} className="text-xs" />
                       </td>
                       <td className="p-3">
                         {db.approvalStatus === "draft" ? (
-                          <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => {
+                          <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => {
                             setEditingId(db.id);
                             setEditAlloc(String(db.allocatedBudget));
                             setEditRevised(String(db.revisedBudget));
@@ -460,8 +455,8 @@ function RevisionHistorySubTab({ projectId }: Props) {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm">{proj?.title ?? rev.projectId}</span>
-                      <Badge variant="outline" className="text-[10px]">Rev #{rev.revisionNumber}</Badge>
-                      <Badge className={`text-[10px] ${
+                      <Badge variant="outline" className="text-xs">Rev #{rev.revisionNumber}</Badge>
+                      <Badge className={`text-xs ${
                         rev.status === "approved" ? "bg-emerald-500/20 text-emerald-300" :
                         rev.status === "rejected" ? "bg-red-500/20 text-red-300" :
                         rev.status === "submitted" ? "bg-blue-500/20 text-blue-300" :
@@ -476,7 +471,7 @@ function RevisionHistorySubTab({ projectId }: Props) {
                     <div className={`text-sm font-medium ${isIncrease ? "text-amber-400" : "text-emerald-400"}`}>
                       {isIncrease ? "+" : ""}{formatCompactINR(rev.changeAmount)}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       ({rev.changePercentage >= 0 ? "+" : ""}{rev.changePercentage.toFixed(1)}%)
                     </div>
                   </div>
@@ -490,7 +485,7 @@ function RevisionHistorySubTab({ projectId }: Props) {
                 </div>
                 {rev.departmentChanges.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-border/30">
-                    <p className="text-[10px] text-muted-foreground uppercase mb-1">Department Changes</p>
+                    <p className="text-xs text-muted-foreground uppercase mb-1">Department Changes</p>
                     {rev.departmentChanges.map((dc) => (
                       <div key={dc.departmentKey} className="flex items-center gap-2 text-xs">
                         <span className="text-muted-foreground">{getDepartmentDisplay(dc.departmentKey)}:</span>
@@ -505,7 +500,7 @@ function RevisionHistorySubTab({ projectId }: Props) {
                 )}
                 {rev.approvalHistory.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-border/30">
-                    <p className="text-[10px] text-muted-foreground uppercase mb-1">Approval Trail</p>
+                    <p className="text-xs text-muted-foreground uppercase mb-1">Approval Trail</p>
                     {rev.approvalHistory.map((ah, i) => (
                       <div key={i} className="flex items-center gap-2 text-xs">
                         {ah.decision === "approved" ? <CheckCircle2 className="w-3 h-3 text-emerald-400" /> :
@@ -520,7 +515,7 @@ function RevisionHistorySubTab({ projectId }: Props) {
                 )}
                 {rev.status === "submitted" && (
                   <div className="mt-2 pt-2 border-t border-border/30 flex gap-2">
-                    <Button size="sm" variant="outline" className="h-6 text-[10px] text-emerald-400"
+                    <Button size="sm" variant="outline" className="h-6 text-xs text-emerald-400"
                       onClick={() => approveBudgetRevision(rev.id, "Producer", "Revision approved")}>
                       <CheckCircle2 className="w-3 h-3 mr-1" />Approve Revision
                     </Button>
@@ -664,12 +659,12 @@ function ApprovalQueueSubTab({ projectId }: Props) {
                 {allPending.map((item) => (
                   <tr key={item.id} className="border-b border-border/30 hover:bg-muted/30">
                     <td className="p-3">
-                      <Badge variant="outline" className="text-[10px]">{item.type}</Badge>
+                      <Badge variant="outline" className="text-xs">{item.type}</Badge>
                     </td>
                     <td className="p-3">{item.requestor}</td>
                     <td className="p-3 text-right">{formatCompactINR(item.amount)}</td>
                     <td className="p-3">
-                      <Badge className={`text-[10px] ${
+                      <Badge className={`text-xs ${
                         item.level.includes("Producer") ? "bg-violet-500/20 text-violet-300" :
                         item.level.includes("Finance") ? "bg-teal-500/20 text-teal-300" :
                         "bg-blue-500/20 text-blue-300"
@@ -749,13 +744,11 @@ function BudgetComparisonSubTab({ projectId }: Props) {
                       </td>
                       <td className="p-3 text-center">
                         {revCount > 0 ? (
-                          <Badge variant="outline" className="text-[10px]">{revCount}</Badge>
+                          <Badge variant="outline" className="text-xs">{revCount}</Badge>
                         ) : "—"}
                       </td>
                       <td className="p-3">
-                        <Badge className={`text-[10px] ${BUDGET_STATUS_COLORS[pb.budgetStatus] ?? ""}`}>
-                          {statusLabel(pb.budgetStatus)}
-                        </Badge>
+                        <StatusBadge status={String(pb.budgetStatus)} label={statusLabel(pb.budgetStatus)} className="text-xs" />
                       </td>
                     </tr>
                   );
@@ -774,7 +767,7 @@ function BudgetComparisonSubTab({ projectId }: Props) {
                     <td className="p-3 text-right text-amber-400">{formatCompactINR(dashboard.summary.totalCommitted)}</td>
                     <td className="p-3 text-right text-emerald-400">{formatCompactINR(dashboard.summary.availableBudget)}</td>
                     <td className="p-3 text-center">
-                      <Badge variant="outline" className="text-[10px]">{revisions.length}</Badge>
+                      <Badge variant="outline" className="text-xs">{revisions.length}</Badge>
                     </td>
                     <td className="p-3" />
                   </tr>

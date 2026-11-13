@@ -11,13 +11,7 @@ import {
   availabilityColors,
 } from "@/lib/crew-store";
 import { Avatar } from "@/components/images/image-upload";
-
-const contractColors: Record<string, string> = {
-  signed: "text-emerald-400",
-  negotiating: "text-amber-400",
-  pending: "text-muted-foreground",
-  expired: "text-red-400",
-};
+import { StatusBadge } from "@/components/app/status-badge";
 
 function fmtShort(v: number) {
   return formatINR(v);
@@ -51,10 +45,10 @@ export function CrewCard({ member, projectScope }: Props) {
         </div>
 
         <div className="flex flex-wrap gap-1.5 mb-3">
-          <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full border", crewDepartmentColors[member.department])}>
+          <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full border", crewDepartmentColors[member.department])}>
             {crewDepartmentLabels[member.department]}
           </span>
-          <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full", availabilityColors[member.availability])}>
+          <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", availabilityColors[member.availability])}>
             {availabilityLabels[member.availability]}
           </span>
         </div>
@@ -66,21 +60,19 @@ export function CrewCard({ member, projectScope }: Props) {
           </div>
         )}
 
-        <div className="flex items-center gap-4 text-xs mb-3">
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
           <span className="flex items-center gap-1">
-            <FileSignature className="w-3 h-3 text-muted-foreground" />
-            <span className={contractColors[member.contractStatus]}>
-              {member.contractStatus.charAt(0).toUpperCase() + member.contractStatus.slice(1)}
-            </span>
+            <FileSignature className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+            <StatusBadge status={member.contractStatus} className="px-1.5 py-0 text-xs" />
           </span>
-          <span className="text-muted-foreground">
+          <span className="text-muted-foreground tabular-nums">
             {fmtShort(member.dayRate)}/day
           </span>
         </div>
 
         <div className="space-y-2">
           <div>
-            <div className="flex items-center justify-between text-[11px] mb-1">
+            <div className="flex items-center justify-between text-xs mb-1">
               <span className="text-muted-foreground">Days: {member.daysWorked}/{member.totalDays}</span>
               <span className="text-muted-foreground">{daysPct}%</span>
             </div>
@@ -92,7 +84,7 @@ export function CrewCard({ member, projectScope }: Props) {
             </div>
           </div>
           <div>
-            <div className="flex items-center justify-between text-[11px] mb-1">
+            <div className="flex items-center justify-between text-xs mb-1">
               <span className="text-muted-foreground">Paid: {fmtShort(member.totalPaid)}</span>
               <span className="text-muted-foreground">{paidPct}%</span>
             </div>

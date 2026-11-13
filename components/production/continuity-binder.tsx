@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useEffect, useMemo, useState } from "react";
 import {
   Camera,
@@ -28,6 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProjects } from "@/lib/project-store";
 
 export interface ContinuityEntry {
@@ -67,9 +70,9 @@ const demoContinuityEntries: ContinuityEntry[] = [
     hairMakeupNotes: "Seshachalam mud and holy sindoor blend; thick rugged beard styled with left-side lock; intense bloodshot stare.",
     propsInHand: "Ceremonial bronze trident in right hand; sacred yellow lemon garland draped over left wrist.",
     cameraSpecs: "ARRI Alexa 35 · 35mm Master Anamorphic · T2.8 · 5600K key light with swirling smoke filters.",
-    beforeImageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=80",
+    beforeImageUrl: "",
     beforeLabel: "Day 14 (Principal Shoot)",
-    afterImageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80",
+    afterImageUrl: "",
     afterLabel: "Day 31 (Reverse Coverage)",
     status: "verified",
     supervisorNotes: "Checked against Day 14 wrap photo. Sindoor streak alignment and tiger-claw amulet height match accurately.",
@@ -88,9 +91,9 @@ const demoContinuityEntries: ContinuityEntry[] = [
     hairMakeupNotes: "Jasmine flower veni in long plaited braid; vermillion bindi; soft warm South Indian bridal makeup.",
     propsInHand: "Brass aarti plate with burning camphor in right hand; fresh betel leaf offering in left.",
     cameraSpecs: "Sony FX6 B-cam · 50mm Prime · T2.0 · Low angle 3ft height warm fill.",
-    beforeImageUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=80",
+    beforeImageUrl: "",
     beforeLabel: "Take 2 Reference",
-    afterImageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80",
+    afterImageUrl: "",
     afterLabel: "Reverse Close-Up Coverage",
     status: "verified",
     supervisorNotes: "Saree pallu pleats count and jasmine veni placement verified across both camera setups.",
@@ -109,9 +112,9 @@ const demoContinuityEntries: ContinuityEntry[] = [
     hairMakeupNotes: "Desert dust smudge 60%; combat scratches on right jawline; weathered post-apocalyptic skin tone.",
     propsInHand: "Custom Bujji remote ignition key-card in left hand; sonic bounty disruptor rifle holstered on back.",
     cameraSpecs: "RED V-Raptor XL · 24mm Cooke S8/i · Dystopian amber practical lighting.",
-    beforeImageUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=900&q=80",
+    beforeImageUrl: "",
     beforeLabel: "Platform Master Take",
-    afterImageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=80",
+    afterImageUrl: "",
     afterLabel: "Close-up Cockpit Take",
     status: "verified",
     supervisorNotes: "Comms gauntlet wire harness route and cheek dust consistency approved by script supervisor.",
@@ -130,9 +133,9 @@ const demoContinuityEntries: ContinuityEntry[] = [
     hairMakeupNotes: "Rain-drenched hair; subtle blood graze on left temple; intense underworld gaze.",
     propsInHand: "Custom black steel Katana sword in left scabbard; tactical storm lighter in right pocket.",
     cameraSpecs: "ARRI Alexa LF · 40mm Vintage Anamorphic · High-contrast night rain neon illumination.",
-    beforeImageUrl: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=900&q=80",
+    beforeImageUrl: "",
     beforeLabel: "Day 38 Exterior Docks",
-    afterImageUrl: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=900&q=80",
+    afterImageUrl: "",
     afterLabel: "Interior Container Wrap",
     status: "verified",
     supervisorNotes: "Trenchcoat collar pop height and Katana blade blood splatter orientation confirmed across all takes.",
@@ -140,6 +143,7 @@ const demoContinuityEntries: ContinuityEntry[] = [
 ];
 
 export function ContinuityBinder({ projectId }: { projectId?: string }) {
+  const confirm = useConfirm();
   const projects = useProjects();
   const [entries, setEntries] = useState<ContinuityEntry[]>(demoContinuityEntries);
   const [selectedEntryId, setSelectedEntryId] = useState<string>(demoContinuityEntries[0].id);
@@ -232,18 +236,24 @@ export function ContinuityBinder({ projectId }: { projectId?: string }) {
             />
           </div>
 
-          <select
-            value={characterFilter}
-            onChange={(e) => setCharacterFilter(e.target.value)}
-            className="h-9 rounded-md border bg-background px-3 text-xs focus:ring-2 focus:ring-primary"
-          >
-            <option value="all">All Characters</option>
-            {uniqueCharacters.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+          <>
+            <label htmlFor="continuity-character-filter" className="sr-only">
+              Filter by character
+            </label>
+            <Select value={characterFilter} onValueChange={setCharacterFilter}>
+              <SelectTrigger id="continuity-character-filter" className="h-9 w-[180px] text-xs">
+                <SelectValue placeholder="All Characters" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Characters</SelectItem>
+                {uniqueCharacters.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
         </div>
 
         <div className="text-xs text-muted-foreground">
@@ -283,7 +293,7 @@ export function ContinuityBinder({ projectId }: { projectId?: string }) {
                       </div>
                       <Badge
                         variant="outline"
-                        className={`text-[10px] uppercase font-semibold ${
+                        className={`text-xs uppercase font-semibold ${
                           item.status === "verified"
                             ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                             : item.status === "flagged"
@@ -307,7 +317,7 @@ export function ContinuityBinder({ projectId }: { projectId?: string }) {
                           alt={item.beforeLabel}
                           className="h-full w-full object-cover"
                         />
-                        <span className="absolute bottom-1 left-1 bg-black/70 text-[9px] px-1 py-0.2 rounded text-white backdrop-blur-xs">
+                        <span className="absolute bottom-1 left-1 bg-black/70 text-xs px-1 py-0.2 rounded text-white backdrop-blur-xs">
                           {item.beforeLabel}
                         </span>
                       </div>
@@ -317,13 +327,13 @@ export function ContinuityBinder({ projectId }: { projectId?: string }) {
                           alt={item.afterLabel}
                           className="h-full w-full object-cover"
                         />
-                        <span className="absolute bottom-1 left-1 bg-black/70 text-[9px] px-1 py-0.2 rounded text-white backdrop-blur-xs">
+                        <span className="absolute bottom-1 left-1 bg-black/70 text-xs px-1 py-0.2 rounded text-white backdrop-blur-xs">
                           {item.afterLabel}
                         </span>
                       </div>
                     </div>
 
-                    <p className="text-[11px] text-muted-foreground line-clamp-2 italic pt-1 border-t border-border/40">
+                    <p className="text-xs text-muted-foreground line-clamp-2 italic pt-1 border-t border-border/40">
                       {item.wardrobeStage}
                     </p>
                   </CardContent>
@@ -376,7 +386,7 @@ export function ContinuityBinder({ projectId }: { projectId?: string }) {
                     <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                       <Camera className="h-3.5 w-3.5 text-primary" /> Visual Shot Match (Before vs After)
                     </p>
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       Comparing: <span className="font-semibold text-foreground">{selectedEntry.beforeLabel}</span> ↔ <span className="font-semibold text-foreground">{selectedEntry.afterLabel}</span>
                     </span>
                   </div>
@@ -404,7 +414,7 @@ export function ContinuityBinder({ projectId }: { projectId?: string }) {
                           <ExternalLink className="h-3.5 w-3.5" />
                         </a>
                       </div>
-                      <div className="p-2.5 text-[11px] text-muted-foreground bg-muted/30">
+                      <div className="p-2.5 text-xs text-muted-foreground bg-muted/30">
                         Camera Angle: Master Setup · Reference Frame
                       </div>
                     </div>
@@ -431,7 +441,7 @@ export function ContinuityBinder({ projectId }: { projectId?: string }) {
                           <ExternalLink className="h-3.5 w-3.5" />
                         </a>
                       </div>
-                      <div className="p-2.5 text-[11px] text-muted-foreground bg-muted/30">
+                      <div className="p-2.5 text-xs text-muted-foreground bg-muted/30">
                         Camera Angle: Reverse Insert / Match Frame
                       </div>
                     </div>
@@ -518,7 +528,7 @@ export function ContinuityBinder({ projectId }: { projectId?: string }) {
                   >
                     <Check className="h-3.5 w-3.5 mr-1" /> Mark verified
                   </Button>
-                  <Button variant="destructive" size="icon" aria-label="Delete continuity card" disabled={!ready} onClick={() => { if (window.confirm("Delete this continuity card?")) saveEntries(entries.filter((entry) => entry.id !== selectedEntry.id)); }}><Trash2 className="h-4 w-4" /></Button>
+                  <Button variant="destructive" size="icon" aria-label="Delete continuity card" disabled={!ready} onClick={async () => { if (await confirm({ title: "Delete continuity card?", description: "This continuity card will be permanently removed.", confirmLabel: "Delete" })) saveEntries(entries.filter((entry) => entry.id !== selectedEntry.id)); }}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </CardContent>
             </Card>

@@ -294,7 +294,7 @@ function CountBox({ label, count, icon: Icon, color }: { label: string; count: n
     <div className="rounded-lg bg-muted/40 p-3 text-center">
       <Icon className={cn("w-4 h-4 mx-auto mb-1", color)} />
       <p className="text-lg font-bold">{count}</p>
-      <p className="text-[10px] text-muted-foreground uppercase">{label}</p>
+      <p className="text-xs text-muted-foreground uppercase">{label}</p>
     </div>
   );
 }

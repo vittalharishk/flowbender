@@ -65,7 +65,7 @@ export function ScheduleCalendar({ shootDays, month, year, basePath, today }: Pr
       </div>
       <div className="grid grid-cols-7">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-          <div key={d} className="p-2 text-center text-[10px] uppercase tracking-wider text-muted-foreground border-b font-medium">
+          <div key={d} className="p-2 text-center text-xs uppercase tracking-wider text-muted-foreground border-b font-medium">
             {d}
           </div>
         ))}
@@ -86,7 +86,7 @@ export function ScheduleCalendar({ shootDays, month, year, basePath, today }: Pr
               {day && (
                 <>
                   <span className={cn(
-                    "inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-medium mb-1",
+                    "inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium mb-1",
                     isToday && "bg-amber-500 text-white",
                   )}>
                     {day}
@@ -97,7 +97,7 @@ export function ScheduleCalendar({ shootDays, month, year, basePath, today }: Pr
                         key={ev.id}
                         href={`${basePath}/${ev.id}`}
                         className={cn(
-                          "block px-1.5 py-0.5 rounded text-[10px] truncate transition-colors hover:ring-1 hover:ring-amber-500/30",
+                          "block px-1.5 py-0.5 rounded text-xs truncate transition-colors hover:ring-1 hover:ring-amber-500/30",
                           hasConflict ? "bg-red-500/10 text-red-400" : "bg-muted/60 text-muted-foreground hover:text-foreground",
                         )}
                       >

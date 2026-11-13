@@ -1,110 +1,124 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Zap, Send, Edit2, Trash2, CheckCircle2, Clock, Eye } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Edit2,
+  LayoutGrid,
+  List,
+  Plus,
+  Send,
+  Trash2,
+  Zap,
+} from "lucide-react";
+import { toast } from "sonner";
 import { useAppDataSlice, updateAppDataSlice } from "@/lib/app-data-store";
 import { useProjects, useProject } from "@/lib/project-store";
+import { calcVfxStats } from "@/lib/vfx-store";
 import type { VfxShot, VfxShotStatus } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
+import { useConfirm } from "@/components/app/confirm-dialog";
+import { PageHeader } from "@/components/app/page-header";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge } from "@/components/app/status-badge";
+import { EmptyState } from "@/components/app/empty-state";
+import { SearchInput } from "@/components/app/search-input";
+import { DataTable, type DataTableColumn } from "@/components/app/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
-
-const VfxStatusColors: Record<VfxShotStatus, string> = {
-  "briefed": "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30",
-  "in-progress": "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
-  "client-review": "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30",
-  "final": "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-};
-
-const PriorityColors = {
-  "low": "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/30",
-  "medium": "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
-  "high": "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30",
-};
+import { VfxPipelineBar } from "./vfx-pipeline-bar";
+import { VfxShotDetailDialog } from "./vfx-shot-detail-dialog";
+import { VfxShotFormDialog, type VfxShotFormData } from "./vfx-shot-form-dialog";
+import { vfxPriorityTones, vfxStatusLabels, vfxStatusTones, isOverdue } from "./vfx-status";
 
 interface VfxTrackingWorkspaceProps {
   projectId?: string;
 }
 
+const emptyForm: VfxShotFormData = {
+  shotCode: "",
+  sequence: "",
+  description: "",
+  vendorId: "",
+  status: "briefed",
+  priority: "medium",
+  dueDate: new Date().toISOString().slice(0, 10),
+  projectId: "",
+};
+
 export function VfxTrackingWorkspace({ projectId: scopedProjectId }: VfxTrackingWorkspaceProps) {
+  const confirm = useConfirm();
   const projects = useProjects();
   const vfxShots = useAppDataSlice("vfxShots");
   const scopedProject = useProject(scopedProjectId || "");
 
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(
-    scopedProjectId || "all"
-  );
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(scopedProjectId || "all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
+  const [view, setView] = useState<"cards" | "table">("cards");
+
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingShot, setEditingShot] = useState<VfxShot | null>(null);
+  const [detailShot, setDetailShot] = useState<VfxShot | null>(null);
+  const [formData, setFormData] = useState<VfxShotFormData>(emptyForm);
 
   const effectiveProjectId = scopedProjectId || selectedProjectId;
 
-  // Dialog states
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [editingShot, setEditingShot] = useState<VfxShot | null>(null);
+  const filteredShots = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return vfxShots.filter((shot) => {
+      if (effectiveProjectId && effectiveProjectId !== "all" && shot.projectId !== effectiveProjectId) return false;
+      if (statusFilter !== "all" && shot.status !== statusFilter) return false;
+      if (priorityFilter !== "all" && shot.priority !== priorityFilter) return false;
+      if (
+        query &&
+        ![shot.shotCode, shot.sequence, shot.description, shot.vendorId ?? ""].some((field) =>
+          field.toLowerCase().includes(query)
+        )
+      )
+        return false;
+      return true;
+    });
+  }, [vfxShots, effectiveProjectId, statusFilter, priorityFilter, search]);
 
-  // Form states
-  const [formData, setFormData] = useState({
-    shotCode: "",
-    sequence: "",
-    description: "",
-    vendorId: "",
-    status: "briefed" as VfxShotStatus,
-    priority: "medium" as "low" | "medium" | "high",
-    dueDate: new Date().toISOString().slice(0, 10),
-    projectId: effectiveProjectId || projects[0]?.id || "",
-  });
-
-  const filteredShots = vfxShots.filter((shot) => {
-    if (effectiveProjectId && effectiveProjectId !== "all" && shot.projectId !== effectiveProjectId) {
-      return false;
-    }
-    if (statusFilter !== "all" && shot.status !== statusFilter) return false;
-    if (priorityFilter !== "all" && shot.priority !== priorityFilter) return false;
-    return true;
-  });
-
-  const stats = {
-    total: filteredShots.length,
-    briefed: filteredShots.filter((s) => s.status === "briefed").length,
-    inProgress: filteredShots.filter((s) => s.status === "in-progress").length,
-    review: filteredShots.filter((s) => s.status === "client-review").length,
-    final: filteredShots.filter((s) => s.status === "final").length,
+  const stats = useMemo(() => calcVfxStats(filteredShots), [filteredShots]);
+  const statusCounts: Record<VfxShotStatus, number> = {
+    briefed: stats.briefed,
+    "in-progress": stats.inProgress,
+    "client-review": stats.inReview,
+    final: stats.final,
   };
 
-  const handleOpenAdd = () => {
+  const hasFilters = statusFilter !== "all" || priorityFilter !== "all" || search.trim().length > 0;
+  const projectTitleFor = (id: string) => projects.find((p) => p.id === id)?.title;
+
+  function handleOpenAdd() {
     setFormData({
+      ...emptyForm,
       shotCode: `VFX-${String(vfxShots.length + 1).padStart(3, "0")}`,
       sequence: "Sequence 01",
-      description: "",
       vendorId: "DNEG India",
-      status: "briefed",
-      priority: "medium",
       dueDate: new Date().toISOString().slice(0, 10),
-      projectId: effectiveProjectId || projects[0]?.id || "p1",
+      projectId: effectiveProjectId && effectiveProjectId !== "all" ? effectiveProjectId : projects[0]?.id || "p1",
     });
     setIsAddOpen(true);
-  };
+  }
 
-  const handleSaveAdd = (e: React.FormEvent) => {
+  function handleSaveAdd(e: React.FormEvent) {
     e.preventDefault();
     if (!formData.shotCode.trim()) return;
 
     const newShot: VfxShot = {
       id: `vfx-${Date.now()}`,
-      projectId: formData.projectId || effectiveProjectId || projects[0]?.id || "p1",
+      projectId:
+        formData.projectId ||
+        (effectiveProjectId !== "all" ? effectiveProjectId : "") ||
+        projects[0]?.id ||
+        "p1",
       shotCode: formData.shotCode.trim(),
       sequence: formData.sequence.trim() || "General",
       description: formData.description.trim() || "CGI enhancement",
@@ -117,9 +131,10 @@ export function VfxTrackingWorkspace({ projectId: scopedProjectId }: VfxTracking
     updateAppDataSlice("vfxShots", (current) => [newShot, ...current]);
     toast.success(`VFX Shot ${newShot.shotCode} created.`);
     setIsAddOpen(false);
-  };
+  }
 
-  const handleOpenEdit = (shot: VfxShot) => {
+  function handleOpenEdit(shot: VfxShot) {
+    setDetailShot(null);
     setEditingShot(shot);
     setFormData({
       shotCode: shot.shotCode,
@@ -131,9 +146,9 @@ export function VfxTrackingWorkspace({ projectId: scopedProjectId }: VfxTracking
       dueDate: shot.dueDate,
       projectId: shot.projectId,
     });
-  };
+  }
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  function handleSaveEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editingShot || !formData.shotCode.trim()) return;
 
@@ -156,25 +171,32 @@ export function VfxTrackingWorkspace({ projectId: scopedProjectId }: VfxTracking
     );
     toast.success(`VFX Shot ${formData.shotCode} updated.`);
     setEditingShot(null);
-  };
+  }
 
-  const handleDeleteShot = (id: string) => {
-    if (confirm("Are you sure you want to delete this VFX shot?")) {
+  async function handleDeleteShot(id: string) {
+    if (
+      await confirm({
+        title: "Delete VFX shot?",
+        description: "This VFX shot will be permanently removed.",
+        confirmLabel: "Delete",
+      })
+    ) {
       updateAppDataSlice("vfxShots", (current) => current.filter((s) => s.id !== id));
       toast.info("VFX shot removed.");
       if (editingShot?.id === id) setEditingShot(null);
+      if (detailShot?.id === id) setDetailShot(null);
     }
-  };
+  }
 
-  const handleSendToVendor = (shot: VfxShot) => {
+  function handleSendToVendor(shot: VfxShot) {
     const nextStatus: VfxShotStatus = shot.status === "briefed" ? "in-progress" : shot.status;
     updateAppDataSlice("vfxShots", (current) =>
       current.map((s) => (s.id === shot.id ? { ...s, status: nextStatus } : s))
     );
     toast.success(`Plate turnover dispatched for ${shot.shotCode} to ${shot.vendorId || "assigned vendor"}.`);
-  };
+  }
 
-  const handleQuickAdvance = (shot: VfxShot) => {
+  function handleQuickAdvance(shot: VfxShot) {
     let nextStatus: VfxShotStatus = shot.status;
     if (shot.status === "briefed") nextStatus = "in-progress";
     else if (shot.status === "in-progress") nextStatus = "client-review";
@@ -184,91 +206,160 @@ export function VfxTrackingWorkspace({ projectId: scopedProjectId }: VfxTracking
       current.map((s) => (s.id === shot.id ? { ...s, status: nextStatus } : s))
     );
     toast.success(`${shot.shotCode} advanced to ${nextStatus.replace("-", " ")}`);
-  };
+  }
+
+  const columns: DataTableColumn<VfxShot>[] = [
+    {
+      key: "shotCode",
+      header: "Shot",
+      sortValue: (s) => s.shotCode,
+      cell: (s) => (
+        <button
+          type="button"
+          onClick={() => setDetailShot(s)}
+          className="font-medium text-amber-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 dark:text-amber-400"
+        >
+          {s.shotCode}
+        </button>
+      ),
+    },
+    { key: "sequence", header: "Sequence", sortValue: (s) => s.sequence, cell: (s) => s.sequence },
+    {
+      key: "status",
+      header: "Status",
+      sortValue: (s) => s.status,
+      cell: (s) => (
+        <StatusBadge status={s.status} tone={vfxStatusTones[s.status]} label={vfxStatusLabels[s.status]} />
+      ),
+    },
+    {
+      key: "priority",
+      header: "Priority",
+      sortValue: (s) => s.priority,
+      cell: (s) => (
+        <StatusBadge status={s.priority} tone={vfxPriorityTones[s.priority]} label={s.priority} />
+      ),
+    },
+    {
+      key: "vendor",
+      header: "Vendor",
+      sortValue: (s) => s.vendorId ?? "",
+      cell: (s) => s.vendorId || <span className="text-muted-foreground">Unassigned</span>,
+    },
+    {
+      key: "dueDate",
+      header: "Due",
+      sortValue: (s) => s.dueDate,
+      cell: (s) =>
+        isOverdue(s.dueDate, s.status) ? (
+          <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+            <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+            {s.dueDate}
+          </span>
+        ) : (
+          s.dueDate
+        ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      align: "right",
+      cell: (s) => (
+        <div className="flex justify-end gap-1">
+          <Button size="sm" variant="outline" className="h-8" onClick={() => setDetailShot(s)}>
+            Details
+          </Button>
+          <Button size="sm" variant="ghost" className="h-8" aria-label={`Edit ${s.shotCode}`} onClick={() => handleOpenEdit(s)}>
+            <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            {scopedProject ? `${scopedProject.title} · VFX Tracking` : "VFX Tracking"}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {scopedProject
-              ? `Manage shots, vendor turnovers, and review approvals for ${scopedProject.title}`
-              : "Manage visual effects shots, studio vendor turnovers, and plate deliverables"}
-          </p>
-        </div>
-        <Button onClick={handleOpenAdd} className="gap-2 shrink-0 bg-primary font-semibold">
-          <Plus className="w-4 h-4" />
-          Add VFX Shot
-        </Button>
+      <PageHeader
+        as="h1"
+        icon={Zap}
+        title={scopedProject ? `${scopedProject.title} · VFX Tracking` : "VFX Tracking"}
+        description={
+          scopedProject
+            ? `Manage shots, vendor turnovers, and review approvals for ${scopedProject.title}`
+            : "Manage visual effects shots, studio vendor turnovers, and plate deliverables"
+        }
+        actions={
+          <Button onClick={handleOpenAdd} variant="primary" className="gap-2">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add VFX Shot
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard label="Total Shots" value={stats.total} icon={Zap} />
+        <StatCard label="In Progress" value={stats.inProgress} icon={Clock} hint={`${stats.briefed} briefed`} />
+        <StatCard label="In Review" value={stats.inReview} icon={CheckCircle2} hint={`${stats.final} final`} />
+        <StatCard
+          label="Overdue"
+          value={stats.overdue}
+          icon={AlertTriangle}
+          hint={`${stats.highPriority} high priority open`}
+        />
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-              Total Shots
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-              Briefed
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-500">{stats.briefed}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-              In Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-500">{stats.inProgress}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-              In Review
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-500">{stats.review}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-              Final Approved
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-500">{stats.final}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
       <Card>
         <CardContent className="pt-5">
-          <div className="flex flex-col sm:flex-row gap-3">
+          <VfxPipelineBar counts={statusCounts} total={stats.total} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-3 pt-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <Label htmlFor="vfx-search">Search</Label>
+              <SearchInput
+                id="vfx-search"
+                label="Search VFX shots"
+                className="mt-1 h-10"
+                placeholder="Shot code, sequence, description or vendor"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex h-10 overflow-hidden rounded-lg border" role="group" aria-label="View mode">
+              <button
+                type="button"
+                onClick={() => setView("cards")}
+                aria-pressed={view === "cards"}
+                aria-label="Card view"
+                className={`flex items-center justify-center px-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500 ${
+                  view === "cards" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("table")}
+                aria-pressed={view === "table"}
+                aria-label="Table view"
+                className={`flex items-center justify-center border-l px-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500 ${
+                  view === "table" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <List className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
             {!scopedProjectId && (
               <div className="flex-1">
-                <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Project</label>
+                <Label htmlFor="vfx-project-filter">Project</Label>
                 <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-                  <SelectTrigger>
+                  <SelectTrigger id="vfx-project-filter" className="mt-1">
                     <SelectValue placeholder="Select Project" />
                   </SelectTrigger>
                   <SelectContent>
@@ -283,9 +374,9 @@ export function VfxTrackingWorkspace({ projectId: scopedProjectId }: VfxTracking
               </div>
             )}
             <div className="flex-1">
-              <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Status</label>
+              <Label htmlFor="vfx-status-filter">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger id="vfx-status-filter" className="mt-1">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -298,9 +389,9 @@ export function VfxTrackingWorkspace({ projectId: scopedProjectId }: VfxTracking
               </Select>
             </div>
             <div className="flex-1">
-              <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Priority</label>
+              <Label htmlFor="vfx-priority-filter">Priority</Label>
               <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger>
+                <SelectTrigger id="vfx-priority-filter" className="mt-1">
                   <SelectValue placeholder="All Priorities" />
                 </SelectTrigger>
                 <SelectContent>
@@ -315,383 +406,172 @@ export function VfxTrackingWorkspace({ projectId: scopedProjectId }: VfxTracking
         </CardContent>
       </Card>
 
-      {/* VFX Shots Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredShots.length > 0 ? (
-          filteredShots.map((shot) => {
-            const projectObj = projects.find((p) => p.id === shot.projectId);
-            return (
-              <Card
-                key={shot.id}
-                className="group border hover:border-primary/50 transition-all shadow-sm flex flex-col justify-between"
+      {filteredShots.length === 0 ? (
+        <EmptyState
+          icon={Zap}
+          title="No VFX shots found"
+          description={
+            hasFilters
+              ? "No shots match the current search and filters."
+              : "Create and dispatch VFX shots to monitor plate turnarounds and client review approvals."
+          }
+          action={
+            hasFilters ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearch("");
+                  setStatusFilter("all");
+                  setPriorityFilter("all");
+                }}
               >
+                Clear search and filters
+              </Button>
+            ) : (
+              <Button onClick={handleOpenAdd} variant="primary" className="gap-1.5">
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Add First VFX Shot
+              </Button>
+            )
+          }
+        />
+      ) : view === "table" ? (
+        <DataTable
+          columns={columns}
+          rows={filteredShots}
+          rowKey={(s) => s.id}
+          caption="VFX shots"
+          empty="No VFX shots match the current filters."
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {filteredShots.map((shot) => {
+            const overdue = isOverdue(shot.dueDate, shot.status);
+            const projectTitle = projectTitleFor(shot.projectId);
+            return (
+              <Card key={shot.id} className="flex flex-col justify-between transition-colors hover:border-amber-500/50">
                 <div>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <CardTitle className="text-base font-bold flex items-center gap-2">
-                          <Zap className="w-4 h-4 text-amber-500 shrink-0" />
-                          <span>{shot.shotCode}</span>
+                        <CardTitle className="flex items-center gap-2 text-base">
+                          <Zap className="h-4 w-4 shrink-0 text-amber-500" aria-hidden="true" />
+                          <button
+                            type="button"
+                            onClick={() => setDetailShot(shot)}
+                            className="truncate hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                          >
+                            {shot.shotCode}
+                          </button>
                         </CardTitle>
-                        <CardDescription className="text-xs mt-1">
+                        <CardDescription className="mt-1 text-xs">
                           {shot.sequence}
-                          {projectObj && !scopedProjectId && ` · ${projectObj.title}`}
+                          {projectTitle && !scopedProjectId ? ` · ${projectTitle}` : ""}
                         </CardDescription>
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <Badge
-                          variant="outline"
-                          className={`capitalize text-xs font-semibold ${
-                            VfxStatusColors[shot.status] || ""
-                          }`}
-                        >
-                          {shot.status.replace("-", " ")}
-                        </Badge>
-                        <Badge
-                          variant="outline"
-                          className={`capitalize text-xs font-medium ${
-                            PriorityColors[shot.priority] || ""
-                          }`}
-                        >
-                          {shot.priority}
-                        </Badge>
+                      <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
+                        <StatusBadge
+                          status={shot.status}
+                          tone={vfxStatusTones[shot.status]}
+                          label={vfxStatusLabels[shot.status]}
+                        />
+                        <StatusBadge
+                          status={shot.priority}
+                          tone={vfxPriorityTones[shot.priority]}
+                          label={shot.priority}
+                        />
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3 pt-0">
                     <p className="text-sm text-foreground/90">{shot.description}</p>
-                    <div className="pt-2 border-t text-xs text-muted-foreground flex flex-wrap justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span>Due: {shot.dueDate}</span>
-                      </div>
+                    <div className="flex flex-wrap justify-between gap-2 border-t pt-2 text-xs text-muted-foreground">
+                      <span
+                        className={`flex items-center gap-1.5 ${
+                          overdue ? "font-medium text-red-600 dark:text-red-400" : ""
+                        }`}
+                      >
+                        {overdue ? (
+                          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+                        ) : (
+                          <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                        )}
+                        {overdue ? "Overdue: " : "Due: "}
+                        {shot.dueDate}
+                      </span>
                       {shot.vendorId && (
-                        <div className="font-medium text-foreground">
-                          Vendor: <span className="text-primary">{shot.vendorId}</span>
-                        </div>
+                        <span className="font-medium text-foreground">
+                          Vendor: <span className="text-amber-600 dark:text-amber-400">{shot.vendorId}</span>
+                        </span>
                       )}
                     </div>
                   </CardContent>
                 </div>
 
-                <div className="p-3 border-t bg-muted/10 flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 border-t bg-muted/10 p-3">
                   <div className="flex items-center gap-1.5">
                     {shot.status !== "final" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-xs h-8 gap-1 border-primary/30 hover:bg-primary/10"
-                        onClick={() => handleQuickAdvance(shot)}
-                      >
-                        <CheckCircle2 className="w-3 h-3 text-primary" />
+                      <Button size="sm" variant="outline" className="h-8 gap-1 text-xs" onClick={() => handleQuickAdvance(shot)}>
+                        <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
                         Advance
                       </Button>
                     )}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-xs h-8 gap-1"
-                      onClick={() => handleSendToVendor(shot)}
-                    >
-                      <Send className="w-3 h-3" />
+                    <Button size="sm" variant="ghost" className="h-8 gap-1 text-xs" onClick={() => handleSendToVendor(shot)}>
+                      <Send className="h-3 w-3" aria-hidden="true" />
                       Dispatch
                     </Button>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs h-8 gap-1"
-                      onClick={() => handleOpenEdit(shot)}
-                    >
-                      <Edit2 className="w-3 h-3" />
+                    <Button size="sm" variant="outline" className="h-8 gap-1 text-xs" onClick={() => handleOpenEdit(shot)}>
+                      <Edit2 className="h-3 w-3" aria-hidden="true" />
                       Edit
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-xs h-8 text-destructive hover:bg-destructive/10"
+                      aria-label={`Delete ${shot.shotCode}`}
+                      className="h-8 text-xs text-destructive hover:bg-destructive/10"
                       onClick={() => handleDeleteShot(shot.id)}
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="h-3 w-3" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
               </Card>
             );
-          })
-        ) : (
-          <div className="col-span-full text-center py-16 rounded-xl border border-dashed">
-            <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-30" />
-            <h3 className="font-semibold text-base mb-1">No VFX shots found</h3>
-            <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-4">
-              Create and dispatch VFX shots to monitor plate turnarounds and client review approvals.
-            </p>
-            <Button onClick={handleOpenAdd} size="sm" className="gap-1.5">
-              <Plus className="w-4 h-4" />
-              Add First VFX Shot
-            </Button>
-          </div>
-        )}
-      </div>
+          })}
+        </div>
+      )}
 
-      {/* Add VFX Shot Modal */}
-      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="max-w-md sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add VFX Shot</DialogTitle>
-            <DialogDescription>
-              Assign a new visual effects plate to studio vendors and track deliverables.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSaveAdd} className="space-y-4 pt-2">
-            {!scopedProjectId && (
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">Project</label>
-                <Select
-                  value={formData.projectId}
-                  onValueChange={(val) => setFormData({ ...formData, projectId: val })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">Shot Code *</label>
-                <Input
-                  required
-                  placeholder="e.g. VFX-042"
-                  value={formData.shotCode}
-                  onChange={(e) => setFormData({ ...formData, shotCode: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">Sequence</label>
-                <Input
-                  placeholder="e.g. Climax Battle"
-                  value={formData.sequence}
-                  onChange={(e) => setFormData({ ...formData, sequence: e.target.value })}
-                />
-              </div>
-            </div>
+      <VfxShotFormDialog
+        open={isAddOpen}
+        mode="add"
+        formData={formData}
+        projects={projects}
+        showProjectPicker={!scopedProjectId}
+        onChange={setFormData}
+        onSubmit={handleSaveAdd}
+        onOpenChange={setIsAddOpen}
+      />
 
-            <div>
-              <label className="text-xs font-semibold text-foreground mb-1 block">Description *</label>
-              <Textarea
-                required
-                rows={3}
-                placeholder="Describe plate cleanup, 3D asset integration, green screen replacement..."
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </div>
+      <VfxShotFormDialog
+        open={!!editingShot}
+        mode="edit"
+        formData={formData}
+        projects={projects}
+        showProjectPicker={!scopedProjectId}
+        onChange={setFormData}
+        onSubmit={handleSaveEdit}
+        onOpenChange={(open) => !open && setEditingShot(null)}
+        onDelete={() => editingShot && handleDeleteShot(editingShot.id)}
+      />
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">Status</label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(val: VfxShotStatus) => setFormData({ ...formData, status: val })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="briefed">Briefed</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="client-review">Client Review</SelectItem>
-                    <SelectItem value="final">Final</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">Priority</label>
-                <Select
-                  value={formData.priority}
-                  onValueChange={(val: any) => setFormData({ ...formData, priority: val })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">Target Due Date</label>
-                <Input
-                  type="date"
-                  value={formData.dueDate}
-                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-foreground mb-1 block">Assigned VFX Vendor</label>
-              <Input
-                placeholder="e.g. DNEG, Makuta VFX, Red Chillies.vfx"
-                value={formData.vendorId}
-                onChange={(e) => setFormData({ ...formData, vendorId: e.target.value })}
-              />
-            </div>
-
-            <DialogFooter className="gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" className="bg-primary">
-                Save VFX Shot
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit VFX Shot Modal */}
-      <Dialog open={!!editingShot} onOpenChange={(open) => !open && setEditingShot(null)}>
-        <DialogContent className="max-w-md sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit VFX Shot</DialogTitle>
-            <DialogDescription>
-              Update turnaround status, assigned vendor, and plate instructions.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSaveEdit} className="space-y-4 pt-2">
-            {!scopedProjectId && (
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">Project</label>
-                <Select
-                  value={formData.projectId}
-                  onValueChange={(val) => setFormData({ ...formData, projectId: val })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">Shot Code *</label>
-                <Input
-                  required
-                  value={formData.shotCode}
-                  onChange={(e) => setFormData({ ...formData, shotCode: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">Sequence</label>
-                <Input
-                  value={formData.sequence}
-                  onChange={(e) => setFormData({ ...formData, sequence: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-foreground mb-1 block">Description *</label>
-              <Textarea
-                required
-                rows={3}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">Status</label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(val: VfxShotStatus) => setFormData({ ...formData, status: val })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="briefed">Briefed</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="client-review">Client Review</SelectItem>
-                    <SelectItem value="final">Final</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">Priority</label>
-                <Select
-                  value={formData.priority}
-                  onValueChange={(val: any) => setFormData({ ...formData, priority: val })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-foreground mb-1 block">Due Date</label>
-                <Input
-                  type="date"
-                  value={formData.dueDate}
-                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-foreground mb-1 block">Assigned VFX Vendor</label>
-              <Input
-                value={formData.vendorId}
-                onChange={(e) => setFormData({ ...formData, vendorId: e.target.value })}
-              />
-            </div>
-
-            <DialogFooter className="gap-2 pt-2 flex items-center justify-between">
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                onClick={() => editingShot && handleDeleteShot(editingShot.id)}
-              >
-                Delete Shot
-              </Button>
-              <div className="flex items-center gap-2">
-                <Button type="button" variant="outline" onClick={() => setEditingShot(null)}>
-                  Cancel
-                </Button>
-                <Button type="submit" className="bg-primary">
-                  Save Changes
-                </Button>
-              </div>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <VfxShotDetailDialog
+        shot={detailShot}
+        projectTitle={detailShot ? projectTitleFor(detailShot.projectId) : undefined}
+        onClose={() => setDetailShot(null)}
+        onEdit={handleOpenEdit}
+      />
     </div>
   );
 }

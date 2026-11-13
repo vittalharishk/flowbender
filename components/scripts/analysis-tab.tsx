@@ -438,10 +438,10 @@ export function AnalysisTab({ scriptId, script }: Props) {
                   <p className="text-xs text-muted-foreground mb-1">Characters introduced:</p>
                   <div className="flex flex-wrap gap-1">
                     {a.charactersIntroduced.slice(0, 6).map((c) => (
-                      <span key={c} className="text-[10px] px-1.5 py-0.5 rounded bg-muted/60 font-medium">{c}</span>
+                      <span key={c} className="text-xs px-1.5 py-0.5 rounded bg-muted/60 font-medium">{c}</span>
                     ))}
                     {a.charactersIntroduced.length > 6 && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground">+{a.charactersIntroduced.length - 6}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground">+{a.charactersIntroduced.length - 6}</span>
                     )}
                   </div>
                 </div>
@@ -467,14 +467,14 @@ export function AnalysisTab({ scriptId, script }: Props) {
                   className={`w-full rounded-t ${actColors[p.act]} transition-opacity group-hover:opacity-80`}
                   style={{ height: `${Math.max(heightPct, 4)}%` }}
                 />
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-popover border rounded px-2 py-1 text-[10px] font-mono whitespace-nowrap shadow-lg z-10">
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-popover border rounded px-2 py-1 text-xs font-mono whitespace-nowrap shadow-lg z-10">
                   Sc. {p.sceneNumber} — {p.pages} pg
                 </div>
               </div>
             );
           })}
         </div>
-        <div className="flex gap-4 mt-3 text-[10px] text-muted-foreground">
+        <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-blue-500" /> Act 1</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-amber-500" /> Act 2</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500" /> Act 3</span>
@@ -497,7 +497,7 @@ export function AnalysisTab({ scriptId, script }: Props) {
               </div>
               <span className="text-xs font-mono text-muted-foreground">Sc. {pp.actualScene}</span>
               {pp.deviation > 2 && (
-                <Badge variant="outline" className="text-[10px] text-amber-400 border-amber-500/30">
+                <Badge variant="outline" className="text-xs text-amber-400 border-amber-500/30">
                   {pp.deviation} pg off
                 </Badge>
               )}
@@ -558,7 +558,7 @@ export function AnalysisTab({ scriptId, script }: Props) {
                           <p className="font-medium truncate">{scene.intExt}. {scene.heading} — {scene.timeOfDay}</p>
                           <p className="text-xs text-muted-foreground truncate">{scene.location || "No location"} · {scene.pages} pg</p>
                         </div>
-                        <Badge variant="outline" className="text-[10px]">{scene.status}</Badge>
+                        <Badge variant="outline" className="text-xs">{scene.status}</Badge>
                       </div>
                     ))}
                     {a.scenes.length === 0 && (
@@ -585,7 +585,7 @@ export function AnalysisTab({ scriptId, script }: Props) {
           rows={4}
           className="text-sm"
         />
-        <p className="text-[10px] text-muted-foreground mt-2">Notes are stored locally in this session and are not persisted.</p>
+        <p className="text-xs text-muted-foreground mt-2">Notes are stored locally in this session and are not persisted.</p>
       </div>
     </section>
   );

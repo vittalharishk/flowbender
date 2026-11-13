@@ -188,7 +188,7 @@ export function CrewProfile({ member, backHref, backLabel, onUpdate }: Props) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          {isToday && <span className="text-[10px] text-amber-400 font-medium uppercase">Today</span>}
+                          {isToday && <span className="text-xs text-amber-400 font-medium uppercase">Today</span>}
                           <span className="text-xs text-muted-foreground">Day {entry.shootDayNumber}</span>
                         </div>
                         <p className="text-sm font-medium truncate">{entry.location}</p>
@@ -242,7 +242,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function MiniStat({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div className="rounded-lg bg-muted/40 p-3 text-center">
-      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{label}</p>
+      <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
       <p className={cn("text-lg font-bold mt-0.5", color)}>{value}</p>
     </div>
   );
@@ -253,7 +253,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: typeof Mail; label: strin
     <div className="flex items-start gap-2.5">
       <Icon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
       <div className="min-w-0">
-        <p className="text-[11px] text-muted-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
         {label === "Email" && value ? <a href={`mailto:${value}`} className="text-sm break-all hover:underline">{value}</a> : label === "Phone" && value !== "Not provided" ? <a href={`tel:${value}`} className="text-sm break-all hover:underline">{value}</a> : <p className="text-sm break-all">{value || "Not provided"}</p>}
       </div>
     </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useState } from "react";
 import {
   Clapperboard, Calendar, MapPin, Clock, Plus, Pencil, FileText, ChevronLeft, ChevronRight,
@@ -81,7 +83,7 @@ export function ProductionDashboard({ projectId }: { projectId?: string }) {
       {!projectId && (
         <div className="flex items-center gap-3">
           <Select value={selectedProject} onValueChange={setSelectedProject}>
-            <SelectTrigger className="w-56 h-8 text-xs">
+            <SelectTrigger aria-label="All Projects" className="w-56 h-8 text-xs">
               <SelectValue placeholder="All Projects" />
             </SelectTrigger>
             <SelectContent>
@@ -114,7 +116,7 @@ export function ProductionDashboard({ projectId }: { projectId?: string }) {
             ].map((s) => (
               <Card key={s.label}>
                 <CardContent className="p-3">
-                  <p className="text-[11px] text-muted-foreground">{s.label}</p>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
                   <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
                 </CardContent>
               </Card>
@@ -145,7 +147,7 @@ export function ProductionDashboard({ projectId }: { projectId?: string }) {
                   return (
                     <div key={s} className="flex justify-between">
                       <span className="text-muted-foreground capitalize">{s}</span>
-                      <Badge className={`text-[10px] ${DPR_STATUS_COLOR[s]}`}>{count}</Badge>
+                      <Badge className={`text-xs ${DPR_STATUS_COLOR[s]}`}>{count}</Badge>
                     </div>
                   );
                 })}
@@ -200,16 +202,16 @@ export function ProductionDashboard({ projectId }: { projectId?: string }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs font-bold">Day {day.shootDayNumber}</span>
-                        <Badge className={`text-[10px] ${SHOOT_STATUS_COLOR[day.status] ?? "bg-slate-500/20 text-slate-300"}`}>
+                        <Badge className={`text-xs ${SHOOT_STATUS_COLOR[day.status] ?? "bg-slate-500/20 text-slate-300"}`}>
                           {day.status}
                         </Badge>
                         {dpr && (
-                          <Badge className={`text-[10px] ${DPR_STATUS_COLOR[dpr.status]}`}>
+                          <Badge className={`text-xs ${DPR_STATUS_COLOR[dpr.status]}`}>
                             DPR {dpr.status}
                           </Badge>
                         )}
                       </div>
-                      <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                         <Calendar className="w-3 h-3" /> {dateLabel(day.date)}
                         <span className="mx-1">·</span>
                         <MapPin className="w-3 h-3" /> {day.location}
@@ -223,7 +225,7 @@ export function ProductionDashboard({ projectId }: { projectId?: string }) {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-6 text-[10px] px-2"
+                          className="h-6 text-xs px-2"
                           onClick={(e) => {
                             e.stopPropagation();
                             setDprDialog("create");
@@ -249,7 +251,7 @@ export function ProductionDashboard({ projectId }: { projectId?: string }) {
               value={sceneDayObj?.id ?? ""}
               onValueChange={setSceneDayId}
             >
-              <SelectTrigger className="w-72 h-8 text-xs">
+              <SelectTrigger aria-label="Select shoot day" className="w-72 h-8 text-xs">
                 <SelectValue placeholder="Select shoot day" />
               </SelectTrigger>
               <SelectContent>
@@ -266,20 +268,20 @@ export function ProductionDashboard({ projectId }: { projectId?: string }) {
               <div className="grid grid-cols-3 gap-3 mb-4">
                 <Card>
                   <CardContent className="p-3">
-                    <p className="text-[11px] text-muted-foreground">Scenes Planned</p>
+                    <p className="text-xs text-muted-foreground">Scenes Planned</p>
                     <p className="text-xl font-bold">{sceneDayObj.scenes?.length ?? 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-3">
-                    <p className="text-[11px] text-muted-foreground">Total Pages</p>
+                    <p className="text-xs text-muted-foreground">Total Pages</p>
                     <p className="text-xl font-bold text-amber-400">{sceneDayObj.totalPages ?? 0}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-3">
-                    <p className="text-[11px] text-muted-foreground">Status</p>
-                    <Badge className={`text-[11px] ${SHOOT_STATUS_COLOR[sceneDayObj.status] ?? "bg-slate-500/20 text-slate-300"}`}>
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <Badge className={`text-xs ${SHOOT_STATUS_COLOR[sceneDayObj.status] ?? "bg-slate-500/20 text-slate-300"}`}>
                       {sceneDayObj.status}
                     </Badge>
                   </CardContent>
@@ -293,13 +295,13 @@ export function ProductionDashboard({ projectId }: { projectId?: string }) {
                   <CardContent className="p-3 flex items-center gap-4">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium">Sc. {scene.sceneNumber} · {scene.heading}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {scene.intExt} · {scene.pages} pages
                         {scene.characters?.length ? ` · ${scene.characters.join(", ")}` : ""}
                       </p>
                     </div>
                     <Badge
-                      className={`text-[10px] shrink-0 ${
+                      className={`text-xs shrink-0 ${
                         sceneDayObj.status === "completed"
                           ? "bg-emerald-500/20 text-emerald-300"
                           : "bg-amber-500/20 text-amber-400"
@@ -344,9 +346,9 @@ export function ProductionDashboard({ projectId }: { projectId?: string }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-bold">Day {dpr.shootDayNumber}</span>
-                      <Badge className={`text-[10px] ${DPR_STATUS_COLOR[dpr.status]}`}>{dpr.status}</Badge>
+                      <Badge className={`text-xs ${DPR_STATUS_COLOR[dpr.status]}`}>{dpr.status}</Badge>
                     </div>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {dateLabel(dpr.date)} · {dpr.location}
                     </p>
                   </div>
@@ -424,7 +426,7 @@ function ShootDayDetailDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <InfoCard label="Status"><Badge className={`text-[10px] ${SHOOT_STATUS_COLOR[day.status] ?? ""}`}>{day.status}</Badge></InfoCard>
+            <InfoCard label="Status"><Badge className={`text-xs ${SHOOT_STATUS_COLOR[day.status] ?? ""}`}>{day.status}</Badge></InfoCard>
             <InfoCard label="Location">{day.location}</InfoCard>
             <InfoCard label="Call Time">{day.callTime} – {day.wrapTime}</InfoCard>
             <InfoCard label="Cast Required">{day.castRequired?.length ?? 0} artists</InfoCard>
@@ -441,7 +443,7 @@ function ShootDayDetailDialog({
                   <div key={s.sceneNumber} className="flex items-center gap-2 text-xs border rounded-lg px-3 py-2">
                     <span className="font-medium">Sc. {s.sceneNumber}</span>
                     <span className="flex-1 text-muted-foreground truncate">{s.heading}</span>
-                    <Badge variant="outline" className="text-[10px]">{s.intExt}</Badge>
+                    <Badge variant="outline" className="text-xs">{s.intExt}</Badge>
                     <span className="text-muted-foreground">{s.pages}pg</span>
                   </div>
                 ))}
@@ -455,7 +457,7 @@ function ShootDayDetailDialog({
               <p className="text-xs font-semibold mb-2">Cast Required</p>
               <div className="flex flex-wrap gap-1.5">
                 {day.castRequired.map((name) => (
-                  <Badge key={name} variant="secondary" className="text-[10px]">{name}</Badge>
+                  <Badge key={name} variant="secondary" className="text-xs">{name}</Badge>
                 ))}
               </div>
             </div>
@@ -477,7 +479,7 @@ function ShootDayDetailDialog({
             </div>
             {dpr ? (
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <InfoCard label="DPR Status"><Badge className={`text-[10px] ${DPR_STATUS_COLOR[dpr.status]}`}>{dpr.status}</Badge></InfoCard>
+                <InfoCard label="DPR Status"><Badge className={`text-xs ${DPR_STATUS_COLOR[dpr.status]}`}>{dpr.status}</Badge></InfoCard>
                 <InfoCard label="Scenes">{dpr.scenesCompleted}/{dpr.scenesPlanned} completed</InfoCard>
                 <InfoCard label="Pages">{dpr.pagesCompleted}/{dpr.pagesPlanned} shot</InfoCard>
                 <InfoCard label="Cast Present">{dpr.castPresent}</InfoCard>
@@ -498,7 +500,7 @@ function ShootDayDetailDialog({
 function InfoCard({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="rounded-lg border px-3 py-2">
-      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <div className="text-xs font-medium mt-0.5">{children}</div>
     </div>
   );
@@ -519,6 +521,7 @@ function DPRDialog({
   onDelete: (id: string) => void;
   onClose: () => void;
 }) {
+  const confirm = useConfirm();
   const initialShootDay = shootDay ?? (dpr ? shootDays.find((d) => d.id === dpr.shootDayId) ?? null : null);
   const [form, setForm] = useState<Partial<DPRReport>>(dpr ?? {
     projectId,
@@ -588,7 +591,7 @@ function DPRDialog({
               <div>
                 <Label className="text-xs">Shoot Day</Label>
                 <Select value={form.shootDayId ?? ""} onValueChange={handleShootDayChange}>
-                  <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue placeholder="Select shoot day" /></SelectTrigger>
+                  <SelectTrigger aria-label="Select shoot day" className="mt-1 h-8 text-xs"><SelectValue placeholder="Select shoot day" /></SelectTrigger>
                   <SelectContent>
                     {shootDays.filter((d) => !form.projectId || d.projectId === form.projectId).map((d) => (
                       <SelectItem key={d.id} value={d.id} className="text-xs">Day {d.shootDayNumber} · {d.date}</SelectItem>
@@ -691,7 +694,7 @@ function DPRDialog({
               variant="destructive"
               size="sm"
               className="mr-auto"
-              onClick={() => { if (window.confirm("Delete this DPR?")) onDelete(dpr.id); }}
+              onClick={async () => { if (await confirm({ title: "Delete DPR?", description: "This daily production report will be permanently removed.", confirmLabel: "Delete" })) onDelete(dpr.id); }}
             >
               Delete
             </Button>

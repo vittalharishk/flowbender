@@ -114,7 +114,7 @@ export function CastProfile({ member, backHref, backLabel, onUpdate }: CastProfi
                   <Pencil className="w-3.5 h-3.5" /> Edit
                 </Button>
               </div>
-              <p className="mt-2 text-[11px] text-muted-foreground">Reference image only — not a contract or casting confirmation.</p>
+              <p className="mt-2 text-xs text-muted-foreground">Reference image only — not a contract or casting confirmation.</p>
               <div className="flex flex-wrap gap-2 mt-3">
                 <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full border", castCategoryColors[member.category])}>
                   {castCategoryLabels[member.category]}
@@ -235,7 +235,7 @@ export function CastProfile({ member, backHref, backLabel, onUpdate }: CastProfi
                     <Link href={`/dashboard/projects/${member.projectId}/schedule`} key={entry.id} className={cn("block p-2.5 rounded-lg text-xs", isToday ? "bg-amber-500/10 border border-amber-500/20" : "bg-muted/40")}>
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium">{fmtDate(entry.date)}</span>
-                        {isToday && <span className="text-[10px] text-amber-400 font-medium uppercase">Today</span>}
+                        {isToday && <span className="text-xs text-amber-400 font-medium uppercase">Today</span>}
                       </div>
                       <p className="text-muted-foreground flex items-center gap-1">
                         <MapPin className="w-3 h-3 shrink-0" /> {entry.location}
@@ -287,7 +287,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function MiniStat({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div className="rounded-lg bg-muted/40 p-3 text-center">
-      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{label}</p>
+      <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
       <p className={cn("text-lg font-bold mt-0.5", color)}>{value}</p>
     </div>
   );
@@ -298,7 +298,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: typeof Mail; label: strin
     <div className="flex items-start gap-2.5">
       <Icon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
       <div className="min-w-0">
-        <p className="text-[11px] text-muted-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
         {label === "Email" && value ? <a href={`mailto:${value}`} className="text-sm break-all hover:underline">{value}</a> : label === "Phone" && value !== "Not provided" ? <a href={`tel:${value}`} className="text-sm break-all hover:underline">{value}</a> : <p className="text-sm break-all">{value || "Not provided"}</p>}
       </div>
     </div>
@@ -323,7 +323,7 @@ function MilestoneRow({ milestone }: { milestone: PaymentMilestone }) {
       </div>
       <div className="text-right shrink-0">
         <p className="text-sm font-semibold">{fmt(milestone.amount)}</p>
-        <p className={cn("text-[11px] font-medium", cfg.color)}>{cfg.label}</p>
+        <p className={cn("text-xs font-medium", cfg.color)}>{cfg.label}</p>
       </div>
     </div>
   );

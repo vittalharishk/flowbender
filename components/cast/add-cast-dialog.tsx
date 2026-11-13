@@ -287,10 +287,10 @@ export function AddCastDialog({ open, onOpenChange, projectId, projectTitle, onC
             <Button type="button" variant="outline" onClick={() => { reset(); onOpenChange(false); }}>
               Cancel
             </Button>
-            <Button
+            <Button variant="primary"
               type="submit"
               disabled={saving || projects.length === 0}
-              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+             
             >
               {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
               {saving ? "Adding..." : "Add Cast Member"}

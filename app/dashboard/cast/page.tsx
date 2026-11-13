@@ -1,59 +1,92 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Users } from "lucide-react";
 import { useCastMembers } from "@/lib/cast-store";
+import { useProjects } from "@/lib/project-store";
+import { PageHeader } from "@/components/app/page-header";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CastListView } from "@/components/cast/cast-list-view";
 import { RolesProbableTab } from "@/components/cast/roles-probable-tab";
 import { CastingDashboardTab } from "@/components/cast/casting-dashboard-tab";
 import { ContractsTab } from "@/components/cast/contracts-tab";
 import { AvailabilityTab } from "@/components/cast/availability-tab";
 
-const TABS = [
-  { id: "members", label: "Cast Members" },
-  { id: "roles", label: "Roles & Probable" },
-  { id: "casting", label: "Casting" },
-  { id: "contracts", label: "Contracts" },
-  { id: "availability", label: "Availability" },
-] as const;
-type Tab = (typeof TABS)[number]["id"];
-
 export default function GlobalCastPage() {
   const members = useCastMembers();
-  const [tab, setTab] = useState<Tab>("members");
+  const projects = useProjects();
+  const [projectFilter, setProjectFilter] = useState<string>("all");
+
+  const scopedProjectId = projectFilter === "all" ? undefined : projectFilter;
+
+  const visibleMembers = useMemo(
+    () => (scopedProjectId ? members.filter((m) => m.projectId === scopedProjectId) : members),
+    [members, scopedProjectId]
+  );
+
+  const selectedProject = projects.find((p) => p.id === scopedProjectId);
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold">Cast</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          All cast members and casting pipeline across every production
-        </p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        as="h1"
+        icon={Users}
+        title="Cast"
+        description="All cast members and the casting pipeline across every production"
+        actions={
+          <div className="flex items-center gap-2">
+            <label htmlFor="cast-project-filter" className="text-xs font-medium text-muted-foreground">
+              Project
+            </label>
+            <Select value={projectFilter} onValueChange={setProjectFilter}>
+              <SelectTrigger id="cast-project-filter" aria-label="Filter by project" className="h-9 w-[200px]">
+                <SelectValue placeholder="All projects" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All projects</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        }
+      />
 
-      {/* Tab bar */}
-      <div className="flex gap-1 border-b">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-              tab === t.id
-                ? "border-amber-500 text-amber-500"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <Tabs defaultValue="members" className="space-y-5">
+        <TabsList className="h-auto flex-wrap">
+          <TabsTrigger value="members">Cast Members</TabsTrigger>
+          <TabsTrigger value="roles">Roles &amp; Probable</TabsTrigger>
+          <TabsTrigger value="casting">Casting</TabsTrigger>
+          <TabsTrigger value="contracts">Contracts</TabsTrigger>
+          <TabsTrigger value="availability">Availability</TabsTrigger>
+        </TabsList>
 
-      {tab === "members" && (
-        <CastListView members={members} onCastAdded={() => undefined} />
-      )}
-      {tab === "roles" && <RolesProbableTab />}
-      {tab === "casting" && <CastingDashboardTab />}
-      {tab === "contracts" && <ContractsTab />}
-      {tab === "availability" && <AvailabilityTab />}
+        <TabsContent value="members">
+          <CastListView
+            key={projectFilter}
+            members={visibleMembers}
+            projectScope={Boolean(scopedProjectId)}
+            projectId={scopedProjectId}
+            projectTitle={selectedProject?.title}
+          />
+        </TabsContent>
+        <TabsContent value="roles">
+          <RolesProbableTab key={projectFilter} projectId={scopedProjectId} />
+        </TabsContent>
+        <TabsContent value="casting">
+          <CastingDashboardTab key={projectFilter} projectId={scopedProjectId} />
+        </TabsContent>
+        <TabsContent value="contracts">
+          <ContractsTab key={projectFilter} projectId={scopedProjectId} />
+        </TabsContent>
+        <TabsContent value="availability">
+          <AvailabilityTab key={projectFilter} projectId={scopedProjectId} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

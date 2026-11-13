@@ -1,11 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
-import { Download } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Clock, Download } from "lucide-react";
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge } from "@/components/app/status-badge";
+import { DataTable, type DataTableColumn } from "@/components/app/data-table";
+import { ChartContainer, seriesColors } from "@/components/app/chart-container";
+import { EmptyState } from "@/components/app/empty-state";
 import { useAppDataSlice } from "@/lib/app-data-store";
 import { useMilestones } from "@/lib/post-prod-store";
 import { usePreProdChecklist } from "@/lib/pre-prod-store";
@@ -80,10 +84,10 @@ export function ScheduleVarianceReport({ projectId, filters, projectName }: Prop
 
   const chartData = useMemo(() => {
     return [
-      { name: "On Time", value: stats.onTime, fill: "#10b981" },
-      { name: "Delayed", value: stats.delayed, fill: "#ef4444" },
-      { name: "Ahead", value: stats.ahead, fill: "#3b82f6" },
-      { name: "Pending", value: stats.pending, fill: "#6b7280" },
+      { name: "On Time", value: stats.onTime, fill: seriesColors[2] },
+      { name: "Delayed", value: stats.delayed, fill: seriesColors[3] },
+      { name: "Ahead", value: stats.ahead, fill: seriesColors[1] },
+      { name: "Pending", value: stats.pending, fill: seriesColors[4] },
     ].filter((d) => d.value > 0);
   }, [stats]);
 
@@ -102,17 +106,16 @@ export function ScheduleVarianceReport({ projectId, filters, projectName }: Prop
   };
 
   if (items.length === 0) {
-    return <Card><CardContent className="p-8 text-center text-muted-foreground">No schedule data available for the selected filters.</CardContent></Card>;
+    return <EmptyState title="No schedule data" description="No schedule data available for the selected filters." icon={Clock} />;
   }
 
-  const statusColor = (s: string) => {
-    switch (s) {
-      case "on-time": return "border-emerald-500/30 text-emerald-400";
-      case "delayed": return "border-red-500/30 text-red-400";
-      case "ahead": return "border-blue-500/30 text-blue-400";
-      default: return "";
-    }
-  };
+  const columns: DataTableColumn<VarianceItem>[] = [
+    { key: "label", header: "Item", cell: (r) => <span className="font-medium max-w-[250px] truncate block">{r.label}</span>, sortValue: (r) => r.label },
+    { key: "planned", header: "Planned", cell: (r) => r.plannedDate || "—", sortValue: (r) => r.plannedDate || "" },
+    { key: "actual", header: "Actual", cell: (r) => r.actualDate || "—", sortValue: (r) => r.actualDate || "" },
+    { key: "variance", header: "Variance (days)", cell: (r) => <span className={`font-medium ${r.varianceDays > 0 ? "text-red-600 dark:text-red-400" : r.varianceDays < 0 ? "text-blue-600 dark:text-blue-400" : ""}`}>{r.varianceDays > 0 ? `+${r.varianceDays}` : r.varianceDays}</span>, sortValue: (r) => r.varianceDays, align: "right" },
+    { key: "status", header: "Status", cell: (r) => <StatusBadge status={r.status} />, sortValue: (r) => r.status },
+  ];
 
   return (
     <div className="space-y-4">
@@ -122,67 +125,37 @@ export function ScheduleVarianceReport({ projectId, filters, projectName }: Prop
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI label="Total Items" value={String(stats.total)} />
-        <KPI label="On Time" value={String(stats.onTime)} tone="text-emerald-400" />
-        <KPI label="Delayed" value={String(stats.delayed)} tone="text-red-400" />
-        <KPI label="Pending" value={String(stats.pending)} />
+        <StatCard label="Total Items" value={String(stats.total)} icon={Clock} />
+        <StatCard label="On Time" value={String(stats.onTime)} />
+        <StatCard label="Delayed" value={String(stats.delayed)} />
+        <StatCard label="Pending" value={String(stats.pending)} />
       </div>
 
       {chartData.length > 0 && (
         <Card>
           <CardHeader><CardTitle className="text-sm">Variance Distribution</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={260}>
+            <ChartContainer label="Schedule variance distribution chart" height={260}>
               <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {chartData.map((d, i) => <rect key={i} fill={d.fill} />)}
+                  {chartData.map((d, i) => <Cell key={i} fill={d.fill} />)}
                 </Bar>
               </BarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       )}
 
       <Card>
         <CardHeader><CardTitle className="text-sm">Variance Details</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-xs text-muted-foreground">
-                  <th className="text-left p-3">Item</th>
-                  <th className="text-left p-3">Planned</th>
-                  <th className="text-left p-3">Actual</th>
-                  <th className="text-right p-3">Variance (days)</th>
-                  <th className="text-left p-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.slice(0, 100).map((item) => (
-                  <tr key={item.id} className="border-b hover:bg-muted/30">
-                    <td className="p-3 font-medium max-w-[250px] truncate">{item.label}</td>
-                    <td className="p-3">{item.plannedDate || "—"}</td>
-                    <td className="p-3">{item.actualDate || "—"}</td>
-                    <td className={`p-3 text-right font-medium ${item.varianceDays > 0 ? "text-red-400" : item.varianceDays < 0 ? "text-blue-400" : ""}`}>
-                      {item.varianceDays > 0 ? `+${item.varianceDays}` : item.varianceDays}
-                    </td>
-                    <td className="p-3"><Badge variant="outline" className={`text-xs ${statusColor(item.status)}`}>{item.status}</Badge></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {items.length > 100 && <p className="text-xs text-muted-foreground text-center py-2">Showing first 100 of {items.length} items.</p>}
-          </div>
+        <CardContent>
+          <DataTable columns={columns} rows={items} rowKey={(r) => r.id} caption="Schedule variance details" />
         </CardContent>
       </Card>
     </div>
   );
-}
-
-function KPI({ label, value, tone = "text-foreground" }: { label: string; value: string; tone?: string }) {
-  return <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{label}</p><p className={`text-lg font-semibold mt-1 ${tone}`}>{value}</p></CardContent></Card>;
 }

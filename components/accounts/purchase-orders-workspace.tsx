@@ -3,6 +3,8 @@
 import { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/app/empty-state";
+import { StatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -271,8 +273,8 @@ export function PurchaseOrdersWorkspace({ projectId }: Props) {
             <TableBody>
               {paged.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={projectId ? 8 : 9} className="text-center py-8 text-muted-foreground">
-                    {pos.length === 0 ? "No purchase orders yet" : "No POs match the current filters"}
+                  <TableCell colSpan={projectId ? 8 : 9}>
+                    <EmptyState icon={ShoppingCart} title={pos.length === 0 ? "No purchase orders yet" : "No POs match the current filters"} description={pos.length === 0 ? "Purchase orders you raise will appear here." : "Try clearing the search or status filters."} className="py-6" />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -291,9 +293,7 @@ export function PurchaseOrdersWorkspace({ projectId }: Props) {
                     <TableCell className="text-sm capitalize">{po.department.replace(/-/g, " ")}</TableCell>
                     <TableCell className="text-right font-mono text-sm">{formatCurrency(po.inrTotal, "INR")}</TableCell>
                     <TableCell>
-                      <Badge className={`text-[10px] ${PO_STATUS_COLORS[po.status]}`}>
-                        {PO_STATUS_LABELS[po.status]}
-                      </Badge>
+                      <StatusBadge status={String(po.status)} label={PO_STATUS_LABELS[po.status]} className="text-xs" />
                     </TableCell>
                     <TableCell className="text-right text-sm">
                       <FulfilmentBar po={po} />
@@ -513,9 +513,7 @@ function PODetailPanel({ po, vendorName, projectName, onAction, onFulfil }: {
       <div>
         <h3 className="font-semibold text-sm">{po.title}</h3>
         <div className="flex items-center gap-2 mt-1">
-          <Badge className={`text-[10px] ${PO_STATUS_COLORS[po.status]}`}>
-            {PO_STATUS_LABELS[po.status]}
-          </Badge>
+          <StatusBadge status={String(po.status)} label={PO_STATUS_LABELS[po.status]} className="text-xs" />
           <span className="text-xs text-muted-foreground">{projectName}</span>
         </div>
       </div>
@@ -562,7 +560,7 @@ function PODetailPanel({ po, vendorName, projectName, onAction, onFulfil }: {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-5 text-[10px] px-1.5"
+                      className="h-5 text-xs px-1.5"
                       onClick={() => onFulfil(li)}
                     >
                       <Truck className="h-3 w-3 mr-0.5" /> Receive
@@ -583,7 +581,7 @@ function PODetailPanel({ po, vendorName, projectName, onAction, onFulfil }: {
             <div key={amd.id} className="border rounded p-2 text-xs space-y-1">
               <div className="flex justify-between">
                 <span className="font-medium">{amd.reason}</span>
-                <Badge variant="outline" className="text-[10px]">{amd.status}</Badge>
+                <Badge variant="outline" className="text-xs">{amd.status}</Badge>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Original: {formatCurrency(amd.originalAmount, po.currency)}</span>
@@ -621,7 +619,7 @@ function PODetailPanel({ po, vendorName, projectName, onAction, onFulfil }: {
               <div className="flex justify-between">
                 <span className="font-medium capitalize">{rec.level}</span>
                 <Badge
-                  className={`text-[10px] ${rec.decision === "approved" ? "bg-green-100 text-green-800" : rec.decision === "rejected" ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800"}`}
+                  className={`text-xs ${rec.decision === "approved" ? "bg-green-100 text-green-800" : rec.decision === "rejected" ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800"}`}
                 >
                   {rec.decision}
                 </Badge>

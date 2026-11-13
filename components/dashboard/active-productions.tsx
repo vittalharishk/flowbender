@@ -42,7 +42,7 @@ export function ActiveProductions({ projects }: ActiveProductionsProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Active Productions</h3>
+        <p className="text-lg font-semibold">Active Productions</p>
         <Link href="/dashboard/projects" className="text-sm text-primary hover:underline">View all projects</Link>
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">

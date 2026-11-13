@@ -172,9 +172,9 @@ export default function LoginPage() {
               </Label>
             </div>
 
-            <Button
+            <Button variant="primary"
               type="submit"
-              className="w-full h-11 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-medium shadow-lg shadow-amber-500/20 transition-all duration-200"
+              className="w-full h-11 font-medium transition-all duration-200"
               disabled={loading}
             >
               {loading ? (

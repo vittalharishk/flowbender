@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useMemo } from "react";
@@ -35,7 +37,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/app/page-header";
 import { ScriptUploadDialog } from "./script-upload-dialog";
+
+const scriptTabs = [
+  "Overview",
+  "Script",
+  "Scenes",
+  "Shot Division",
+  "Timeline",
+  "Characters & Dialogue",
+  "Breakdown",
+  "Locations",
+  "References",
+  "Versions",
+  "Reports",
+  "Analysis",
+];
 import { ScenesTab } from "./scenes-tab";
 import { VersionsTab } from "./versions-tab";
 import { ShotDivisionTab } from "./shot-division-tab";
@@ -78,6 +97,7 @@ function ScriptEditorContent({
   scriptId: string;
   embeddedProjectId?: string;
 }) {
+  const confirm = useConfirm();
   const id = scriptId;
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -209,6 +229,14 @@ function ScriptEditorContent({
     return characterMetrics.characters.find((c) => c.name === selectedCharacterForInspect) || null;
   }, [characterMetrics.characters, selectedCharacterForInspect]);
 
+  const tabCounts: Record<string, number | undefined> = {
+    "Characters & Dialogue": characterMetrics.characters.length,
+    Scenes: script?.scenes.length,
+    "Shot Division": (script?.shots ?? []).length,
+    References: (script?.references ?? []).length,
+    Versions: script?.versions.length,
+  };
+
   if (!script || (embeddedProjectId && script.projectId !== embeddedProjectId)) {
     return (
       <main className="p-8">
@@ -263,76 +291,41 @@ function ScriptEditorContent({
       {message && <p role="status" className="rounded-md border bg-muted p-3 text-sm">{message}</p>}
 
       {/* Top Banner / Actions */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
-              {project?.title ?? "Project"}
-            </Badge>
-            <span className="text-xs text-muted-foreground">·</span>
-            <span className="text-xs text-muted-foreground">{script.status}</span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight mt-1">{script.title}</h1>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => setShowUploadDialog(true)}
-            className="bg-amber-600 hover:bg-amber-700 text-white font-medium shadow-sm"
-          >
-            <Upload className="mr-1.5 h-4 w-4" /> Upload & Ingest Script
-          </Button>
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/dashboard/projects/${script.projectId}/scenes`}>
-              <Film className="mr-1.5 h-4 w-4" /> Production Scenes
-            </Link>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        as={embeddedProjectId ? "h2" : "h1"}
+        icon={FileText}
+        title={script.title}
+        description={`${project?.title ?? "Project"} · ${script.status} · ${script.draftName} v${script.draftNumber}`}
+        actions={
+          <>
+            <Button variant="primary" size="sm" onClick={() => setShowUploadDialog(true)}>
+              <Upload className="mr-1.5 h-4 w-4" aria-hidden="true" /> Upload &amp; Ingest Script
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/dashboard/projects/${script.projectId}/scenes`}>
+                <Film className="mr-1.5 h-4 w-4" aria-hidden="true" /> Production Scenes
+              </Link>
+            </Button>
+          </>
+        }
+      />
 
       {/* Navigation Tabs */}
-      <nav className="flex gap-1 overflow-auto border-b">
-        {["Overview", "Script", "Scenes", "Shot Division", "Timeline", "Characters & Dialogue", "Breakdown", "Locations", "References", "Versions", "Reports", "Analysis"].map((item) => (
-          <button
-            key={item}
-            onClick={() => setTab(item)}
-            className={`whitespace-nowrap border-b-2 px-3.5 py-2.5 text-sm font-medium transition-colors ${
-              tab === item
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {item}
-            {item === "Characters & Dialogue" && (
-              <span className="ml-1.5 rounded-full bg-amber-500/10 text-amber-500 px-1.5 py-0.2 text-[11px]">
-                {characterMetrics.characters.length}
-              </span>
-            )}
-            {item === "Scenes" && (
-              <span className="ml-1.5 rounded-full bg-muted text-muted-foreground px-1.5 py-0.2 text-[11px]">
-                {script.scenes.length}
-              </span>
-            )}
-            {item === "Shot Division" && (
-              <span className="ml-1.5 rounded-full bg-muted text-muted-foreground px-1.5 py-0.2 text-[11px]">
-                {(script.shots ?? []).length}
-              </span>
-            )}
-            {item === "References" && (
-              <span className="ml-1.5 rounded-full bg-muted text-muted-foreground px-1.5 py-0.2 text-[11px]">
-                {(script.references ?? []).length}
-              </span>
-            )}
-            {item === "Versions" && (
-              <span className="ml-1.5 rounded-full bg-muted text-muted-foreground px-1.5 py-0.2 text-[11px]">
-                {script.versions.length}
-              </span>
-            )}
-          </button>
-        ))}
-      </nav>
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="h-auto flex-wrap justify-start">
+          {scriptTabs.map((item) => {
+            const count = tabCounts[item];
+            return (
+              <TabsTrigger key={item} value={item} className="gap-1.5">
+                {item}
+                {count !== undefined && (
+                  <span className="rounded-full bg-muted px-1.5 text-xs text-muted-foreground">{count}</span>
+                )}
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+      </Tabs>
 
       {/* Tab: Overview */}
       {tab === "Overview" && (
@@ -509,8 +502,8 @@ function ScriptEditorContent({
                         variant="ghost"
                         className="h-6 w-6 text-destructive"
                         aria-label={`Delete ${block.type} block`}
-                        onClick={() => {
-                          if (window.confirm("Delete this screenplay block?")) {
+                        onClick={async () => {
+                          if (await confirm({ title: "Delete screenplay block?", description: "This block will be removed from the script.", confirmLabel: "Delete" })) {
                             removeScriptBlock(id, block.id);
                           }
                         }}
@@ -574,7 +567,7 @@ function ScriptEditorContent({
                           <span className="font-bold text-sm text-foreground">{char.name}</span>
                           <Badge
                             variant="secondary"
-                            className={`text-[10px] ${
+                            className={`text-xs ${
                               char.roleTier === "Lead"
                                 ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20"
                                 : char.roleTier === "Major Supporting"
@@ -639,11 +632,11 @@ function ScriptEditorContent({
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2 text-center p-2.5 rounded-lg bg-muted/40 text-xs">
                     <div>
-                      <span className="text-[10px] text-muted-foreground uppercase">Total Speeches</span>
+                      <span className="text-xs text-muted-foreground uppercase">Total Speeches</span>
                       <p className="font-bold text-lg text-primary">{activeInspectChar.dialogueCount}</p>
                     </div>
                     <div>
-                      <span className="text-[10px] text-muted-foreground uppercase">Spoken Words</span>
+                      <span className="text-xs text-muted-foreground uppercase">Spoken Words</span>
                       <p className="font-bold text-lg text-foreground">{activeInspectChar.wordCount}</p>
                     </div>
                   </div>
@@ -651,12 +644,12 @@ function ScriptEditorContent({
                   <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
                     {activeInspectChar.dialogues.map((quote, qIdx) => (
                       <div key={qIdx} className="p-3 rounded-lg border bg-background/60 space-y-1.5 text-xs">
-                        <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                        <div className="flex items-center justify-between text-xs font-mono text-muted-foreground">
                           <span className="font-semibold text-primary">Scene {quote.sceneNumber}</span>
                           <span className="truncate max-w-[170px]">{quote.sceneHeading}</span>
                         </div>
                         {quote.parenthetical && (
-                          <p className="italic text-muted-foreground text-[11px]">{quote.parenthetical}</p>
+                          <p className="italic text-muted-foreground text-xs">{quote.parenthetical}</p>
                         )}
                         <p className="font-medium text-foreground leading-relaxed">&ldquo;{quote.text}&rdquo;</p>
                       </div>
@@ -755,8 +748,8 @@ function ScriptEditorContent({
         <Button
           variant="destructive"
           size="sm"
-          onClick={() => {
-            if (window.confirm("Delete this script and all its versions?")) {
+          onClick={async () => {
+            if (await confirm({ title: "Delete script?", description: "This script and all its versions will be permanently removed.", confirmLabel: "Delete" })) {
               deleteScript(id);
               router.push(backHref);
             }

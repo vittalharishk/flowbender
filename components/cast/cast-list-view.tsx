@@ -2,9 +2,11 @@
 
 import { useState, useMemo } from "react";
 import { formatINR } from "@/lib/utils";
-import { Search, LayoutGrid, List, Plus, Users, SlidersHorizontal } from "lucide-react";
+import { LayoutGrid, List, Plus, Users, SlidersHorizontal, FileSignature, Clock, IndianRupee } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { StatCard } from "@/components/app/stat-card";
+import { SearchInput } from "@/components/app/search-input";
+import { EmptyState } from "@/components/app/empty-state";
 import {
   Select,
   SelectContent,
@@ -104,41 +106,29 @@ export function CastListView({
     return formatINR(v);
   }
 
+  const hasActiveFilters = Boolean(search) || categoryFilter !== "all" || contractFilter !== "all";
+
   return (
     <div className="space-y-5">
       <p className="text-xs text-muted-foreground">Seeded cast assignments, contact details, contracts and fees are demo planning data, not casting confirmations. All amounts are INR.</p>
       {/* Summary bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Total Cast</p>
-          <p className="text-xl font-bold mt-0.5">{stats.total}</p>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Contracts Signed</p>
-          <p className="text-xl font-bold mt-0.5 text-emerald-400">{stats.signed}</p>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Pending / Negotiating</p>
-          <p className="text-xl font-bold mt-0.5 text-amber-400">{stats.pending}</p>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Total Fees</p>
-          <p className="text-xl font-bold mt-0.5">{fmtShort(stats.totalFee)}</p>
-        </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard label="Total Cast" value={stats.total} icon={Users} compact />
+        <StatCard label="Contracts Signed" value={stats.signed} icon={FileSignature} compact />
+        <StatCard label="Pending / Negotiating" value={stats.pending} icon={Clock} compact />
+        <StatCard label="Total Fees" value={fmtShort(stats.totalFee)} icon={IndianRupee} compact hint={`${fmtShort(stats.paidFee)} paid`} />
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            aria-label="Search cast"
-            placeholder="Search by name, character, or project..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-muted/40"
-          />
-        </div>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <SearchInput
+          label="Search cast"
+          placeholder="Search by name, character, or project..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          wrapperClassName="flex-1"
+          className="h-10"
+        />
         <div className="flex gap-2 flex-wrap">
           <Button
             variant="outline"
@@ -151,7 +141,7 @@ export function CastListView({
           </Button>
           <div className={`${showFilters ? "flex" : "hidden"} sm:flex gap-2 flex-wrap`}>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[150px] h-9 text-xs">
+              <SelectTrigger aria-label="Filter by category" className="h-9 w-[150px] text-xs">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -162,7 +152,7 @@ export function CastListView({
               </SelectContent>
             </Select>
             <Select value={contractFilter} onValueChange={setContractFilter}>
-              <SelectTrigger className="w-[140px] h-9 text-xs">
+              <SelectTrigger aria-label="Filter by contract status" className="h-9 w-[140px] text-xs">
                 <SelectValue placeholder="Contract" />
               </SelectTrigger>
               <SelectContent>
@@ -174,7 +164,7 @@ export function CastListView({
               </SelectContent>
             </Select>
             <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
-              <SelectTrigger className="w-[150px] h-9 text-xs">
+              <SelectTrigger aria-label="Sort cast" className="h-9 w-[150px] text-xs">
                 <SelectValue placeholder="Sort" />
               </SelectTrigger>
               <SelectContent>
@@ -184,25 +174,29 @@ export function CastListView({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center border rounded-md overflow-hidden">
+          <div className="flex items-center overflow-hidden rounded-md border" role="group" aria-label="View mode">
             <button
-              aria-label="Grid view" aria-pressed={view === "grid"}
+              type="button"
+              aria-label="Grid view"
+              aria-pressed={view === "grid"}
               onClick={() => setView("grid")}
-              className={`p-2 ${view === "grid" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              className={`p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500 ${view === "grid" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
             >
-              <LayoutGrid className="w-4 h-4" />
+              <LayoutGrid className="h-4 w-4" aria-hidden="true" />
             </button>
             <button
-              aria-label="List view" aria-pressed={view === "list"}
+              type="button"
+              aria-label="List view"
+              aria-pressed={view === "list"}
               onClick={() => setView("list")}
-              className={`p-2 ${view === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              className={`border-l p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500 ${view === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}
             >
-              <List className="w-4 h-4" />
+              <List className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
-          <Button
+          <Button variant="primary"
             size="sm"
-            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white gap-1.5"
+            className="gap-1.5"
             onClick={() => setShowAdd(true)}
           >
             <Plus className="w-4 h-4" />
@@ -213,25 +207,34 @@ export function CastListView({
 
       {/* Results */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
-            <Users className="w-7 h-7 text-muted-foreground" />
-          </div>
-          <h3 className="font-semibold mb-1">No cast members found</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {search || categoryFilter !== "all" || contractFilter !== "all"
+        <EmptyState
+          icon={Users}
+          title="No cast members found"
+          description={
+            hasActiveFilters
               ? "Try adjusting your search or filters."
-              : "Add your first cast member to get started."}
-          </p>
-          {(search || categoryFilter !== "all" || contractFilter !== "all") && (
-            <Button size="sm" variant="outline" onClick={() => { setSearch(""); setCategoryFilter("all"); setContractFilter("all"); }}>Clear search and filters</Button>
-          )}
-          {!search && categoryFilter === "all" && contractFilter === "all" && (
-            <Button size="sm" variant="outline" onClick={() => setShowAdd(true)}>
-              <Plus className="w-4 h-4 mr-1.5" /> Add Cast Member
-            </Button>
-          )}
-        </div>
+              : "Add your first cast member to get started."
+          }
+          action={
+            hasActiveFilters ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setSearch("");
+                  setCategoryFilter("all");
+                  setContractFilter("all");
+                }}
+              >
+                Clear search and filters
+              </Button>
+            ) : (
+              <Button size="sm" variant="primary" className="gap-1.5" onClick={() => setShowAdd(true)}>
+                <Plus className="h-4 w-4" aria-hidden="true" /> Add Cast Member
+              </Button>
+            )
+          }
+        />
       ) : view === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((m) => (

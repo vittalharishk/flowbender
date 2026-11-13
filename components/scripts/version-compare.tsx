@@ -158,7 +158,7 @@ export function VersionCompare({ versionA, versionB, onClose }: Props) {
                 {d.changes && d.changes.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {d.changes.map((c) => (
-                      <Badge key={c} variant="outline" className="text-[10px] bg-amber-500/5 text-amber-400 border-amber-500/20">
+                      <Badge key={c} variant="outline" className="text-xs bg-amber-500/5 text-amber-400 border-amber-500/20">
                         {c}
                       </Badge>
                     ))}

@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
@@ -63,6 +65,7 @@ interface PostProductionWorkspaceProps {
 }
 
 export function PostProductionWorkspace({ projectId }: PostProductionWorkspaceProps) {
+  const confirm = useConfirm();
   const centralSelectedId = useSelectedProjectId();
   const activeProjectId = projectId || centralSelectedId || "p1";
 
@@ -224,14 +227,14 @@ export function PostProductionWorkspace({ projectId }: PostProductionWorkspacePr
     setMessage(`Deliverable "${newDeliverable.name}" saved successfully.`);
   };
 
-  const handleDeleteTask = (taskId: string) => {
-    if (confirm("Delete this post production task?")) {
+  const handleDeleteTask = async (taskId: string) => {
+    if (await confirm({ title: "Delete post production task?", description: "This task will be permanently removed.", confirmLabel: "Delete" })) {
       updateAppDataSlice("postProductionItems", (current) => current.filter((item) => item.id !== taskId));
     }
   };
 
-  const handleDeleteDeliverable = (delivId: string) => {
-    if (confirm("Delete this deliverable item?")) {
+  const handleDeleteDeliverable = async (delivId: string) => {
+    if (await confirm({ title: "Delete deliverable?", description: "This deliverable item will be permanently removed.", confirmLabel: "Delete" })) {
       updateAppDataSlice("deliverables", (current) => current.filter((item) => item.id !== delivId));
     }
   };

@@ -77,7 +77,7 @@ function RoleRow({
           <div className="flex items-center gap-2">
             <StatusDot status={bestStatus} />
             <span className="font-medium text-sm truncate">{roleName}</span>
-            <span className="hidden sm:inline text-[10px] rounded-full px-1.5 py-0.5 bg-muted text-muted-foreground">{category}</span>
+            <span className="hidden sm:inline text-xs rounded-full px-1.5 py-0.5 bg-muted text-muted-foreground">{category}</span>
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground truncate pl-6">{roleArc}</p>
         </div>
@@ -88,7 +88,7 @@ function RoleRow({
             <div>
               <p className="text-sm font-medium truncate">{selectedArtist}</p>
               {contractStatus && (
-                <p className="text-[11px] text-muted-foreground capitalize">{contractStatus}</p>
+                <p className="text-xs text-muted-foreground capitalize">{contractStatus}</p>
               )}
             </div>
           ) : (
@@ -110,7 +110,7 @@ function RoleRow({
         {/* Contract */}
         <div className="hidden sm:flex items-center">
           {linkedCastId ? (
-            <span className={`text-[11px] rounded-full px-2 py-0.5 font-medium ${
+            <span className={`text-xs rounded-full px-2 py-0.5 font-medium ${
               contractStatus === "signed" ? "bg-emerald-500/10 text-emerald-400" :
               contractStatus === "negotiating" ? "bg-amber-500/10 text-amber-400" :
               "bg-muted text-muted-foreground"
@@ -118,7 +118,7 @@ function RoleRow({
               {contractStatus ?? "pending"}
             </span>
           ) : (
-            <span className="text-[11px] text-muted-foreground">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           )}
         </div>
 
@@ -142,7 +142,7 @@ function RoleRow({
             <ol className="space-y-1.5">
               {history.map((h, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs">
-                  <span className="shrink-0 mt-0.5 text-[10px] text-muted-foreground">{new Date(h.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                  <span className="shrink-0 mt-0.5 text-xs text-muted-foreground">{new Date(h.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
                   <span className="font-medium shrink-0">{h.name}</span>
                   <span className="text-muted-foreground">
                     {h.from ? (
@@ -206,7 +206,7 @@ function ProjectCard({ projectId, projectTitle, posterColor, roles, allCandidate
       {open && (
         <div className="border-t">
           {/* Column headers */}
-          <div className="hidden sm:grid grid-cols-[1fr_auto] gap-2 px-4 py-1.5 text-[11px] font-medium text-muted-foreground sm:grid-cols-[minmax(180px,1.5fr)_minmax(140px,1fr)_minmax(80px,0.6fr)_minmax(90px,0.7fr)_auto]">
+          <div className="hidden sm:grid grid-cols-[1fr_auto] gap-2 px-4 py-1.5 text-xs font-medium text-muted-foreground sm:grid-cols-[minmax(180px,1.5fr)_minmax(140px,1fr)_minmax(80px,0.6fr)_minmax(90px,0.7fr)_auto]">
             <span>Role</span>
             <span>Artist</span>
             <span>Fee</span>

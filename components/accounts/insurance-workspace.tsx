@@ -19,31 +19,30 @@ import { useInsurancePolicies, useInsuranceDashboard, createInsurancePolicy, fil
 import { formatCurrency, formatCompactINR } from "@/lib/accounts-departments";
 import { useAppDataSlice } from "@/lib/app-data-store";
 import type { InsurancePolicy, InsurancePolicyType, InsurancePolicyStatus, InsuranceClaim, InsuranceClaimStatus } from "@/lib/types";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge, type StatusTone } from "@/components/app/status-badge";
+import { EmptyState } from "@/components/app/empty-state";
 
 interface Props {
   projectId?: string;
 }
 
-function statusColor(s: InsurancePolicyStatus) {
-  switch (s) {
-    case "active": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
-    case "expired": return "bg-red-500/10 text-red-400 border-red-500/30";
-    case "cancelled": return "bg-slate-500/10 text-slate-400 border-slate-500/30";
-    case "pending": return "bg-amber-500/10 text-amber-400 border-amber-500/30";
-    case "renewed": return "bg-blue-500/10 text-blue-400 border-blue-500/30";
-  }
-}
+const policyTone: Record<InsurancePolicyStatus, StatusTone> = {
+  active: "success",
+  expired: "neutral",
+  cancelled: "neutral",
+  pending: "warning",
+  renewed: "info",
+};
 
-function claimStatusColor(s: InsuranceClaimStatus) {
-  switch (s) {
-    case "filed": return "bg-amber-500/10 text-amber-400 border-amber-500/30";
-    case "under-review": return "bg-blue-500/10 text-blue-400 border-blue-500/30";
-    case "approved": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
-    case "denied": return "bg-red-500/10 text-red-400 border-red-500/30";
-    case "settled": return "bg-cyan-500/10 text-cyan-400 border-cyan-500/30";
-    case "withdrawn": return "bg-slate-500/10 text-slate-400 border-slate-500/30";
-  }
-}
+const claimTone: Record<InsuranceClaimStatus, StatusTone> = {
+  filed: "warning",
+  "under-review": "info",
+  approved: "success",
+  denied: "error",
+  settled: "success",
+  withdrawn: "neutral",
+};
 
 // ── Dashboard Cards ──────────────────────────────────────────────────────────
 
@@ -60,19 +59,16 @@ function DashboardCards({ dashboard }: { dashboard: ReturnType<typeof useInsuran
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {cards.map((c) => (
-        <Card key={c.label} className="bg-card/50 border-border/50">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <c.icon className={`w-4 h-4 ${c.color}`} />
-              <span className="text-[11px] text-muted-foreground uppercase tracking-wider">{c.label}</span>
-            </div>
-            <p className="text-lg font-semibold">
-              {c.isCurrency ? formatCompactINR(c.value as number) : c.value}
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          key={c.label}
+          compact
+          label={c.label}
+          icon={c.icon}
+          value={c.isCurrency ? formatCompactINR(c.value as number) : c.value}
+          hint={c.isCurrency ? formatCurrency(c.value as number) : undefined}
+        />
       ))}
     </div>
   );
@@ -157,7 +153,7 @@ function PolicyRegister({ policies, onSelect }: { policies: InsurancePolicy[]; o
           </thead>
           <tbody>
             {pageItems.length === 0 ? (
-              <tr><td colSpan={10} className="text-center py-8 text-muted-foreground">No policies found</td></tr>
+              <tr><td colSpan={10}><EmptyState icon={Shield} title="No policies found" description="Try adjusting your search or filters, or add a policy to get started." className="py-6" /></td></tr>
             ) : pageItems.map((p) => (
               <tr key={p.id} className="border-t border-border/30 hover:bg-muted/10 cursor-pointer" onClick={() => onSelect(p)}>
                 <td className="p-2.5 font-mono text-xs">{p.policyNumber}</td>
@@ -175,7 +171,7 @@ function PolicyRegister({ policies, onSelect }: { policies: InsurancePolicy[]; o
                 </td>
                 <td className="p-2.5 text-muted-foreground">{p.endDate ? new Date(p.endDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</td>
                 <td className="p-2.5 text-center">
-                  <Badge variant="outline" className={`text-xs ${statusColor(p.status)}`}>{POLICY_STATUS_LABELS[p.status]}</Badge>
+                  <StatusBadge status={p.status} tone={policyTone[p.status]} label={POLICY_STATUS_LABELS[p.status]} className="text-xs" />
                 </td>
                 <td className="p-2.5 text-center">
                   <Eye className="w-4 h-4 text-muted-foreground" />
@@ -226,7 +222,7 @@ function PolicyDetailSheet({ policy, open, onClose }: { policy: InsurancePolicy 
 
           <div className="space-y-6 mt-4">
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className={statusColor(policy.status)}>{POLICY_STATUS_LABELS[policy.status]}</Badge>
+              <StatusBadge status={policy.status} tone={policyTone[policy.status]} label={POLICY_STATUS_LABELS[policy.status]} />
               <Badge variant="outline">{POLICY_TYPE_LABELS[policy.policyType]}</Badge>
             </div>
 
@@ -321,7 +317,7 @@ function PolicyDetailSheet({ policy, open, onClose }: { policy: InsurancePolicy 
                             <span className="font-mono text-xs text-muted-foreground">{c.claimNumber}</span>
                             <p className="text-sm font-medium mt-0.5">{c.description}</p>
                           </div>
-                          <Badge variant="outline" className={`text-xs ${claimStatusColor(c.status)}`}>{CLAIM_STATUS_LABELS[c.status]}</Badge>
+                          <StatusBadge status={c.status} tone={claimTone[c.status]} label={CLAIM_STATUS_LABELS[c.status]} className="text-xs" />
                         </div>
                         <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mt-2">
                           <div>
@@ -625,7 +621,7 @@ function ClaimsOverview({ policies }: { policies: InsurancePolicy[] }) {
       </div>
 
       {allClaims.length === 0 ? (
-        <p className="text-center text-muted-foreground py-8">No claims found</p>
+        <EmptyState icon={AlertTriangle} title="No claims found" description="Claims filed against policies will appear here." className="py-6" />
       ) : (
         <div className="space-y-3">
           {allClaims.map((c) => (
@@ -642,7 +638,7 @@ function ClaimsOverview({ policies }: { policies: InsurancePolicy[] }) {
                     <p className="text-sm font-medium">{c.description}</p>
                     <p className="text-xs text-muted-foreground mt-1">{projMap.get(c.projectId) || c.projectId}</p>
                   </div>
-                  <Badge variant="outline" className={`text-xs ${claimStatusColor(c.status)}`}>{CLAIM_STATUS_LABELS[c.status]}</Badge>
+                  <StatusBadge status={c.status} tone={claimTone[c.status]} label={CLAIM_STATUS_LABELS[c.status]} className="text-xs" />
                 </div>
                 <div className="grid grid-cols-4 gap-3 text-xs mt-3">
                   <div>

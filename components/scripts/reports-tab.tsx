@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { Script, ScriptScene, ScriptBlock, SceneBreakdownItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -214,25 +215,19 @@ export function ReportsTab({ scriptId, script }: Props) {
 
   return (
     <section className="space-y-5">
-      <div className="flex flex-wrap items-center gap-1 border-b pb-1">
-        {subTabs.map((t) => {
-          const Icon = t.icon;
-          return (
-            <button
-              key={t.key}
-              onClick={() => setSubTab(t.key)}
-              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                subTab === t.key
-                  ? "border-amber-500 text-amber-500"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
+      <Tabs value={subTab} onValueChange={(v) => setSubTab(v as typeof subTab)}>
+        <TabsList className="h-auto flex-wrap justify-start">
+          {subTabs.map((t) => {
+            const Icon = t.icon;
+            return (
+              <TabsTrigger key={t.key} value={t.key} className="gap-1.5 text-xs">
+                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                {t.label}
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+      </Tabs>
 
       {subTab === "summary" && (
         <SummaryDashboard
@@ -308,7 +303,7 @@ function SummaryDashboard({
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         {kpis.map((k) => (
           <div key={k.label} className="rounded-xl border bg-card p-3 text-center">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{k.label}</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{k.label}</p>
             <p className="text-2xl font-bold mt-1">{k.value}</p>
           </div>
         ))}
@@ -461,7 +456,7 @@ function CastReport({ characters, scriptTitle }: { characters: CharEntry[]; scri
                   <TableCell className="text-right font-mono text-sm">{c.pct}%</TableCell>
                   <TableCell className="text-right font-mono text-sm">{c.sceneCount}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={`text-[10px] ${tierColors[c.tier] || ""}`}>{c.tier}</Badge>
+                    <Badge variant="outline" className={`text-xs ${tierColors[c.tier] || ""}`}>{c.tier}</Badge>
                   </TableCell>
                 </TableRow>
               ))
@@ -666,7 +661,7 @@ function DialogueReport({
           <Input placeholder="Search dialogue..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-8 text-xs" />
         </div>
         <Select value={charFilter} onValueChange={setCharFilter}>
-          <SelectTrigger className="w-[180px] h-8 text-xs"><SelectValue placeholder="Character" /></SelectTrigger>
+          <SelectTrigger aria-label="Character" className="w-[180px] h-8 text-xs"><SelectValue placeholder="Character" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Characters</SelectItem>
             {characters.map((c) => (
@@ -703,7 +698,7 @@ function DialogueReport({
                   <div className="flex items-center gap-3">
                     {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                     <span className="font-semibold text-sm">{c.name}</span>
-                    <Badge variant="outline" className={`text-[10px] ${tierColors[c.tier] || ""}`}>{c.tier}</Badge>
+                    <Badge variant="outline" className={`text-xs ${tierColors[c.tier] || ""}`}>{c.tier}</Badge>
                   </div>
                   <span className="text-xs text-muted-foreground">{c.dialogues.length} lines</span>
                 </button>
@@ -802,7 +797,7 @@ function PropReport({ props, scriptTitle }: { props: PropEntry[]; scriptTitle: s
           <Input placeholder="Search item..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-8 text-xs" />
         </div>
         <Select value={catFilter} onValueChange={setCatFilter}>
-          <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue placeholder="Category" /></SelectTrigger>
+          <SelectTrigger aria-label="Category" className="w-[150px] h-8 text-xs"><SelectValue placeholder="Category" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
             <SelectItem value="prop">Props</SelectItem>
@@ -839,7 +834,7 @@ function PropReport({ props, scriptTitle }: { props: PropEntry[]; scriptTitle: s
                 <TableRow key={`${p.category}-${p.name}-${i}`}>
                   <TableCell className="font-medium text-sm">{p.name}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={`text-[10px] capitalize ${catColors[p.category] || ""}`}>{p.category}</Badge>
+                    <Badge variant="outline" className={`text-xs capitalize ${catColors[p.category] || ""}`}>{p.category}</Badge>
                   </TableCell>
                   <TableCell className="text-xs font-mono text-muted-foreground">
                     {p.sceneAppearances.map((s) => `Sc. ${s}`).join(", ")}

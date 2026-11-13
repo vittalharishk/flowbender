@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useState, useMemo } from "react";
 import {
   ChevronDown,
@@ -55,7 +57,7 @@ function StatusIcon({ status }: { status: CastCandidateStatus }) {
 
 function StatusBadge({ status }: { status: CastCandidateStatus }) {
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${candidateStatusColors[status]}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${candidateStatusColors[status]}`}>
       <StatusIcon status={status} />
       {candidateStatusLabels[status]}
     </span>
@@ -78,7 +80,7 @@ function HistoryPanel({ entries, candidates }: HistoryPanelProps) {
     <ol className="space-y-1.5 py-1">
       {[...entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(e => (
         <li key={e.id} className="flex items-start gap-2 text-xs">
-          <span className="shrink-0 text-[10px] text-muted-foreground mt-0.5">
+          <span className="shrink-0 text-xs text-muted-foreground mt-0.5">
             {new Date(e.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
           </span>
           <span className="font-medium shrink-0">{nameOf(e.candidateId)}</span>
@@ -121,7 +123,7 @@ function ReplaceConfirm({ oldName, newName, roleName, onConfirm, onCancel }: Rep
         </div>
         <div className="flex gap-2 justify-end">
           <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700" onClick={onConfirm}>
+          <Button variant="primary" onClick={onConfirm}>
             Confirm replacement
           </Button>
         </div>
@@ -142,6 +144,7 @@ interface CandidateCardProps {
 }
 
 function CandidateCard({ candidate, allCandidatesForRole, decisionLog, onStatusChange, onEdit, onDelete }: CandidateCardProps) {
+  const confirm = useConfirm();
   const [expanded, setExpanded] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const statuses: CastCandidateStatus[] = ["proposed", "under-discussion", "shortlisted", "negotiation", "on-hold", "rejected", "selected"];
@@ -152,7 +155,7 @@ function CandidateCard({ candidate, allCandidatesForRole, decisionLog, onStatusC
       {/* Row */}
       <div className="flex items-center gap-3 px-4 py-3">
         {/* Avatar */}
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-muted-foreground">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
           {candidate.name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()}
         </div>
         {/* Name + agency */}
@@ -167,7 +170,7 @@ function CandidateCard({ candidate, allCandidatesForRole, decisionLog, onStatusC
         </div>
         {/* Linked cast badge */}
         {candidate.linkedCastId && (
-          <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-emerald-400 rounded-full px-1.5 py-0.5 bg-emerald-500/10" title={`Linked: ${candidate.linkedCastId}`}>
+          <span className="hidden sm:inline-flex items-center gap-1 text-xs text-emerald-400 rounded-full px-1.5 py-0.5 bg-emerald-500/10" title={`Linked: ${candidate.linkedCastId}`}>
             <Link2 className="w-3 h-3" /> cast member
           </span>
         )}
@@ -194,7 +197,7 @@ function CandidateCard({ candidate, allCandidatesForRole, decisionLog, onStatusC
       {/* History panel */}
       {showHistory && (
         <div className="border-t px-4 pb-3 pt-2 bg-muted/20">
-          <p className="text-[11px] font-medium text-muted-foreground mb-1 uppercase tracking-wide">Decision history</p>
+          <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wide">Decision history</p>
           <HistoryPanel entries={candidateLog} candidates={allCandidatesForRole} />
         </div>
       )}
@@ -233,7 +236,7 @@ function CandidateCard({ candidate, allCandidatesForRole, decisionLog, onStatusC
               <button
                 key={s}
                 onClick={() => onStatusChange(candidate.id, s)}
-                className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium border transition-colors hover:opacity-80 ${candidateStatusColors[s]}`}
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium border transition-colors hover:opacity-80 ${candidateStatusColors[s]}`}
               >
                 {candidateStatusLabels[s]}
               </button>
@@ -242,8 +245,8 @@ function CandidateCard({ candidate, allCandidatesForRole, decisionLog, onStatusC
               <Button size="icon" variant="ghost" className="h-7 w-7" title="Edit" onClick={() => onEdit(candidate)}>
                 <Edit2 className="w-3.5 h-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" title="Delete" onClick={() => {
-                if (window.confirm(`Remove ${candidate.name} from consideration? The record will be permanently deleted.`)) {
+              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" title="Delete" onClick={async () => {
+                if (await confirm({ title: `Remove ${candidate.name} from consideration?`, description: "The record will be permanently deleted.", confirmLabel: "Remove" })) {
                   onDelete(candidate.id);
                 }
               }}>
@@ -317,15 +320,15 @@ function RoleGroup({ role, candidates, allCandidatesForRole, decisionLog, onStat
           {/* Summary pills */}
           <div className="hidden sm:flex items-center gap-2 shrink-0">
             {selected.length > 0 && (
-              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
+              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">
                 {selected.length} selected
               </span>
             )}
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+            <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
               {active.length} active
             </span>
             {candidates.length > active.length && (
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                 {candidates.length - active.length} rejected
               </span>
             )}
@@ -346,7 +349,7 @@ function RoleGroup({ role, candidates, allCandidatesForRole, decisionLog, onStat
         {/* Role history panel */}
         {showRoleHistory && (
           <div className="border-t px-5 pb-3 pt-2 bg-muted/20">
-            <p className="text-[11px] font-medium text-muted-foreground mb-1 uppercase tracking-wide">All decisions for this role</p>
+            <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wide">All decisions for this role</p>
             <HistoryPanel entries={roleLog} candidates={allCandidatesForRole} />
           </div>
         )}
@@ -555,7 +558,7 @@ function CandidateForm({ roleId, projectId, initial, onClose }: CandidateFormPro
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex gap-2 pt-1">
-            <Button type="submit" className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700">
+            <Button variant="primary" type="submit">
               {initial ? "Save changes" : "Add candidate"}
             </Button>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>

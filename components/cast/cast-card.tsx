@@ -6,20 +6,7 @@ import { cn, formatINR } from "@/lib/utils";
 import type { CastMember } from "@/lib/types";
 import { castCategoryLabels, castCategoryColors } from "@/lib/cast-store";
 import { Avatar } from "@/components/images/image-upload";
-
-const contractColors: Record<string, string> = {
-  signed: "text-emerald-400",
-  negotiating: "text-amber-400",
-  pending: "text-muted-foreground",
-  expired: "text-red-400",
-};
-
-const paymentColors: Record<string, string> = {
-  paid: "text-emerald-400",
-  partial: "text-amber-400",
-  pending: "text-muted-foreground",
-  overdue: "text-red-400",
-};
+import { StatusBadge } from "@/components/app/status-badge";
 
 function fmtShort(value: number) {
   return formatINR(value);
@@ -42,13 +29,13 @@ export function CastCard({ member, projectScope }: CastCardProps) {
         <div className="flex items-start gap-3 mb-3">
           <Avatar src={member.profileImage} initials={member.initials} alt={member.name} className="shrink-0 ring-2 ring-amber-500/10 group-hover:ring-amber-500/30 transition-all" />
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-sm group-hover:text-amber-400 transition-colors truncate">
+            <p className="font-semibold text-sm group-hover:text-amber-400 transition-colors truncate">
               {member.name}
-            </h3>
+            </p>
             <p className="text-xs text-muted-foreground truncate">as {member.character}</p>
           </div>
           <span className={cn(
-            "text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0",
+            "shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium",
             castCategoryColors[member.category]
           )}>
             {castCategoryLabels[member.category]}
@@ -64,24 +51,20 @@ export function CastCard({ member, projectScope }: CastCardProps) {
         )}
 
         {/* Status row */}
-        <div className="flex items-center gap-4 text-xs mb-3">
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
           <span className="flex items-center gap-1">
-            <FileSignature className="w-3 h-3 text-muted-foreground" />
-            <span className={contractColors[member.contractStatus]}>
-              {member.contractStatus.charAt(0).toUpperCase() + member.contractStatus.slice(1)}
-            </span>
+            <FileSignature className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+            <StatusBadge status={member.contractStatus} className="px-1.5 py-0 text-xs" />
           </span>
           <span className="flex items-center gap-1">
-            <IndianRupee className="w-3 h-3 text-muted-foreground" />
-            <span className={paymentColors[member.paymentStatus]}>
-              {member.paymentStatus.charAt(0).toUpperCase() + member.paymentStatus.slice(1)}
-            </span>
+            <IndianRupee className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+            <StatusBadge status={member.paymentStatus} className="px-1.5 py-0 text-xs" />
           </span>
         </div>
 
         {/* Fee bar */}
         <div className="space-y-1">
-          <div className="flex items-center justify-between text-[11px]">
+          <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Fee: {fmtShort(member.totalFee)}</span>
             <span className="text-muted-foreground">
               {member.totalFee > 0 ? Math.round((member.paidAmount / member.totalFee) * 100) : 0}% paid
@@ -96,9 +79,9 @@ export function CastCard({ member, projectScope }: CastCardProps) {
         </div>
 
         {/* Contact hint */}
-        <div className="flex items-center gap-3 mt-3 pt-3 border-t text-[11px] text-muted-foreground">
+        <div className="mt-3 flex items-center gap-3 border-t pt-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1 truncate">
-            <Mail className="w-3 h-3 shrink-0" /> {member.email}
+            <Mail className="h-3 w-3 shrink-0" aria-hidden="true" /> {member.email}
           </span>
         </div>
       </div>

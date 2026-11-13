@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ChunkErrorHandler } from "@/components/chunk-error-handler";
+import { ConfirmProvider } from "@/components/app/confirm-dialog";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,7 +24,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <ChunkErrorHandler />
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <ConfirmProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </ConfirmProvider>
           <Toaster richColors />
         </ThemeProvider>
       </body>

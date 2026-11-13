@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useState } from "react";
 import {
   Save, Eye, GitCompare, RotateCcw, Trash2, Clock,
@@ -51,6 +53,7 @@ const statusColors: Partial<Record<ScriptStatus, string>> = {
 };
 
 export function VersionsTab({ scriptId, script }: Props) {
+  const confirm = useConfirm();
   const [versionName, setVersionName] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
@@ -74,15 +77,15 @@ export function VersionsTab({ scriptId, script }: Props) {
     setTimeout(() => setMessage(""), 3000);
   }
 
-  function handleRestore(version: ScriptDraftVersion) {
-    if (!window.confirm(`Restore version V${version.number} — ${version.name}?\n\nThe current draft will be saved as a new version before restoring.`)) return;
+  async function handleRestore(version: ScriptDraftVersion) {
+    if (!(await confirm({ title: `Restore version V${version.number} — ${version.name}?`, description: "The current draft will be saved as a new version before restoring.", confirmLabel: "Restore", destructive: false }))) return;
     restoreScriptVersion(scriptId, version.id);
     setMessage(`Restored V${version.number}. Previous draft saved as a new version.`);
     setTimeout(() => setMessage(""), 4000);
   }
 
-  function handleDelete(version: ScriptDraftVersion) {
-    if (!window.confirm(`Delete version V${version.number} — ${version.name}? This cannot be undone.`)) return;
+  async function handleDelete(version: ScriptDraftVersion) {
+    if (!(await confirm({ title: `Delete version V${version.number} — ${version.name}?`, description: "This cannot be undone.", confirmLabel: "Delete" }))) return;
     deleteScriptVersion(scriptId, version.id);
     setSelectedForCompare((prev) => { const next = new Set(prev); next.delete(version.id); return next; });
     setMessage("Version deleted.");
@@ -222,7 +225,7 @@ export function VersionsTab({ scriptId, script }: Props) {
                       V{version.number}
                     </Badge>
                     <span className="font-semibold text-sm">{version.name}</span>
-                    <Badge variant="secondary" className={`text-[10px] ${statusColors[version.status] ?? "bg-muted text-muted-foreground"}`}>
+                    <Badge variant="secondary" className={`text-xs ${statusColors[version.status] ?? "bg-muted text-muted-foreground"}`}>
                       {version.status}
                     </Badge>
                   </div>
@@ -322,7 +325,7 @@ export function VersionsTab({ scriptId, script }: Props) {
                           </span>
                           <span className="text-muted-foreground">{scene.location}</span>
                           <span className="text-muted-foreground">{scene.pages} pg</span>
-                          <Badge variant="secondary" className="text-[10px]">{scene.status}</Badge>
+                          <Badge variant="secondary" className="text-xs">{scene.status}</Badge>
                         </div>
                       ))}
                     </div>

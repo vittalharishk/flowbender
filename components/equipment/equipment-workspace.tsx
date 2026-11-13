@@ -1,11 +1,12 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useMemo, useState } from "react";
 import {
   CheckCircle2,
   ClipboardList,
   Package,
-  Search,
   ShoppingCart,
   Wrench,
   Camera,
@@ -24,11 +25,8 @@ import {
   ChevronRight,
   Filter,
   Eye,
-  X,
-  Phone,
   Building2,
   Check,
-  Calendar,
   Layers,
   Pencil,
   Trash2,
@@ -37,16 +35,22 @@ import { updateAppDataSlice, useAppDataSlice } from "@/lib/app-data-store";
 import { useProjects } from "@/lib/project-store";
 import type { EquipmentItem } from "@/lib/types";
 import { ProjectContextSelector } from "@/components/app/project-context-selector";
+import { PageHeader } from "@/components/app/page-header";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge, type StatusTone } from "@/components/app/status-badge";
+import { EmptyState } from "@/components/app/empty-state";
+import { SearchInput } from "@/components/app/search-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   getEquipmentImage,
   getEquipmentFallback,
@@ -59,6 +63,15 @@ const statusLabels: Record<string, string> = {
   maintenance: "Maintenance",
 };
 
+const statusTones: Record<string, StatusTone> = {
+  available: "success",
+  reserved: "info",
+  "in-use": "warning",
+  maintenance: "error",
+};
+
+// Retained for the image-overlay badges, which sit on photography and need
+// their own opaque background rather than the shared badge treatment.
 const statusBadgeVariants: Record<
   string,
   { bg: string; text: string; border: string }
@@ -101,6 +114,7 @@ const categoryIcons: Record<string, React.ComponentType<{ className?: string }>>
 };
 
 export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?: string }) {
+  const confirm = useConfirm();
   const projects = useProjects();
   const equipment = useAppDataSlice("equipmentInventory");
   const vendors = useAppDataSlice("vendors");
@@ -111,7 +125,7 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
   const [category, setCategory] = useState("all");
   const [mode, setMode] = useState<"inventory" | "requirements">("inventory");
   const [viewLayout, setViewLayout] = useState<"grid" | "table">("grid");
-  const [pageSize, setPageSize] = useState<number | "all">("all");
+  const [pageSize, setPageSize] = useState<number | "all">(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isGlanceOpen, setIsGlanceOpen] = useState(false);
@@ -218,8 +232,8 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDeleteItem = (item: EquipmentItem) => {
-    if (window.confirm(`Delete "${item.name}" from equipment inventory?`)) {
+  const handleDeleteItem = async (item: EquipmentItem) => {
+    if (await confirm({ title: `Delete "${item.name}"?`, description: "This item will be removed from equipment inventory.", confirmLabel: "Delete" })) {
       updateAppDataSlice("equipmentInventory", (items) =>
         items.filter((curr) => curr.id !== item.id)
       );
@@ -242,36 +256,36 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
       <p className="text-sm text-muted-foreground">Seeded inventory and assignments are fictional demo data. Images are illustrative references, not verified asset photographs. Status changes are local records, not rental orders.</p>
       {message && <p role="status" className="text-sm text-emerald-600">{message}</p>}
       {/* Top Banner */}
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            Production Equipment Inventory & Requirements
-          </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">
-            Equipment Packages & Gear Register
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Complete visual register of all camera, lighting, sound, grip, props, and field gear across active productions.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {selectedItem && (
-            <button
-              onClick={() => setIsGlanceOpen(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border bg-background px-3.5 py-2 text-sm font-semibold shadow-xs hover:bg-muted transition-all"
+      <PageHeader
+        as="h1"
+        icon={Package}
+        title="Equipment Packages & Gear Register"
+        description="Complete visual register of all camera, lighting, sound, grip, props, and field gear across active productions."
+        actions={
+          <>
+            {selectedItem && (
+              <Button variant="outline" className="gap-2" onClick={() => setIsGlanceOpen(true)}>
+                <Eye className="h-4 w-4" aria-hidden="true" /> View at a glance
+              </Button>
+            )}
+            {selectedItem && (
+              <Button
+                variant="outline"
+                onClick={() => { setEditingId(selectedItem.id); setForm({ name: selectedItem.name, category: selectedItem.category, quantity: String(selectedItem.quantity), projectId: selectedItem.projectId ?? "shared", notes: selectedItem.notes ?? "", imageUrl: selectedItem.imageUrl ?? "" }); setFormError(""); setShowForm(true); }}
+              >
+                Edit equipment
+              </Button>
+            )}
+            <Button
+              variant="primary"
+              className="gap-2"
+              onClick={() => { setEditingId(null); setFormError(""); setForm({ name: "", category: "camera", quantity: "1", projectId: projectId === "all" ? "shared" : projectId, notes: "", imageUrl: "" }); setShowForm(true); }}
             >
-              <Eye className="h-4 w-4 text-primary" /> View at a glance
-            </button>
-          )}
-          {selectedItem && <button className="rounded-lg border px-3 py-2 text-sm" onClick={() => { setEditingId(selectedItem.id); setForm({ name: selectedItem.name, category: selectedItem.category, quantity: String(selectedItem.quantity), projectId: selectedItem.projectId ?? "shared", notes: selectedItem.notes ?? "", imageUrl: selectedItem.imageUrl ?? "" }); setFormError(""); setShowForm(true); }}>Edit equipment</button>}
-          <button
-            onClick={() => { setEditingId(null); setFormError(""); setForm({ name: "", category: "camera", quantity: "1", projectId: projectId === "all" ? "shared" : projectId, notes: "", imageUrl: "" }); setShowForm(true); }}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all"
-          >
-            <ShoppingCart className="h-4 w-4" /> Add requirement
-          </button>
-        </div>
-      </div>
+              <ShoppingCart className="h-4 w-4" aria-hidden="true" /> Add requirement
+            </Button>
+          </>
+        }
+      />
 
       {/* Add Form */}
       {showForm && (
@@ -447,7 +461,7 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
 
               {formError && <p role="alert" className="text-sm text-red-500 sm:col-span-2">{formError}</p>}
               <div className="flex flex-wrap justify-end gap-2 sm:col-span-2 pt-2">
-                {editingId && <button type="button" className="rounded-lg border px-4 py-2 text-sm text-red-500" onClick={() => { if (window.confirm("Delete this local equipment record?")) { updateAppDataSlice("equipmentInventory", (items) => items.filter((item) => item.id !== editingId)); setShowForm(false); setEditingId(null); setMessage("Equipment record deleted locally."); } }}>Delete equipment</button>}
+                {editingId && <button type="button" className="rounded-lg border px-4 py-2 text-sm text-red-500" onClick={async () => { if (await confirm({ title: "Delete equipment record?", description: "This local equipment record will be permanently removed.", confirmLabel: "Delete" })) { updateAppDataSlice("equipmentInventory", (items) => items.filter((item) => item.id !== editingId)); setShowForm(false); setEditingId(null); setMessage("Equipment record deleted locally."); } }}>Delete equipment</button>}
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
@@ -476,37 +490,30 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
         </div>
 
         {/* Summary KPI cards count each equipment record once. */}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <SummaryCard
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatCard
             icon={Package}
             label="Equipment present"
-            mainValue={stats.totalItems}
-            unitSuffix="items"
-            subtext="One count per equipment record"
+            value={stats.totalItems}
+            hint="One count per equipment record"
           />
-          <SummaryCard
+          <StatCard
             icon={CheckCircle2}
             label="Available now"
-            mainValue={stats.availableItems}
-            unitSuffix="items"
-            subtext="Ready to use"
-            tone="text-emerald-600 dark:text-emerald-400"
+            value={stats.availableItems}
+            hint="Ready to use"
           />
-          <SummaryCard
+          <StatCard
             icon={ClipboardList}
             label="Booked / In use"
-            mainValue={stats.bookedItems}
-            unitSuffix="items"
-            subtext="Reserved or assigned"
-            tone="text-blue-600 dark:text-blue-400"
+            value={stats.bookedItems}
+            hint="Reserved or assigned"
           />
-          <SummaryCard
+          <StatCard
             icon={Wrench}
             label="Needs maintenance"
-            mainValue={stats.maintenanceItems}
-            unitSuffix="items"
-            subtext="Under repair or servicing"
-            tone="text-amber-600 dark:text-amber-400"
+            value={stats.maintenanceItems}
+            hint="Under repair or servicing"
           />
         </div>
       </div>
@@ -652,18 +659,17 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
               ))}
             </select>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder="Search equipment by name, category, notes..."
-                className="h-9 pl-9 text-xs sm:w-64"
-              />
-            </div>
+            <SearchInput
+              label="Search equipment"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder="Search equipment by name, category, notes..."
+              className="h-9 text-xs"
+              wrapperClassName="sm:w-64"
+            />
 
             {/* Items per view selector - Accurate dynamically computed labels */}
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground pl-1">
@@ -676,7 +682,8 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
                       setPageSize(size);
                       setCurrentPage(1);
                     }}
-                    className={`rounded px-2 py-1 font-semibold uppercase text-[10px] transition-colors ${
+                    aria-pressed={pageSize === size}
+                    className={`rounded px-2 py-1 text-xs font-semibold uppercase transition-colors ${
                       pageSize === size
                         ? "bg-background shadow-xs text-foreground font-bold"
                         : "hover:text-foreground"
@@ -723,6 +730,7 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={pageIndex <= 1}
+                aria-label="Previous page"
                 className="rounded p-1 border bg-background hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
@@ -730,6 +738,7 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={pageIndex >= totalPages}
+                aria-label="Next page"
                 className="rounded p-1 border bg-background hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -785,7 +794,7 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
                       {/* Status Badge */}
                       <div className="absolute top-2.5 right-2.5 z-10">
                         <span
-                          className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold backdrop-blur-sm shadow-sm ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}
+                          className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold backdrop-blur-sm shadow-sm ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}
                         >
                           {statusLabels[item.status]}
                         </span>
@@ -793,7 +802,7 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
 
                       {/* Category Pill */}
                       <div className="absolute top-2.5 left-2.5 z-10">
-                        <span className="inline-flex items-center rounded-md bg-black/70 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white capitalize border border-white/10">
+                        <span className="inline-flex items-center rounded-md bg-black/70 backdrop-blur-sm px-2 py-0.5 text-xs font-medium text-white capitalize border border-white/10">
                           {item.category}
                         </span>
                       </div>
@@ -821,9 +830,9 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
                     {/* Card Content */}
                     <CardContent className="p-4 space-y-2">
                       <div className="flex items-start justify-between gap-1">
-                        <h3 className="font-semibold text-sm leading-tight text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                        <p className="font-semibold text-sm leading-tight text-foreground line-clamp-1 group-hover:text-primary transition-colors">
                           {item.name}
-                        </h3>
+                        </p>
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-1">
                         {projectTitle}
@@ -915,11 +924,18 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
           </div>
 
           {!visible.length && (
-            <Card>
-              <CardContent className="p-12 text-center text-sm text-muted-foreground">
-                No equipment items match the current search or filters.
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon={Package}
+              title="No equipment found"
+              description="No equipment items match the current search or filters."
+              action={
+                query || category !== "all" ? (
+                  <Button variant="outline" onClick={() => { setQuery(""); setCategory("all"); setCurrentPage(1); }}>
+                    Clear search and filters
+                  </Button>
+                ) : undefined
+              }
+            />
           )}
         </div>
       ) : (
@@ -938,7 +954,7 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
               </Badge>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="hidden grid-cols-[36px_2fr_1fr_1.2fr_1fr_110px] gap-3 border-b bg-muted/40 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground sm:grid">
+              <div className="hidden grid-cols-[36px_2fr_1fr_1.2fr_1fr_110px] gap-3 border-b bg-muted/40 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:grid">
                 <span>#</span>
                 <span>Equipment & Image</span>
                 <span>Category</span>
@@ -995,11 +1011,11 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
                           ?.title ?? "Shared inventory"}
                       </span>
                       <span className="hidden self-center sm:block">
-                        <span
-                          className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}
-                        >
-                          {statusLabels[item.status]}
-                        </span>
+                        <StatusBadge
+                          status={item.status}
+                          tone={statusTones[item.status] ?? "neutral"}
+                          label={statusLabels[item.status]}
+                        />
                       </span>
                       <span className="hidden self-center text-right sm:block">
                         <div className="flex items-center justify-end gap-1">
@@ -1071,19 +1087,21 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
           </div>
 
           {!visible.length && (
-            <Card className="md:col-span-2 xl:col-span-3">
-              <CardContent className="p-10 text-center text-sm text-muted-foreground">
-                No equipment matches this filter.
-              </CardContent>
-            </Card>
+            <div className="md:col-span-2 xl:col-span-3">
+              <EmptyState
+                icon={Package}
+                title="No equipment matches this filter"
+                description="Adjust the category, production or search filters to see more gear."
+              />
+            </div>
           )}
         </div>
       )}
 
-      {/* Slide-over "Equipment at a Glance" Sheet / Drawer */}
-      <Sheet open={isGlanceOpen} onOpenChange={setIsGlanceOpen}>
-        <SheetContent className="w-full sm:max-w-lg md:max-w-xl overflow-y-auto p-0 border-l bg-background">
-          <SheetHeader className="sr-only"><SheetTitle>Equipment details</SheetTitle><SheetDescription>Inspect the selected local inventory record and update its status or notes.</SheetDescription></SheetHeader>
+      {/* "Equipment at a Glance" detail dialog */}
+      <Dialog open={isGlanceOpen} onOpenChange={setIsGlanceOpen}>
+        <DialogContent className="max-h-[85vh] w-full max-w-lg overflow-y-auto p-0 md:max-w-xl">
+          <DialogHeader className="sr-only"><DialogTitle>Equipment details</DialogTitle><DialogDescription>Inspect the selected local inventory record and update its status or notes.</DialogDescription></DialogHeader>
           {selectedItem && (
             <EquipmentGlanceDrawer
               key={selectedItem.id}
@@ -1099,9 +1117,9 @@ export function EquipmentWorkspace({ projectId: scopedProjectId }: { projectId?:
               onDelete={() => handleDeleteItem(selectedItem)}
             />
           )}
-          {!selectedItem && <p className="p-6 text-sm text-muted-foreground">No equipment matches the current filters. Close this drawer to change them.</p>}
-        </SheetContent>
-      </Sheet>
+          {!selectedItem && <p className="p-6 text-sm text-muted-foreground">No equipment matches the current filters. Close this dialog to change them.</p>}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1165,7 +1183,7 @@ function EquipmentGlanceDrawer({
           </div>
           <div>
             <h2 className="text-sm font-bold leading-tight">Equipment at a Glance</h2>
-            <p className="text-[11px] font-mono text-muted-foreground">
+            <p className="text-xs font-mono text-muted-foreground">
               Asset ID: {item.id}
             </p>
           </div>
@@ -1182,7 +1200,7 @@ function EquipmentGlanceDrawer({
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </button>
-          <span className="text-[11px] text-muted-foreground font-mono px-1">
+          <span className="text-xs text-muted-foreground font-mono px-1">
             {currentIndex >= 0 ? currentIndex + 1 : 1} of {allVisible.length}
           </span>
           <button
@@ -1221,12 +1239,12 @@ function EquipmentGlanceDrawer({
 
         <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3 text-white">
           <div>
-            <span className="inline-block rounded bg-black/70 px-2 py-0.5 text-[11px] font-medium backdrop-blur-md uppercase tracking-wider mb-1.5 border border-white/10">
+            <span className="inline-block rounded bg-black/70 px-2 py-0.5 text-xs font-medium backdrop-blur-md uppercase tracking-wider mb-1.5 border border-white/10">
               {item.category}
             </span>
-            <h3 className="text-xl font-bold leading-snug drop-shadow-md">
+            <p className="text-xl font-bold leading-snug drop-shadow-md">
               {item.name}
-            </h3>
+            </p>
           </div>
 
           <a
@@ -1245,7 +1263,7 @@ function EquipmentGlanceDrawer({
       <div className="p-5 space-y-5 flex-1">
         {/* Status Switcher Bar */}
         <div className="rounded-xl border bg-muted/20 p-3 space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Update Equipment Status
           </p>
           <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
@@ -1306,7 +1324,7 @@ function EquipmentGlanceDrawer({
                 </span>
                 <span className="font-semibold">{vendor.name}</span>
               </div>
-              <p className="text-[11px] text-muted-foreground pl-5">
+              <p className="text-xs text-muted-foreground pl-5">
                 Contact: {vendor.contactName} · {vendor.city} · {vendor.phone}
               </p>
             </div>
@@ -1316,7 +1334,7 @@ function EquipmentGlanceDrawer({
         {/* Sourcing Notes & Technical Specs */}
         <div className="rounded-xl border p-3.5 bg-muted/10 space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Production Notes & Technical Specs
             </p>
             {!editingNotes && (
@@ -1326,7 +1344,7 @@ function EquipmentGlanceDrawer({
                   setNotesValue(item.notes ?? "");
                   setEditingNotes(true);
                 }}
-                className="text-[11px] text-primary hover:underline font-medium"
+                className="text-xs text-primary hover:underline font-medium"
               >
                 Edit notes
               </button>
@@ -1458,13 +1476,13 @@ function EquipmentDetailCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
         <div className="absolute top-3 right-3">
           <span
-            className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold backdrop-blur-sm shadow-sm ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}
+            className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold backdrop-blur-sm shadow-sm ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}
           >
             {statusLabels[item.status]}
           </span>
         </div>
         <div className="absolute bottom-3 left-3 text-white">
-          <span className="rounded bg-black/60 px-2 py-0.5 text-[11px] font-medium backdrop-blur-sm uppercase tracking-wider">
+          <span className="rounded bg-black/60 px-2 py-0.5 text-xs font-medium backdrop-blur-sm uppercase tracking-wider">
             {item.category}
           </span>
         </div>
@@ -1608,7 +1626,7 @@ function QuickCategories({
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] capitalize text-muted-foreground truncate">
+                  <p className="text-xs capitalize text-muted-foreground truncate">
                     {category}
                   </p>
                   <p className="text-base font-bold leading-tight">{count}</p>
@@ -1621,45 +1639,3 @@ function QuickCategories({
   );
 }
 
-{/* Detailed KPI Card showing both primary count and secondary unit breakdown */}
-function SummaryCard({
-  icon: Icon,
-  label,
-  mainValue,
-  unitSuffix,
-  subtext,
-  tone = "text-foreground",
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  mainValue: number;
-  unitSuffix: string;
-  subtext: string;
-  tone?: string;
-}) {
-  return (
-    <Card className="hover:border-primary/30 transition-all">
-      <CardContent className="p-4 flex flex-col justify-between h-full">
-        <div>
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-muted-foreground">{label}</p>
-            <div className="rounded-lg bg-primary/10 p-2 text-primary">
-              <Icon className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className={`text-2xl font-bold tracking-tight ${tone}`}>
-              {mainValue}
-            </span>
-            <span className="text-xs font-medium text-muted-foreground lowercase">
-              {unitSuffix}
-            </span>
-          </div>
-        </div>
-        <p className="mt-2 text-[11px] text-muted-foreground/80 leading-tight border-t pt-2 border-border/40">
-          {subtext}
-        </p>
-      </CardContent>
-    </Card>
-  );
-}

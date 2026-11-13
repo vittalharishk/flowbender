@@ -2,16 +2,18 @@
 
 import { useMemo } from "react";
 import { Download } from "lucide-react";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAppDataSlice } from "@/lib/app-data-store";
 import { exportToCsv, formatFilterContext } from "@/lib/report-export";
 import { pct, filterByProject, countByStatus, groupBy } from "@/lib/report-utils";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge } from "@/components/app/status-badge";
+import { ChartContainer, seriesColors } from "@/components/app/chart-container";
+import { DataTable, type DataTableColumn } from "@/components/app/data-table";
+import { EmptyState } from "@/components/app/empty-state";
 import type { ReportFilterState } from "./report-filters";
-
-const COLORS = ["#10b981", "#f59e0b", "#3b82f6", "#ef4444", "#8b5cf6", "#ec4899"];
 
 const STATUS_LABELS: Record<string, string> = {
   "shot": "Completed",
@@ -91,8 +93,19 @@ export function ProductionProgressReport({ projectId, filters, projectName }: Pr
   };
 
   if (scenes.length === 0) {
-    return <Card><CardContent className="p-8 text-center text-muted-foreground">No scene data available for the selected filters.</CardContent></Card>;
+    return <EmptyState title="No scene data" description="No scene data available for the selected filters." />;
   }
+
+  type SceneRow = (typeof scenes)[number];
+
+  const columns = useMemo((): DataTableColumn<SceneRow>[] => [
+    { key: "sceneNumber", header: "Scene #", cell: (s) => <span className="font-medium">{s.sceneNumber}</span>, sortValue: (s) => s.sceneNumber },
+    { key: "heading", header: "Heading", cell: (s) => <span className="max-w-[200px] truncate block">{s.heading}</span> },
+    { key: "location", header: "Location", cell: (s) => s.location },
+    { key: "status", header: "Status", cell: (s) => <StatusBadge status={s.status} label={STATUS_LABELS[s.status] || s.status} /> },
+    { key: "pages", header: "Pages", cell: (s) => s.pages, align: "right", sortValue: (s) => s.pages },
+    { key: "shootDate", header: "Shoot Date", cell: (s) => s.shootDate || "—" },
+  ], []);
 
   return (
     <div className="space-y-4">
@@ -101,89 +114,51 @@ export function ProductionProgressReport({ projectId, filters, projectName }: Pr
         <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExport}><Download className="w-3.5 h-3.5" /> CSV</Button>
       </div>
 
-      {/* KPI */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <KPI label="Total Scenes" value={String(progress.total)} />
-        <KPI label="Completed" value={String(progress.completed)} tone="text-emerald-400" />
-        <KPI label="Partially Shot" value={String(progress.partiallyShot)} tone="text-amber-400" />
-        <KPI label="Scheduled" value={String(progress.scheduled)} tone="text-blue-400" />
-        <KPI label="Completion" value={`${progress.completionPct}%`} tone="text-cyan-400" />
+        <StatCard label="Total Scenes" value={String(progress.total)} />
+        <StatCard label="Completed" value={String(progress.completed)} />
+        <StatCard label="Partially Shot" value={String(progress.partiallyShot)} />
+        <StatCard label="Scheduled" value={String(progress.scheduled)} />
+        <StatCard label="Completion" value={`${progress.completionPct}%`} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Pie */}
         {pieData.length > 0 && (
           <Card>
             <CardHeader><CardTitle className="text-sm">Scene Status Distribution</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={260}>
+              <ChartContainer label="Scene status distribution pie chart" height={260}>
                 <PieChart>
                   <Pie data={pieData} cx="50%" cy="50%" outerRadius={90} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                    {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    {pieData.map((_, i) => <Cell key={i} fill={seriesColors[i % seriesColors.length]} />)}
                   </Pie>
                   <Tooltip />
                 </PieChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         )}
 
-        {/* Bar */}
         <Card>
           <CardHeader><CardTitle className="text-sm">Shoot Days: Planned vs Completed</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={260}>
+            <ChartContainer label="Shoot days planned vs completed bar chart" height={260}>
               <BarChart data={shootDayChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
-                <Bar dataKey="Planned" fill={COLORS[2]} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Completed" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Planned" fill={seriesColors[1]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Completed" fill={seriesColors[2]} radius={[4, 4, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Table */}
-      <Card>
-        <CardHeader><CardTitle className="text-sm">Scene Details</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-xs text-muted-foreground">
-                  <th className="text-left p-3">Scene #</th>
-                  <th className="text-left p-3">Heading</th>
-                  <th className="text-left p-3">Location</th>
-                  <th className="text-left p-3">Status</th>
-                  <th className="text-right p-3">Pages</th>
-                  <th className="text-left p-3">Shoot Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {scenes.slice(0, 100).map((s) => (
-                  <tr key={s.id} className="border-b hover:bg-muted/30">
-                    <td className="p-3 font-medium">{s.sceneNumber}</td>
-                    <td className="p-3 max-w-[200px] truncate">{s.heading}</td>
-                    <td className="p-3">{s.location}</td>
-                    <td className="p-3"><Badge variant="outline" className="text-xs">{STATUS_LABELS[s.status] || s.status}</Badge></td>
-                    <td className="p-3 text-right">{s.pages}</td>
-                    <td className="p-3">{s.shootDate || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {scenes.length > 100 && <p className="text-xs text-muted-foreground text-center py-2">Showing first 100 of {scenes.length} scenes. Use CSV export for full data.</p>}
-          </div>
-        </CardContent>
-      </Card>
+      <h3 className="text-sm font-semibold">Scene Details</h3>
+      <DataTable columns={columns} rows={scenes} rowKey={(s) => s.id} caption="Scene details" />
     </div>
   );
-}
-
-function KPI({ label, value, tone = "text-foreground" }: { label: string; value: string; tone?: string }) {
-  return <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{label}</p><p className={`text-lg font-semibold mt-1 ${tone}`}>{value}</p></CardContent></Card>;
 }

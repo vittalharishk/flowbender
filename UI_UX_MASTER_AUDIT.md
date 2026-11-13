@@ -186,3 +186,39 @@ The application has strong functional depth (26 complete modules, 272 passing te
 - Cross-browser (only Chromium tested)
 - Print styles
 - Performance metrics
+
+---
+
+## Status Update — U2 + U3 Complete (2026-11-12)
+
+### U2 (design system + shared components) — done
+- Shared components added in `components/app/`: `PageHeader`, `StatusBadge`, `ConfirmDialog` + `useConfirm`, `EmptyState`, `SearchInput`, `DataTable`, `ChartContainer` (+ `seriesColors`), refreshed `StatCard`.
+- Button `primary` variant added; 26 inline-gradient buttons migrated (0 remain).
+- 30 `window.confirm()` calls in 23 files replaced with `ConfirmDialog` (0 remain).
+- Chart series colors defined as CSS variables (`--series-1..8`) with dark-mode values.
+- TD-01: `lib/types.ts` split into 20 domain files under `lib/types/`, barrel re-export intact.
+
+### U3 (navigation + application shell) — done
+- Sidebar rebuilt on a single shared `SidebarNav` (desktop + mobile drawer no longer duplicate logic).
+- Groups: Overview, Production, Operations, Finance, System; collapsible, state persisted per viewer.
+- Active page: left accent bar + tint + `aria-current="page"`; longest-match so only one item is active.
+- Collapsed mode (68px) with tooltips; collapse state persisted; toggle in sidebar footer and header.
+- Header: breadcrumbs replace the duplicate page `<h1>`; project routes show the project title.
+- Landmarks: `<nav aria-label="Main navigation">`, `<header>`, `<main id="main-content">`; skip-to-content link.
+- Loading text replaced by a layout skeleton; command palette headings no longer use emojis.
+- Content area: `max-w-[1400px]`, demo banner moved inside `<main>`.
+
+### Verification (Puppeteer, real mouse/keyboard input, Chromium headless-shell)
+- 20/20 sidebar routes load, single correct active item, matching breadcrumb, no overflow.
+- Group collapse/expand (mouse + keyboard) and persistence; sidebar collapse, tooltips, persistence.
+- Deep breadcrumb `Dashboard > Projects > <title> > Cast` and breadcrumb link navigation.
+- Theme switching; tablet (820px) and mobile (390px) drawer: open, focus trap, Escape, overlay click, close-on-navigate, no overflow.
+- axe-core landmark/ARIA/name rules: 0 violations on /dashboard, /dashboard/crew, /dashboard/accounts.
+- tsc 0 errors; `next build` passes; vitest 206/206.
+
+### Remaining issues
+- Recharts `defaultProps` dev warnings on /dashboard/distribution (library, not shell).
+- `scene-stripboard.tsx` still uses `window.alert`.
+- Legacy `/dashboard/finance` kept in nav (module removal out of U3 scope).
+- Module pages still render their own headings; adopting `PageHeader` per module is U4–U8.
+- StatusBadge/DataTable/EmptyState exist but most modules have not adopted them yet (U4–U8).

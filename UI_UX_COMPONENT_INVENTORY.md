@@ -186,3 +186,22 @@ Main issue: chart colors hardcoded, no chart accessibility.
 | Add/Edit dialog pair | 4 files (Cast + Crew) | Cast, Crew | FormDialog wrapper |
 | Hardcoded dark colors | 3 occurrences | crew/art-workspace.tsx | Replace with theme tokens |
 | COLORS chart palette | 2 definitions | distribution-workspace, distribution-report | Shared constant |
+
+---
+
+## Shared Components Delivered (U2/U3, 2026-11-12)
+
+| Component | File | Adoption so far |
+|---|---|---|
+| Button `primary` variant | components/ui/button.tsx | 26 buttons, 19 files |
+| ConfirmDialog / useConfirm | components/app/confirm-dialog.tsx | 30 calls, 23 files; provider in app/layout.tsx |
+| PageHeader | components/app/page-header.tsx | Ready; module adoption in U4–U8 |
+| StatCard | components/app/stat-card.tsx | Dashboard |
+| StatusBadge (+ getStatusTone) | components/app/status-badge.tsx | Ready; module adoption in U4–U8 |
+| EmptyState | components/app/empty-state.tsx | Ready |
+| SearchInput | components/app/search-input.tsx | Ready |
+| DataTable (sort + pagination) | components/app/data-table.tsx | Ready |
+| ChartContainer + seriesColors | components/app/chart-container.tsx | Ready; CSS vars `--series-1..8` |
+| SidebarNav / SidebarBrand | components/app/sidebar-nav.tsx | Desktop sidebar + mobile drawer |
+| SidebarUser | components/app/sidebar.tsx | Desktop sidebar + mobile drawer |
+| Breadcrumbs (getBreadcrumbs) | lib/navigation.ts + ui/breadcrumb | App header, all routes |

@@ -314,10 +314,10 @@ export default function NewProjectPage() {
               Cancel
             </Button>
           </Link>
-          <Button
+          <Button variant="primary"
             type="submit"
             disabled={saving}
-            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg shadow-amber-500/20 gap-2 min-w-[140px]"
+            className="gap-2 min-w-[140px]"
           >
             {saving ? (
               <>

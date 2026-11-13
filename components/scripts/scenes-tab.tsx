@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useConfirm } from "@/components/app/confirm-dialog";
+
+import { Fragment, useState, useMemo } from "react";
 import {
   Search,
   Plus,
@@ -102,6 +104,7 @@ interface Props {
 }
 
 export function ScenesTab({ scriptId, script }: Props) {
+  const confirm = useConfirm();
   const scenes = script.scenes;
 
   const [search, setSearch] = useState("");
@@ -235,8 +238,8 @@ export function ScenesTab({ scriptId, script }: Props) {
     setDialogOpen(false);
   }
 
-  function handleDelete(sceneId: string) {
-    if (window.confirm("Delete this scene? This cannot be undone.")) {
+  async function handleDelete(sceneId: string) {
+    if (await confirm({ title: "Delete scene?", description: "This cannot be undone.", confirmLabel: "Delete" })) {
       removeScriptScene(scriptId, sceneId);
       if (expandedId === sceneId) setExpandedId(null);
     }
@@ -269,6 +272,7 @@ export function ScenesTab({ scriptId, script }: Props) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            aria-label="Search scenes"
             placeholder="Search scenes..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
@@ -280,7 +284,7 @@ export function ScenesTab({ scriptId, script }: Props) {
             <Filter className="w-3.5 h-3.5" /> Filters
           </Button>
           <Select value={sort} onValueChange={(v) => { setSort(v as SortKey); setPage(0); }}>
-            <SelectTrigger className="w-[150px] h-9 text-xs">
+            <SelectTrigger aria-label="Sort" className="w-[150px] h-9 text-xs">
               <ArrowUpDown className="w-3.5 h-3.5 mr-1" />
               <SelectValue placeholder="Sort" />
             </SelectTrigger>
@@ -301,7 +305,7 @@ export function ScenesTab({ scriptId, script }: Props) {
       {showFilters && (
         <div className="flex flex-wrap gap-2 p-3 rounded-lg border bg-muted/20">
           <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(0); }}>
-            <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectTrigger aria-label="Status" className="w-[160px] h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               {statusOptions.map((s) => (
@@ -310,7 +314,7 @@ export function ScenesTab({ scriptId, script }: Props) {
             </SelectContent>
           </Select>
           <Select value={intExtFilter} onValueChange={(v) => { setIntExtFilter(v); setPage(0); }}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="INT/EXT" /></SelectTrigger>
+            <SelectTrigger aria-label="INT/EXT" className="w-[120px] h-8 text-xs"><SelectValue placeholder="INT/EXT" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
               {intExtOptions.map((o) => (
@@ -319,7 +323,7 @@ export function ScenesTab({ scriptId, script }: Props) {
             </SelectContent>
           </Select>
           <Select value={todFilter} onValueChange={(v) => { setTodFilter(v); setPage(0); }}>
-            <SelectTrigger className="w-[150px] h-8 text-xs"><SelectValue placeholder="Time of Day" /></SelectTrigger>
+            <SelectTrigger aria-label="Time of Day" className="w-[150px] h-8 text-xs"><SelectValue placeholder="Time of Day" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Times</SelectItem>
               {todOptions.map((o) => (
@@ -371,8 +375,8 @@ export function ScenesTab({ scriptId, script }: Props) {
                 const isExpanded = expandedId === scene.id;
 
                 return (
-                  <>
-                    <TableRow key={scene.id} className={isExpanded ? "border-b-0" : ""}>
+                  <Fragment key={scene.id}>
+                    <TableRow className={isExpanded ? "border-b-0" : ""}>
                       <TableCell className="font-mono font-bold text-sm text-primary">
                         {scene.number}
                       </TableCell>
@@ -380,17 +384,17 @@ export function ScenesTab({ scriptId, script }: Props) {
                         {scene.heading}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-[10px]">{scene.intExt}</Badge>
+                        <Badge variant="outline" className="text-xs">{scene.intExt}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-[10px]">{scene.timeOfDay}</Badge>
+                        <Badge variant="outline" className="text-xs">{scene.timeOfDay}</Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground max-w-[160px] truncate">
                         {scene.location || "—"}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm">{scene.pages}</TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusColors[scene.status]}`}>
+                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${statusColors[scene.status]}`}>
                           {statusLabels[scene.status]}
                         </span>
                       </TableCell>
@@ -438,34 +442,34 @@ export function ScenesTab({ scriptId, script }: Props) {
                         <TableCell colSpan={8} className="p-4">
                           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Description</p>
+                              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Description</p>
                               <p className="text-sm text-foreground">{scene.description || "No description"}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Script Day</p>
+                              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Script Day</p>
                               <p className="text-sm">{scene.scriptDay || "—"}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Page Eighths</p>
+                              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Page Eighths</p>
                               <p className="text-sm font-mono">{scene.eighths}/8</p>
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Breakdown Items</p>
+                              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Breakdown Items</p>
                               <p className="text-sm">{scene.breakdown.length} item{scene.breakdown.length !== 1 ? "s" : ""}</p>
                               {scene.breakdown.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-1">
                                   {scene.breakdown.map((b) => (
-                                    <Badge key={b.id} variant="secondary" className="text-[10px]">{b.name}</Badge>
+                                    <Badge key={b.id} variant="secondary" className="text-xs">{b.name}</Badge>
                                   ))}
                                 </div>
                               )}
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Script Blocks</p>
+                              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Script Blocks</p>
                               <p className="text-sm">{scene.blockIds.length} block{scene.blockIds.length !== 1 ? "s" : ""}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Status</p>
+                              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Status</p>
                               <Select
                                 value={scene.status}
                                 onValueChange={(v) => updateScriptScene(scriptId, scene.id, { status: v as SceneStatus })}
@@ -484,7 +488,7 @@ export function ScenesTab({ scriptId, script }: Props) {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
                 );
               })}
             </TableBody>
@@ -537,6 +541,7 @@ export function ScenesTab({ scriptId, script }: Props) {
             <div>
               <Label className="text-xs">Scene Number *</Label>
               <Input
+                aria-label="e.g. 4A"
                 value={form.number}
                 onChange={(e) => setForm({ ...form, number: e.target.value })}
                 placeholder="e.g. 4A"
@@ -556,6 +561,7 @@ export function ScenesTab({ scriptId, script }: Props) {
             <div className="sm:col-span-2">
               <Label className="text-xs">Heading *</Label>
               <Input
+                aria-label="e.g. OLD HOUSE - NIGHT"
                 value={form.heading}
                 onChange={(e) => setForm({ ...form, heading: e.target.value })}
                 placeholder="e.g. OLD HOUSE - NIGHT"
@@ -575,6 +581,7 @@ export function ScenesTab({ scriptId, script }: Props) {
             <div>
               <Label className="text-xs">Location</Label>
               <Input
+                aria-label="Studio / Practical"
                 value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
                 placeholder="Studio / Practical"
@@ -593,6 +600,7 @@ export function ScenesTab({ scriptId, script }: Props) {
             <div>
               <Label className="text-xs">Script Day</Label>
               <Input
+                aria-label="e.g. Day 3"
                 value={form.scriptDay}
                 onChange={(e) => setForm({ ...form, scriptDay: e.target.value })}
                 placeholder="e.g. Day 3"
@@ -624,7 +632,7 @@ export function ScenesTab({ scriptId, script }: Props) {
 function KpiTile({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   return (
     <div className="rounded-lg border bg-card p-3 text-center">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{label}</p>
+      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{label}</p>
       <p className={`text-2xl font-bold ${accent ? "text-amber-500" : ""}`}>{value}</p>
     </div>
   );

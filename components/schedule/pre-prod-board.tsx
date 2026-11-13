@@ -164,7 +164,7 @@ export function PreProdBoard({ projectId }: { projectId?: string }) {
       <div className="flex flex-wrap gap-3 items-center">
         {!projectId && (
           <Select value={selectedProject} onValueChange={setSelectedProject}>
-            <SelectTrigger className="w-52 h-8 text-xs">
+            <SelectTrigger aria-label="All Projects" className="w-52 h-8 text-xs">
               <SelectValue placeholder="All Projects" />
             </SelectTrigger>
             <SelectContent>
@@ -176,7 +176,7 @@ export function PreProdBoard({ projectId }: { projectId?: string }) {
           </Select>
         )}
         <Select value={deptFilter} onValueChange={setDeptFilter}>
-          <SelectTrigger className="w-44 h-8 text-xs">
+          <SelectTrigger aria-label="All Departments" className="w-44 h-8 text-xs">
             <SelectValue placeholder="All Departments" />
           </SelectTrigger>
           <SelectContent>
@@ -218,7 +218,7 @@ export function PreProdBoard({ projectId }: { projectId?: string }) {
             ].map((s) => (
               <Card key={s.label} className="border">
                 <CardContent className="p-3">
-                  <p className="text-[11px] text-muted-foreground">{s.label}</p>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
                   <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
                 </CardContent>
               </Card>
@@ -302,7 +302,7 @@ export function PreProdBoard({ projectId }: { projectId?: string }) {
             {KANBAN_COLS.map((col) => (
               <div key={col} className="space-y-2">
                 <div className="flex items-center justify-between px-1">
-                  <Badge className={`text-[11px] font-semibold ${TASK_STATUS_COLOR[col]}`}>
+                  <Badge className={`text-xs font-semibold ${TASK_STATUS_COLOR[col]}`}>
                     {TASK_STATUS_LABEL[col]}
                   </Badge>
                   <span className="text-xs text-muted-foreground">{tasksByStatus[col]?.length ?? 0}</span>
@@ -317,16 +317,16 @@ export function PreProdBoard({ projectId }: { projectId?: string }) {
                       <CardContent className="p-3 space-y-2">
                         <p className="text-xs font-medium leading-snug">{task.title}</p>
                         <div className="flex flex-wrap gap-1">
-                          <Badge className={`text-[10px] ${PRIORITY_COLOR[task.priority]}`}>
+                          <Badge className={`text-xs ${PRIORITY_COLOR[task.priority]}`}>
                             {task.priority}
                           </Badge>
-                          <Badge variant="outline" className="text-[10px]">{task.department}</Badge>
+                          <Badge variant="outline" className="text-xs">{task.department}</Badge>
                         </div>
                         {task.owner && (
-                          <p className="text-[10px] text-muted-foreground">{task.owner}</p>
+                          <p className="text-xs text-muted-foreground">{task.owner}</p>
                         )}
                         {task.dueDate && (
-                          <p className="text-[10px] text-muted-foreground">Due {task.dueDate}</p>
+                          <p className="text-xs text-muted-foreground">Due {task.dueDate}</p>
                         )}
                         <div className="flex gap-1 pt-1">
                           {KANBAN_COLS.filter((c) => c !== col).map((next) => (
@@ -349,7 +349,7 @@ export function PreProdBoard({ projectId }: { projectId?: string }) {
                     </Card>
                   ))}
                   {(tasksByStatus[col] ?? []).length === 0 && (
-                    <p className="text-[11px] text-muted-foreground text-center py-6 border border-dashed rounded-lg">No tasks</p>
+                    <p className="text-xs text-muted-foreground text-center py-6 border border-dashed rounded-lg">No tasks</p>
                   )}
                 </div>
               </div>
@@ -379,7 +379,7 @@ export function PreProdBoard({ projectId }: { projectId?: string }) {
                     <div className="flex items-center gap-2">
                       {expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                       <span className="text-sm font-semibold">{cat}</span>
-                      <Badge variant="outline" className="text-[10px]">{catDone}/{items.length}</Badge>
+                      <Badge variant="outline" className="text-xs">{catDone}/{items.length}</Badge>
                     </div>
                     <Progress value={items.length ? (catDone / items.length) * 100 : 0} className="h-1.5 w-24" />
                   </button>
@@ -397,9 +397,9 @@ export function PreProdBoard({ projectId }: { projectId?: string }) {
                             <p className={`text-xs font-medium ${item.status === "done" ? "line-through text-muted-foreground" : ""}`}>
                               {item.title}
                             </p>
-                            <p className="text-[10px] text-muted-foreground">{item.owner} · Due {item.dueDate}</p>
+                            <p className="text-xs text-muted-foreground">{item.owner} · Due {item.dueDate}</p>
                           </div>
-                          <Badge className={`text-[10px] ${CHECKLIST_STATUS_COLOR[item.status]}`}>
+                          <Badge className={`text-xs ${CHECKLIST_STATUS_COLOR[item.status]}`}>
                             {item.status}
                           </Badge>
                           <button
@@ -500,7 +500,7 @@ export function PreProdBoard({ projectId }: { projectId?: string }) {
                         <span className="text-muted-foreground">{item.label}</span>
                         <div className="flex items-center gap-1.5">
                           <span className="font-medium">{item.value}</span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${item.ok ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${item.ok ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>
                             {item.ok ? "✓ Ready" : "Pending"}
                           </span>
                         </div>

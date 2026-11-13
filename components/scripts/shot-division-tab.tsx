@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useState, useMemo } from "react";
 import {
   Camera, Plus, Pencil, Trash2, Video, Sparkles,
@@ -114,6 +116,7 @@ function suggestNextShotNumber(shots: Shot[], sceneId: string): string {
 }
 
 export function ShotDivisionTab({ scriptId, script }: Props) {
+  const confirm = useConfirm();
   const shots = script.shots ?? [];
   const scenes = script.scenes;
 
@@ -239,8 +242,8 @@ export function ShotDivisionTab({ scriptId, script }: Props) {
     setDialogOpen(false);
   }
 
-  function handleDelete(shotId: string) {
-    if (window.confirm("Delete this shot?")) {
+  async function handleDelete(shotId: string) {
+    if (await confirm({ title: "Delete shot?", description: "This shot will be permanently removed.", confirmLabel: "Delete" })) {
       removeShot(scriptId, shotId);
       if (expandedShot === shotId) setExpandedShot(null);
     }
@@ -254,7 +257,7 @@ export function ShotDivisionTab({ scriptId, script }: Props) {
       {/* KPI Tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         <div className="rounded-xl border bg-card p-3 text-center">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Shots</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Total Shots</p>
           <p className="text-2xl font-bold">{kpis.total}</p>
         </div>
         {STATUSES.map((s) => (
@@ -265,12 +268,12 @@ export function ShotDivisionTab({ scriptId, script }: Props) {
               statusFilter === s ? "border-amber-500/50 bg-amber-500/5" : "bg-card hover:border-muted-foreground/30"
             }`}
           >
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground capitalize">{s}</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground capitalize">{s}</p>
             <p className="text-xl font-bold">{kpis.byStatus[s]}</p>
           </button>
         ))}
         <div className="rounded-xl border bg-card p-3 text-center">
-          <p className="text-[10px] uppercase tracking-wider text-violet-400">VFX Shots</p>
+          <p className="text-xs uppercase tracking-wider text-violet-400">VFX Shots</p>
           <p className="text-2xl font-bold text-violet-400">{kpis.vfxCount}</p>
         </div>
       </div>
@@ -280,6 +283,7 @@ export function ShotDivisionTab({ scriptId, script }: Props) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            aria-label="Search shots, descriptions, scenes"
             placeholder="Search shots, descriptions, scenes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -288,7 +292,7 @@ export function ShotDivisionTab({ scriptId, script }: Props) {
         </div>
         <div className="flex flex-wrap gap-2">
           <Select value={sceneFilter} onValueChange={setSceneFilter}>
-            <SelectTrigger className="w-[180px] h-9 text-xs"><SelectValue placeholder="Scene" /></SelectTrigger>
+            <SelectTrigger aria-label="Scene" className="w-[180px] h-9 text-xs"><SelectValue placeholder="Scene" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Scenes</SelectItem>
               {scenes.map((s) => (
@@ -297,7 +301,7 @@ export function ShotDivisionTab({ scriptId, script }: Props) {
             </SelectContent>
           </Select>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[130px] h-9 text-xs"><SelectValue placeholder="Type" /></SelectTrigger>
+            <SelectTrigger aria-label="Type" className="w-[130px] h-9 text-xs"><SelectValue placeholder="Type" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
               {SHOT_TYPES.map((t) => (
@@ -306,7 +310,7 @@ export function ShotDivisionTab({ scriptId, script }: Props) {
             </SelectContent>
           </Select>
           <Select value={vfxFilter} onValueChange={setVfxFilter}>
-            <SelectTrigger className="w-[110px] h-9 text-xs"><SelectValue placeholder="VFX" /></SelectTrigger>
+            <SelectTrigger aria-label="VFX" className="w-[110px] h-9 text-xs"><SelectValue placeholder="VFX" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="yes">VFX</SelectItem>
@@ -343,7 +347,7 @@ export function ShotDivisionTab({ scriptId, script }: Props) {
                   <span className="font-semibold text-sm uppercase truncate flex-1">
                     {scene.intExt}. {scene.heading} — {scene.timeOfDay}
                   </span>
-                  <Badge variant="secondary" className="text-[10px] shrink-0">
+                  <Badge variant="secondary" className="text-xs shrink-0">
                     {allSceneShots.length} shot{allSceneShots.length !== 1 ? "s" : ""}
                   </Badge>
                 </button>
@@ -377,12 +381,12 @@ export function ShotDivisionTab({ scriptId, script }: Props) {
                               >
                                 <ShotThumb key={shot.imageUrl ?? "none"} src={shot.imageUrl} className="w-14 h-9 shrink-0" />
                                 <span className="font-mono font-bold text-xs text-primary w-10 shrink-0">{shot.shotNumber}</span>
-                                <Badge variant="outline" className="text-[10px] font-mono shrink-0">{SHOT_TYPE_LABELS[shot.type]}</Badge>
+                                <Badge variant="outline" className="text-xs font-mono shrink-0">{SHOT_TYPE_LABELS[shot.type]}</Badge>
                                 <span className="text-xs text-muted-foreground capitalize shrink-0">{shot.movement}</span>
                                 {shot.lens && <span className="text-xs text-muted-foreground shrink-0">{shot.lens}</span>}
                                 <span className="text-xs truncate flex-1 min-w-0">{shot.description}</span>
                                 {shot.vfx && <Sparkles className="w-3.5 h-3.5 text-violet-400 shrink-0" />}
-                                <Badge variant="secondary" className={`text-[10px] border shrink-0 ${STATUS_COLORS[shot.status]}`}>
+                                <Badge variant="secondary" className={`text-xs border shrink-0 ${STATUS_COLORS[shot.status]}`}>
                                   {shot.status}
                                 </Badge>
                                 <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -415,20 +419,20 @@ export function ShotDivisionTab({ scriptId, script }: Props) {
                                   </div>
                                   {shot.characters.length > 0 && (
                                     <div className="sm:col-span-2 lg:col-span-3">
-                                      <p className="text-[10px] uppercase text-muted-foreground mb-1">Characters</p>
+                                      <p className="text-xs uppercase text-muted-foreground mb-1">Characters</p>
                                       <div className="flex flex-wrap gap-1">
                                         {shot.characters.map((c) => (
-                                          <span key={c} className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[10px]">{c}</span>
+                                          <span key={c} className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-xs">{c}</span>
                                         ))}
                                       </div>
                                     </div>
                                   )}
                                   {shot.equipment.length > 0 && (
                                     <div className="sm:col-span-2 lg:col-span-3">
-                                      <p className="text-[10px] uppercase text-muted-foreground mb-1">Equipment</p>
+                                      <p className="text-xs uppercase text-muted-foreground mb-1">Equipment</p>
                                       <div className="flex flex-wrap gap-1">
                                         {shot.equipment.map((e) => (
-                                          <span key={e} className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px]">{e}</span>
+                                          <span key={e} className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs">{e}</span>
                                         ))}
                                       </div>
                                     </div>
@@ -610,7 +614,7 @@ export function ShotDivisionTab({ scriptId, script }: Props) {
 function DetailField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] uppercase text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-xs uppercase text-muted-foreground mb-0.5">{label}</p>
       <p className="text-foreground">{value}</p>
     </div>
   );

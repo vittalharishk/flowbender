@@ -173,22 +173,22 @@ export function LocationsTab({ scriptId, script }: Props) {
         <div className="rounded-xl border bg-card p-4 text-center">
           <MapPin className="w-5 h-5 mx-auto mb-1 text-amber-500" />
           <p className="text-2xl font-bold">{stats.total}</p>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Unique Locations</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Unique Locations</p>
         </div>
         <div className="rounded-xl border bg-card p-4 text-center">
           <Building2 className="w-5 h-5 mx-auto mb-1 text-sky-400" />
           <p className="text-2xl font-bold">{stats.intLocs}</p>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Interior</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Interior</p>
         </div>
         <div className="rounded-xl border bg-card p-4 text-center">
           <Sun className="w-5 h-5 mx-auto mb-1 text-amber-400" />
           <p className="text-2xl font-bold">{stats.extLocs}</p>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Exterior</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Exterior</p>
         </div>
         <div className="rounded-xl border bg-card p-4 text-center">
           <CheckCircle2 className="w-5 h-5 mx-auto mb-1 text-emerald-400" />
           <p className="text-2xl font-bold">{stats.scoutedCount}</p>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Scouted</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Scouted</p>
         </div>
       </div>
 
@@ -197,6 +197,7 @@ export function LocationsTab({ scriptId, script }: Props) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            aria-label="Search locations"
             placeholder="Search locations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -205,7 +206,7 @@ export function LocationsTab({ scriptId, script }: Props) {
         </div>
         <div className="flex gap-2 flex-wrap">
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ScoutingFilter)}>
-            <SelectTrigger className="w-[160px] h-9 text-xs">
+            <SelectTrigger aria-label="Scouting Status" className="w-[160px] h-9 text-xs">
               <SelectValue placeholder="Scouting Status" />
             </SelectTrigger>
             <SelectContent>
@@ -217,7 +218,7 @@ export function LocationsTab({ scriptId, script }: Props) {
             </SelectContent>
           </Select>
           <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
-            <SelectTrigger className="w-[140px] h-9 text-xs">
+            <SelectTrigger aria-label="Sort" className="w-[140px] h-9 text-xs">
               <SelectValue placeholder="Sort" />
             </SelectTrigger>
             <SelectContent>
@@ -241,7 +242,7 @@ export function LocationsTab({ scriptId, script }: Props) {
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border bg-card overflow-hidden">
+        <div className="overflow-x-auto rounded-lg border bg-card">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/40">
@@ -268,7 +269,7 @@ export function LocationsTab({ scriptId, script }: Props) {
                           <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
                           <div className="min-w-0">
                             <p className="text-sm font-medium truncate">{loc.name}</p>
-                            <p className="text-[11px] text-muted-foreground truncate">
+                            <p className="text-xs text-muted-foreground truncate">
                               Sc. {loc.sceneNumbers.join(", ")}
                             </p>
                           </div>
@@ -299,7 +300,7 @@ export function LocationsTab({ scriptId, script }: Props) {
                       <TableCell className="text-center">
                         <Badge
                           variant="outline"
-                          className={`text-[10px] ${badge.bg} ${badge.text} border-0`}
+                          className={`text-xs ${badge.bg} ${badge.text} border-0`}
                         >
                           {badge.label}
                         </Badge>
@@ -368,10 +369,10 @@ function LocationDetailPanel({ loc }: { loc: DerivedLocation }) {
                 <div className="flex-1 min-w-0">
                   <p className="truncate font-medium text-xs">{scene.heading}</p>
                 </div>
-                <Badge variant="outline" className="text-[10px] shrink-0">
+                <Badge variant="outline" className="text-xs shrink-0">
                   {scene.intExt}
                 </Badge>
-                <Badge variant="outline" className="text-[10px] shrink-0">
+                <Badge variant="outline" className="text-xs shrink-0">
                   {scene.timeOfDay}
                 </Badge>
                 <span className="text-xs text-muted-foreground shrink-0">
@@ -398,7 +399,7 @@ function LocationDetailPanel({ loc }: { loc: DerivedLocation }) {
                 </div>
                 <Badge
                   variant="outline"
-                  className={`text-[10px] ${
+                  className={`text-xs ${
                     scoutingBadge[loc.linked.status]?.bg ?? ""
                   } ${scoutingBadge[loc.linked.status]?.text ?? ""} border-0`}
                 >

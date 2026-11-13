@@ -25,6 +25,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { SearchInput } from "@/components/app/search-input";
+import { EmptyState } from "@/components/app/empty-state";
+import { StatCard } from "@/components/app/stat-card";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ShootDay, ShootDayStatus } from "@/lib/types";
@@ -245,24 +248,27 @@ export function ScheduleListView({ shootDays, basePath, projectScope, projectId,
           {(Object.entries(shootDayStatusLabels) as [ShootDayStatus, string][]).map(([key, label]) => (
             <button
               key={key}
+              type="button"
               onClick={() => setStatusFilter(statusFilter === key ? "all" : key)}
-              className={`rounded-xl border p-3.5 text-center transition-all ${
+              aria-pressed={statusFilter === key}
+              aria-label={`Filter by ${label}: ${stats.counts[key]} shoot days`}
+              className={`rounded-lg border p-3.5 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
                 statusFilter === key
-                  ? "border-amber-500/60 bg-amber-500/10 shadow-sm"
+                  ? "border-amber-500/60 bg-amber-500/10"
                   : "bg-card hover:border-muted-foreground/40"
               }`}
             >
-              <div className="flex items-center justify-center gap-1.5 mb-1">
-                <span className={`w-2.5 h-2.5 rounded-full ${shootDayStatusDot[key]}`} />
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</p>
+              <div className="mb-1 flex items-center justify-center gap-1.5">
+                <span className={`h-2.5 w-2.5 rounded-full ${shootDayStatusDot[key]}`} aria-hidden="true" />
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
               </div>
-              <p className="text-2xl font-black text-foreground">{stats.counts[key]}</p>
+              <p className="text-2xl font-bold tabular-nums text-foreground">{stats.counts[key]}</p>
             </button>
           ))}
           {stats.withConflicts > 0 && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-3.5 text-center">
-              <p className="text-[10px] uppercase tracking-wider text-red-400 font-semibold mb-1">Conflicts</p>
-              <p className="text-2xl font-black text-red-400">{stats.withConflicts}</p>
+            <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3.5 text-center">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">Conflicts</p>
+              <p className="text-2xl font-bold tabular-nums text-red-600 dark:text-red-400">{stats.withConflicts}</p>
             </div>
           )}
         </div>
@@ -286,7 +292,7 @@ export function ScheduleListView({ shootDays, basePath, projectScope, projectId,
       <div className="flex flex-col sm:flex-row gap-3">
         {!projectScope && (
           <Select value={projectFilter} onValueChange={setProjectFilter}>
-            <SelectTrigger className="w-full sm:w-[240px] bg-muted/40 font-medium">
+            <SelectTrigger aria-label="Select project" className="w-full sm:w-[240px] bg-muted/40 font-medium">
               <SelectValue placeholder="Select project" />
             </SelectTrigger>
             <SelectContent>
@@ -300,56 +306,64 @@ export function ScheduleListView({ shootDays, basePath, projectScope, projectId,
           </Select>
         )}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
+          <SearchInput
+            label="Search shoot days"
             placeholder="Search locations, scenes, cast..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-muted/40"
+            className="h-10 bg-muted/40"
           />
         </div>
         <div className="flex gap-2 flex-wrap">
-          <div className="flex items-center border rounded-lg overflow-hidden bg-background">
+          <div className="flex items-center overflow-hidden rounded-lg border bg-background" role="group" aria-label="Schedule view mode">
             <button
+              type="button"
               onClick={() => setView("gantt")}
-              title="Gantt view"
-              className={`px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+              aria-pressed={view === "gantt"}
+              aria-label="Gantt view"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500 ${
                 view === "gantt" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <CalendarDays className="w-4 h-4" />
+              <CalendarDays className="h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">Gantt View</span>
             </button>
             <button
+              type="button"
               onClick={() => setView("list")}
-              title="List view"
-              className={`px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold transition-colors border-l ${
+              aria-pressed={view === "list"}
+              aria-label="List view"
+              className={`flex items-center gap-1.5 border-l px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500 ${
                 view === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <List className="w-4 h-4" />
+              <List className="h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">List</span>
             </button>
             <button
+              type="button"
               onClick={() => setView("calendar")}
-              title="Calendar view"
-              className={`px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold transition-colors border-l ${
+              aria-pressed={view === "calendar"}
+              aria-label="Calendar view"
+              className={`flex items-center gap-1.5 border-l px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500 ${
                 view === "calendar" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Calendar className="w-4 h-4" />
+              <Calendar className="h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">Calendar</span>
             </button>
             <button
+              type="button"
               onClick={() => setView("stripboard")}
-              title="Visual Scene Stripboard view"
-              className={`px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold transition-colors border-l ${
+              aria-pressed={view === "stripboard"}
+              aria-label="Visual scene stripboard view"
+              className={`flex items-center gap-1.5 border-l px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500 ${
                 view === "stripboard"
-                  ? "bg-amber-500/15 text-amber-400 font-bold border-amber-500/30"
+                  ? "border-amber-500/30 bg-amber-500/15 text-amber-400"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Film className="w-4 h-4 text-amber-500" />
+              <Film className="h-4 w-4 text-amber-500" aria-hidden="true" />
               <span className="hidden sm:inline">Stripboard</span>
             </button>
           </div>
@@ -364,9 +378,9 @@ export function ScheduleListView({ shootDays, basePath, projectScope, projectId,
             Digital Slate
           </Button>
 
-          <Button
+          <Button variant="primary"
             size="sm"
-            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold gap-1.5 h-9 shadow-sm"
+            className="font-bold gap-1.5 h-9"
             onClick={() => setShowAdd(true)}
           >
             <Plus className="w-4 h-4" /> Add Shoot Day
@@ -377,65 +391,37 @@ export function ScheduleListView({ shootDays, basePath, projectScope, projectId,
       {/* Content */}
       {view === "gantt" ? (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div className="rounded-xl border bg-card p-4 flex gap-3 shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                <CalendarDays className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-0.5">Total Shoot Days</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black">60</span>
-                </div>
-                <div className="w-full h-1.5 bg-muted rounded-full mt-2 overflow-hidden flex">
-                  <div className="h-full bg-blue-500 w-[70%]" />
-                  <div className="h-full bg-emerald-500 w-[15%]" />
-                </div>
-                <p className="text-[10px] text-emerald-500 font-medium mt-1">42 Completed (70%)</p>
-              </div>
-            </div>
-            <div className="rounded-xl border bg-card p-4 flex gap-3 shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                <Clapperboard className="w-5 h-5 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-0.5">Pre-Production</p>
-                <div className="text-2xl font-black text-foreground">100%</div>
-                <p className="text-[11px] text-emerald-500 font-medium mt-0.5">Completed</p>
-              </div>
-            </div>
-            <div className="rounded-xl border bg-card p-4 flex gap-3 shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                <Video className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-0.5">Production</p>
-                <div className="text-2xl font-black text-foreground">70%</div>
-                <p className="text-[11px] text-blue-500 font-medium mt-0.5">In Progress</p>
-              </div>
-            </div>
-            <div className="rounded-xl border bg-card p-4 flex gap-3 shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0">
-                <Film className="w-5 h-5 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-0.5">Post-Production</p>
-                <div className="text-2xl font-black text-foreground">25%</div>
-                <p className="text-[11px] text-blue-500 font-medium mt-0.5">In Progress</p>
-              </div>
-            </div>
-            <div className="rounded-xl border bg-card p-4 flex gap-3 shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-0.5">Target Release</p>
-                <div className="text-lg font-black text-foreground leading-tight">{targetReleaseStr}</div>
-                <p className="text-[11px] text-emerald-500 font-medium mt-0.5">
-                  {targetReleaseStr === "Not Set" ? "Update Project" : "On Track"}
-                </p>
-              </div>
-            </div>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+            <StatCard
+              label="Total Shoot Days"
+              value={stats.total}
+              icon={CalendarDays}
+              hint={`${stats.counts.completed} completed${stats.total > 0 ? ` (${Math.round((stats.counts.completed / stats.total) * 100)}%)` : ""}`}
+            />
+            <StatCard
+              label="In Progress"
+              value={stats.counts["in-progress"]}
+              icon={Video}
+              hint={`${stats.counts.confirmed} confirmed`}
+            />
+            <StatCard
+              label="Planned"
+              value={stats.counts.planned}
+              icon={Clapperboard}
+              hint={`${stats.counts.cancelled} cancelled`}
+            />
+            <StatCard
+              label="Page Execution"
+              value={`${pageProgressPercent}%`}
+              icon={Film}
+              hint={`${completedPages.toFixed(1)} of ${stats.totalPages.toFixed(1)} pages`}
+            />
+            <StatCard
+              label="Target Release"
+              value={targetReleaseStr}
+              icon={CheckCircle2}
+              hint={targetReleaseStr === "Not Set" ? "Update project" : targetReleaseStr === "Multiple" ? "Select a project" : "Scheduled"}
+            />
           </div>
           <GanttChartView shootDays={filtered} />
           <ScheduleDashboardFooter />
@@ -445,17 +431,16 @@ export function ScheduleListView({ shootDays, basePath, projectScope, projectId,
       ) : view === "list" ? (
         <>
           {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border bg-card/50">
-              <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
-                <CalendarDays className="w-7 h-7 text-muted-foreground" />
-              </div>
-              <h3 className="font-semibold mb-1">No shoot days found</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {search || statusFilter !== "all"
+            <EmptyState
+              icon={CalendarDays}
+              title="No shoot days found"
+              description={
+                search || statusFilter !== "all"
                   ? "Try adjusting your search or filters."
-                  : "Add your first shoot day to begin scheduling."}
-              </p>
-            </div>
+                  : "Add your first shoot day to begin scheduling."
+              }
+              className="rounded-lg border bg-card/50"
+            />
           ) : (
             <div className="space-y-6">
               {upcoming.length > 0 && (

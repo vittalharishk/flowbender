@@ -1,16 +1,19 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { CheckCircle } from "lucide-react";
+import { PageHeader } from "@/components/app/page-header";
 import { AttendanceTab } from "@/components/schedule/attendance-tab";
 
 export default function ProjectAttendancePage() {
   const { id } = useParams<{ id: string }>();
   return (
-    <div className="p-6 space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">Attendance</h1>
-        <p className="text-sm text-muted-foreground">Daily register and catering set count for this project.</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        icon={CheckCircle}
+        title="Attendance"
+        description="Daily register and catering set count for this project."
+      />
       <AttendanceTab key={id} projectId={id} />
     </div>
   );

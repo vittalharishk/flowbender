@@ -256,10 +256,10 @@ export function GanttChartView({ shootDays }: GanttChartViewProps) {
             )}
             <span className="whitespace-normal leading-tight" title={task.name}>{task.name}</span>
           </div>
-          <div className="text-muted-foreground text-[11px]">{task.startDate}</div>
-          <div className="text-muted-foreground text-[11px]">{task.endDate}</div>
+          <div className="text-muted-foreground text-xs">{task.startDate}</div>
+          <div className="text-muted-foreground text-xs">{task.endDate}</div>
           <div className="flex justify-end">
-            <Badge variant="outline" className={`justify-center text-[10px] py-0 h-5 px-1.5 ${getStatusColors(task.status)}`}>
+            <Badge variant="outline" className={`justify-center text-xs py-0 h-5 px-1.5 ${getStatusColors(task.status)}`}>
               {task.status}
             </Badge>
           </div>
@@ -267,14 +267,14 @@ export function GanttChartView({ shootDays }: GanttChartViewProps) {
 
         <div className="relative py-2.5 flex items-center group overflow-hidden">
           <div
-            className={`absolute h-5 rounded-md shadow-sm transition-all flex items-center px-2 text-[10px] text-white font-bold whitespace-nowrap overflow-hidden
+            className={`absolute h-5 rounded-md shadow-sm transition-all flex items-center px-2 text-xs text-white font-bold whitespace-nowrap overflow-hidden
               ${getBarColor(task.color, isSubtask)} ${isMilestone ? "transform -rotate-45 !w-3.5 !h-3.5 ml-[-6px] rounded-sm" : ""}`}
             style={{ left: pos.left, width: isMilestone ? undefined : pos.width }}
           >
             {!isMilestone && task.name}
           </div>
           {isMilestone && (
-            <div className="absolute text-[10px] font-bold text-foreground mt-8 ml-[-12px]" style={{ left: pos.left }}>
+            <div className="absolute text-xs font-bold text-foreground mt-8 ml-[-12px]" style={{ left: pos.left }}>
               {task.name}
             </div>
           )}
@@ -286,19 +286,19 @@ export function GanttChartView({ shootDays }: GanttChartViewProps) {
   return (
     <div className="rounded-xl border bg-card shadow-sm flex flex-col mb-6 overflow-hidden">
       <div className="grid grid-cols-[450px_1fr] border-b bg-muted/40">
-        <div className="grid grid-cols-[30px_1fr_80px_80px_90px] items-center text-[11px] uppercase tracking-wider font-bold text-muted-foreground py-2.5 pr-4 border-r gap-1">
+        <div className="grid grid-cols-[30px_1fr_80px_80px_90px] items-center text-xs uppercase tracking-wider font-bold text-muted-foreground py-2.5 pr-4 border-r gap-1">
           <div className="text-center">#</div>
           <div>Task / Milestone</div>
           <div>Start Date</div>
           <div>End Date</div>
           <div className="text-right">Status</div>
         </div>
-        <div className="flex items-center text-[11px] font-bold text-muted-foreground text-center py-2 relative">
+        <div className="flex items-center text-xs font-bold text-muted-foreground text-center py-2 relative">
           {MONTHS.map((m, i) => (
             <div key={i} className="flex-1 relative">
               {m === "Aug" && i === 7 ? (
                 <div className="flex flex-col items-center relative -top-0.5 z-20">
-                  <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px]">Today</span>
+                  <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs">Today</span>
                 </div>
               ) : (
                 <span className="relative z-10">{m}</span>

@@ -2,9 +2,11 @@
 
 import { useState, useMemo } from "react";
 import { formatINR } from "@/lib/utils";
-import { Search, LayoutGrid, List, Plus, UserCog, SlidersHorizontal } from "lucide-react";
+import { LayoutGrid, List, Plus, UserCog, SlidersHorizontal, Users, Building2, IndianRupee } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { StatCard } from "@/components/app/stat-card";
+import { SearchInput } from "@/components/app/search-input";
+import { EmptyState } from "@/components/app/empty-state";
 import {
   Select,
   SelectContent,
@@ -88,48 +90,43 @@ export function CrewListView({ members, projectScope, projectId, projectTitle, o
     return formatINR(v);
   }
 
+  const hasActiveFilters =
+    Boolean(search) || deptFilter !== "all" || contractFilter !== "all" || availFilter !== "all";
+
   return (
     <div className="space-y-5">
       <p className="text-xs text-muted-foreground">Seeded crew assignments, contact details, contracts and rates are demo planning data, not confirmed employment records. All amounts are INR.</p>
       {/* Summary bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Total Crew</p>
-          <p className="text-xl font-bold mt-0.5">{stats.total}</p>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">On Set</p>
-          <p className="text-xl font-bold mt-0.5 text-amber-400">{stats.onSet}</p>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Departments</p>
-          <p className="text-xl font-bold mt-0.5">{stats.depts}</p>
-        </div>
-        <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Avg. Day Rate</p>
-          <p className="text-xl font-bold mt-0.5">{fmtShort(stats.total > 0 ? Math.round(stats.totalRate / stats.total) : 0)}</p>
-        </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard label="Total Crew" value={stats.total} icon={Users} compact />
+        <StatCard label="On Set" value={stats.onSet} icon={UserCog} compact />
+        <StatCard label="Departments" value={stats.depts} icon={Building2} compact />
+        <StatCard
+          label="Avg. Day Rate"
+          value={fmtShort(stats.total > 0 ? Math.round(stats.totalRate / stats.total) : 0)}
+          icon={IndianRupee}
+          compact
+          hint={`${stats.signed} signed`}
+        />
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            aria-label="Search crew"
-            placeholder="Search by name, role, department, or project..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-muted/40"
-          />
-        </div>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <SearchInput
+          label="Search crew"
+          placeholder="Search by name, role, department, or project..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          wrapperClassName="flex-1"
+          className="h-10"
+        />
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" className="gap-1.5 sm:hidden" onClick={() => setShowFilters(!showFilters)}>
             <SlidersHorizontal className="w-3.5 h-3.5" /> Filters
           </Button>
           <div className={`${showFilters ? "flex" : "hidden"} sm:flex gap-2 flex-wrap`}>
             <Select value={deptFilter} onValueChange={setDeptFilter}>
-              <SelectTrigger className="w-[160px] h-9 text-xs"><SelectValue placeholder="Department" /></SelectTrigger>
+              <SelectTrigger aria-label="Filter by department" className="h-9 w-[160px] text-xs"><SelectValue placeholder="Department" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Departments</SelectItem>
                 {Object.entries(crewDepartmentLabels).map(([k, v]) => (
@@ -138,7 +135,7 @@ export function CrewListView({ members, projectScope, projectId, projectTitle, o
               </SelectContent>
             </Select>
             <Select value={availFilter} onValueChange={setAvailFilter}>
-              <SelectTrigger className="w-[140px] h-9 text-xs"><SelectValue placeholder="Availability" /></SelectTrigger>
+              <SelectTrigger aria-label="Filter by availability" className="h-9 w-[140px] text-xs"><SelectValue placeholder="Availability" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 {Object.entries(availabilityLabels).map(([k, v]) => (
@@ -147,7 +144,7 @@ export function CrewListView({ members, projectScope, projectId, projectTitle, o
               </SelectContent>
             </Select>
             <Select value={contractFilter} onValueChange={setContractFilter}>
-              <SelectTrigger className="w-[140px] h-9 text-xs"><SelectValue placeholder="Contract" /></SelectTrigger>
+              <SelectTrigger aria-label="Filter by contract status" className="h-9 w-[140px] text-xs"><SelectValue placeholder="Contract" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Contracts</SelectItem>
                 <SelectItem value="signed">Signed</SelectItem>
@@ -157,7 +154,7 @@ export function CrewListView({ members, projectScope, projectId, projectTitle, o
               </SelectContent>
             </Select>
             <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
-              <SelectTrigger className="w-[150px] h-9 text-xs"><SelectValue placeholder="Sort" /></SelectTrigger>
+              <SelectTrigger aria-label="Sort crew" className="h-9 w-[150px] text-xs"><SelectValue placeholder="Sort" /></SelectTrigger>
               <SelectContent>
                 {Object.entries(sortLabels).map(([k, v]) => (
                   <SelectItem key={k} value={k}>{v}</SelectItem>
@@ -165,15 +162,15 @@ export function CrewListView({ members, projectScope, projectId, projectTitle, o
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center border rounded-md overflow-hidden">
-            <button aria-label="Grid view" aria-pressed={view === "grid"} onClick={() => setView("grid")} className={`p-2 ${view === "grid" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-              <LayoutGrid className="w-4 h-4" />
+          <div className="flex items-center overflow-hidden rounded-md border" role="group" aria-label="View mode">
+            <button type="button" aria-label="Grid view" aria-pressed={view === "grid"} onClick={() => setView("grid")} className={`p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500 ${view === "grid" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              <LayoutGrid className="h-4 w-4" aria-hidden="true" />
             </button>
-            <button aria-label="List view" aria-pressed={view === "list"} onClick={() => setView("list")} className={`p-2 ${view === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-              <List className="w-4 h-4" />
+            <button type="button" aria-label="List view" aria-pressed={view === "list"} onClick={() => setView("list")} className={`border-l p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500 ${view === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              <List className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
-          <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white gap-1.5" onClick={() => setShowAdd(true)}>
+          <Button variant="primary" size="sm" className="gap-1.5" onClick={() => setShowAdd(true)}>
             <Plus className="w-4 h-4" /> Add Crew
           </Button>
         </div>
@@ -181,25 +178,26 @@ export function CrewListView({ members, projectScope, projectId, projectTitle, o
 
       {/* Results */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
-            <UserCog className="w-7 h-7 text-muted-foreground" />
-          </div>
-          <h3 className="font-semibold mb-1">No crew members found</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {search || deptFilter !== "all" || contractFilter !== "all" || availFilter !== "all"
-              ? "Try adjusting your search or filters."
-              : "Add your first crew member to get started."}
-          </p>
-          {(search || deptFilter !== "all" || contractFilter !== "all" || availFilter !== "all") && (
-            <Button size="sm" variant="outline" onClick={() => { setSearch(""); setDeptFilter("all"); setContractFilter("all"); setAvailFilter("all"); }}>Clear search and filters</Button>
-          )}
-          {!search && deptFilter === "all" && contractFilter === "all" && availFilter === "all" && (
-            <Button size="sm" variant="outline" onClick={() => setShowAdd(true)}>
-              <Plus className="w-4 h-4 mr-1.5" /> Add Crew Member
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          icon={UserCog}
+          title="No crew members found"
+          description={hasActiveFilters ? "Try adjusting your search or filters." : "Add your first crew member to get started."}
+          action={
+            hasActiveFilters ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => { setSearch(""); setDeptFilter("all"); setContractFilter("all"); setAvailFilter("all"); }}
+              >
+                Clear search and filters
+              </Button>
+            ) : (
+              <Button size="sm" variant="primary" className="gap-1.5" onClick={() => setShowAdd(true)}>
+                <Plus className="h-4 w-4" aria-hidden="true" /> Add Crew Member
+              </Button>
+            )
+          }
+        />
       ) : view === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((m) => (

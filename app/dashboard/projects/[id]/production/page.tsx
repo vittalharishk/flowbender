@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { PreProdBoard } from "@/components/schedule/pre-prod-board";
@@ -32,7 +34,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ContinuityBinder } from "@/components/production/continuity-binder";
-import { DigitalClapperboardModal } from "@/components/production/digital-clapperboard-modal";
+import { PageHeader } from "@/components/app/page-header";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Report {
   completedScenes: string[];
@@ -81,6 +84,7 @@ export default function ProjectProductionPage() {
 }
 
 function ProjectProduction({ projectId }: { projectId: string }) {
+  const confirm = useConfirm();
   const project = useProject(projectId);
   const shootDays = useShootDaysByProject(projectId);
   const [selectedId, setSelectedId] = useState("");
@@ -88,7 +92,6 @@ function ProjectProduction({ projectId }: { projectId: string }) {
   const [ready, setReady] = useState(false);
   const [message, setMessage] = useState("");
   const [showContinuity, setShowContinuity] = useState(false);
-  const [clapperOpen, setClapperOpen] = useState(false);
 
   const storageKey = `flowbender-production-reports-v1:${projectId}`;
 
@@ -167,49 +170,24 @@ function ProjectProduction({ projectId }: { projectId: string }) {
   if (!project) return <p>Project not found.</p>;
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-6 pb-12">
-      {/* Enhanced Hero Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b">
-        <div>
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-semibold text-amber-500">
-              <Clapperboard className="w-3 h-3" />
-              DAILY PRODUCTION REPORT (DPR)
-            </span>
-            <span className="text-xs text-muted-foreground font-medium">
-              {project.title} · Dir: {project.director || "Production Slate"}
-            </span>
-          </div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground flex items-center gap-2.5">
-            <Clapperboard className="w-7 h-7 text-amber-500" />
-            Daily Production Report & Continuity
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Official daily supervisor sign-offs, call/wrap times, completed pages, expenses, and floor continuity notes.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5 flex-wrap">
+    <div className="space-y-6">
+      <PageHeader
+        icon={Clapperboard}
+        title="Daily Production Report & Continuity"
+        description="Daily supervisor sign-offs, call and wrap times, completed pages, expenses, and floor continuity notes."
+        actions={
           <Button
             size="sm"
             variant="outline"
-            className="gap-1.5 h-9 text-xs border-amber-500/40 text-amber-500 hover:bg-amber-500/10"
-            onClick={() => setClapperOpen(true)}
-          >
-            <Clapperboard className="w-4 h-4" />
-            Digital Slate
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1.5 h-9 text-xs"
+            className="h-9 gap-1.5 text-xs"
+            aria-expanded={showContinuity}
             onClick={() => setShowContinuity(!showContinuity)}
           >
-            <Layers className="w-4 h-4 text-primary" />
+            <Layers className="h-4 w-4" aria-hidden="true" />
             {showContinuity ? "Hide" : "View"} Continuity Binder
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {message && <p role="status" className="rounded-lg border bg-muted/60 p-3 text-sm font-medium">{message}</p>}
 
@@ -226,27 +204,31 @@ function ProjectProduction({ projectId }: { projectId: string }) {
         <>
           {/* Shoot Day Selector Ribbon */}
           <div className="flex items-center justify-between p-3.5 rounded-xl border bg-card/60 gap-3 flex-wrap">
-            <div className="flex items-center gap-2.5 text-xs font-semibold text-foreground">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span>Select Active Shoot Call:</span>
-              <select
-                className="rounded-lg border bg-background px-3 py-1.5 text-xs font-bold text-foreground focus:ring-1 focus:ring-primary outline-none"
+            <div className="flex flex-wrap items-center gap-2.5 text-xs font-semibold text-foreground">
+              <Calendar className="h-4 w-4 text-primary" aria-hidden="true" />
+              <label htmlFor="active-shoot-call">Select active shoot call:</label>
+              <Select
                 value={shootDay.id}
-                onChange={(event) => {
-                  setSelectedId(event.target.value);
+                onValueChange={(value) => {
+                  setSelectedId(value);
                   setMessage("");
                 }}
               >
-                {shootDays.map((day) => (
-                  <option key={day.id} value={day.id}>
-                    Day {day.shootDayNumber} · {dateLabel(day.date)} ({day.location})
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="active-shoot-call" className="h-9 w-[280px] max-w-full text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {shootDays.map((day) => (
+                    <SelectItem key={day.id} value={day.id}>
+                      Day {day.shootDayNumber} · {dateLabel(day.date)} ({day.location})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center gap-2 text-xs">
-              <Badge variant="outline" className="text-[11px] font-semibold border-amber-500/30 text-amber-500">
+              <Badge variant="outline" className="text-xs font-semibold border-amber-500/30 text-amber-500">
                 {shootDay.scenes.length} Scenes Scheduled ({shootDay.totalPages} pgs)
               </Badge>
               <Button size="sm" variant="ghost" asChild className="h-7 text-xs text-primary">
@@ -296,7 +278,7 @@ function ProjectProduction({ projectId }: { projectId: string }) {
                         onClick={() => setSelectedId(day.id)}
                       >
                         Day {day.shootDayNumber} · {dateLabel(day.date)}
-                        <span className="block text-[11px] font-normal text-muted-foreground truncate">
+                        <span className="block text-xs font-normal text-muted-foreground truncate">
                           {day.location} · {reports[day.id].completedScenes.length} Scenes Logged · {formatINR(Number(reports[day.id].expense) || 0)}
                         </span>
                       </button>
@@ -305,7 +287,7 @@ function ProjectProduction({ projectId }: { projectId: string }) {
                     <div className="flex items-center gap-2 shrink-0">
                       <Badge
                         variant="outline"
-                        className={`text-[10px] uppercase font-bold ${
+                        className={`text-xs uppercase font-bold ${
                           reports[day.id].status === "submitted"
                             ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
                             : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
@@ -318,8 +300,8 @@ function ProjectProduction({ projectId }: { projectId: string }) {
                         size="icon"
                         className="h-7 w-7 text-muted-foreground hover:text-destructive"
                         aria-label={`Delete report for day ${day.shootDayNumber}`}
-                        onClick={() => {
-                          if (!window.confirm("Delete this saved production report?")) return;
+                        onClick={async () => {
+                          if (!(await confirm({ title: "Delete production report?", description: "This saved production report will be permanently removed.", confirmLabel: "Delete" }))) return;
                           const next = { ...reports };
                           delete next[day.id];
                           if (persist(next)) {
@@ -345,15 +327,6 @@ function ProjectProduction({ projectId }: { projectId: string }) {
           <ContinuityBinder key={projectId} projectId={projectId} />
         </div>
       )}
-
-      {/* Digital Clapperboard Modal */}
-      <DigitalClapperboardModal
-        open={clapperOpen}
-        onOpenChange={setClapperOpen}
-        defaultProjectId={project.id}
-        defaultProjectTitle={project.title}
-        defaultDirector={project.director}
-      />
     </div>
   );
 }
@@ -463,7 +436,7 @@ function ReportForm({
         ].map(([label, value]) => (
           <Card key={label} className="border shadow-sm">
             <CardContent className="p-3.5">
-              <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+              <p className="text-xs font-medium text-muted-foreground">{label}</p>
               <p className="mt-1 text-base font-bold text-foreground">{value}</p>
             </CardContent>
           </Card>
@@ -551,7 +524,7 @@ function ReportForm({
                   Sc. {scene.sceneNumber} · {scene.heading}
                 </span>
               </div>
-              <Badge variant="secondary" className="text-[10px] font-bold">
+              <Badge variant="secondary" className="text-xs font-bold">
                 {scene.pages} pages
               </Badge>
             </label>

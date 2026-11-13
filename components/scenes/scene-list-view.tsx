@@ -3,6 +3,8 @@
 import { useState, useMemo } from "react";
 import { Search, Plus, Layers, SlidersHorizontal, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/app/search-input";
+import { EmptyState } from "@/components/app/empty-state";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -107,13 +109,13 @@ export function SceneListView({ scenes, projectId, basePath, onSceneAdded }: Pro
           >
             <div className="flex items-center justify-center gap-1.5 mb-1">
               <span className={`w-2 h-2 rounded-full ${sceneStatusDot[key]}`} />
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
             </div>
             <p className="text-xl font-bold">{stats.counts[key]}</p>
           </button>
         ))}
         <div className="rounded-lg border bg-card p-3 text-center">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Total Pages</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Total Pages</p>
           <p className="text-xl font-bold">{stats.totalPages}</p>
         </div>
       </div>
@@ -121,21 +123,21 @@ export function SceneListView({ scenes, projectId, basePath, onSceneAdded }: Pro
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
+          <SearchInput
+            label="Search scenes"
             placeholder="Search scenes, locations, characters..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-muted/40"
+            className="h-9 bg-muted/40"
           />
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowFilters(!showFilters)}>
-            <SlidersHorizontal className="w-3.5 h-3.5" />
+          <Button variant="outline" size="sm" className="gap-1.5" aria-expanded={showFilters} onClick={() => setShowFilters(!showFilters)}>
+            <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
             <span className="hidden sm:inline">Filters</span>
           </Button>
           <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
-            <SelectTrigger className="w-[150px] h-9 text-xs"><SelectValue placeholder="Sort" /></SelectTrigger>
+            <SelectTrigger className="w-[150px] h-9 text-xs" aria-label="Sort scenes"><SelectValue placeholder="Sort" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="number">Scene Number</SelectItem>
               <SelectItem value="status">Status Priority</SelectItem>
@@ -143,7 +145,7 @@ export function SceneListView({ scenes, projectId, basePath, onSceneAdded }: Pro
               <SelectItem value="location">Location</SelectItem>
             </SelectContent>
           </Select>
-          <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white gap-1.5" onClick={() => setShowAdd(true)}>
+          <Button variant="primary" size="sm" className="gap-1.5" onClick={() => setShowAdd(true)}>
             <Plus className="w-4 h-4" /> Add Scene
           </Button>
         </div>
@@ -153,7 +155,7 @@ export function SceneListView({ scenes, projectId, basePath, onSceneAdded }: Pro
       {showFilters && (
         <div className="flex flex-wrap gap-2 p-3 rounded-lg border bg-muted/20">
           <Select value={intExtFilter} onValueChange={setIntExtFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="INT/EXT" /></SelectTrigger>
+            <SelectTrigger className="w-[120px] h-8 text-xs" aria-label="Filter by interior or exterior"><SelectValue placeholder="INT/EXT" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="INT">INT</SelectItem>
@@ -162,7 +164,7 @@ export function SceneListView({ scenes, projectId, basePath, onSceneAdded }: Pro
             </SelectContent>
           </Select>
           <Select value={todFilter} onValueChange={setTodFilter}>
-            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Time of Day" /></SelectTrigger>
+            <SelectTrigger className="w-[140px] h-8 text-xs" aria-label="Filter by time of day"><SelectValue placeholder="Time of Day" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Times</SelectItem>
               <SelectItem value="DAY">Day</SelectItem>
@@ -174,7 +176,7 @@ export function SceneListView({ scenes, projectId, basePath, onSceneAdded }: Pro
             </SelectContent>
           </Select>
           <Select value={charFilter} onValueChange={setCharFilter}>
-            <SelectTrigger className="w-[180px] h-8 text-xs"><SelectValue placeholder="Character" /></SelectTrigger>
+            <SelectTrigger className="w-[180px] h-8 text-xs" aria-label="Filter by character"><SelectValue placeholder="Character" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Characters</SelectItem>
               {allCharacters.map((c) => (
@@ -183,7 +185,7 @@ export function SceneListView({ scenes, projectId, basePath, onSceneAdded }: Pro
             </SelectContent>
           </Select>
           <Select value={locationFilter} onValueChange={setLocationFilter}>
-            <SelectTrigger className="w-[200px] h-8 text-xs"><SelectValue placeholder="Location" /></SelectTrigger>
+            <SelectTrigger className="w-[200px] h-8 text-xs" aria-label="Filter by location"><SelectValue placeholder="Location" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Locations</SelectItem>
               {allLocations.map((l) => (
@@ -192,7 +194,7 @@ export function SceneListView({ scenes, projectId, basePath, onSceneAdded }: Pro
             </SelectContent>
           </Select>
           <Select value={vfxFilter} onValueChange={setVfxFilter}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="VFX" /></SelectTrigger>
+            <SelectTrigger aria-label="VFX" className="w-[120px] h-8 text-xs"><SelectValue placeholder="VFX" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="yes">VFX Required</SelectItem>
@@ -207,15 +209,18 @@ export function SceneListView({ scenes, projectId, basePath, onSceneAdded }: Pro
 
       {/* Results */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
-            <Layers className="w-7 h-7 text-muted-foreground" />
-          </div>
-          <h3 className="font-semibold mb-1">No scenes found</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {search || statusFilter !== "all" ? "Try adjusting your search or filters." : "Add your first scene to begin the breakdown."}
-          </p>
-        </div>
+        <EmptyState
+          icon={Layers}
+          title="No scenes found"
+          description={search || statusFilter !== "all" ? "Try adjusting your search or filters." : "Add your first scene to begin the breakdown."}
+          action={
+            search || statusFilter !== "all" ? undefined : (
+              <Button variant="primary" size="sm" className="gap-1.5" onClick={() => setShowAdd(true)}>
+                <Plus className="w-4 h-4" aria-hidden="true" /> Add Scene
+              </Button>
+            )
+          }
+        />
       ) : (
         <div className="space-y-2">
           {filtered.map((s) => (

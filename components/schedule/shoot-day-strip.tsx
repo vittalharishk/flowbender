@@ -39,10 +39,10 @@ export function ShootDayStrip({ day, basePath, isToday }: Props) {
           <span className={cn("text-2xl font-bold leading-none", isToday && "text-amber-400")}>
             {new Date(day.date).getDate()}
           </span>
-          <span className="text-[10px] uppercase text-muted-foreground mt-0.5">
+          <span className="text-xs uppercase text-muted-foreground mt-0.5">
             {new Date(day.date).toLocaleDateString("en", { month: "short" })}
           </span>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {new Date(day.date).toLocaleDateString("en", { weekday: "short" })}
           </span>
         </div>
@@ -56,7 +56,7 @@ export function ShootDayStrip({ day, basePath, isToday }: Props) {
                   <span className="text-xs font-semibold text-muted-foreground">Day {day.shootDayNumber}</span>
                 )}
                 <span className="text-sm font-semibold group-hover:text-amber-400 transition-colors">{day.projectTitle}</span>
-                {isToday && <span className="text-[10px] text-amber-400 font-bold uppercase">Today</span>}
+                {isToday && <span className="text-xs text-amber-400 font-bold uppercase">Today</span>}
               </div>
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-muted-foreground">
@@ -71,24 +71,24 @@ export function ShootDayStrip({ day, basePath, isToday }: Props) {
               {/* Scenes preview */}
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {day.scenes.slice(0, 4).map((sc) => (
-                  <span key={sc.sceneNumber} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  <span key={sc.sceneNumber} className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                     Sc. {sc.sceneNumber}
                   </span>
                 ))}
                 {day.scenes.length > 4 && (
-                  <span className="text-[10px] text-muted-foreground">+{day.scenes.length - 4} more</span>
+                  <span className="text-xs text-muted-foreground">+{day.scenes.length - 4} more</span>
                 )}
               </div>
             </div>
 
             {/* Right side — status + conflicts */}
             <div className="flex flex-col items-end gap-1.5 shrink-0 self-start">
-              <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full border", shootDayStatusColors[day.status])}>
+              <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full border", shootDayStatusColors[day.status])}>
                 {shootDayStatusLabels[day.status]}
               </span>
               {hasConflicts && (
                 <span className={cn(
-                  "flex items-center gap-1 text-[10px] font-medium",
+                  "flex items-center gap-1 text-xs font-medium",
                   criticalConflicts.length > 0 ? "text-red-400" : "text-amber-400"
                 )}>
                   <AlertTriangle className="w-3 h-3" />

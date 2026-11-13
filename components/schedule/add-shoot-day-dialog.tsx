@@ -84,7 +84,7 @@ export function AddShootDayDialog({ open, onOpenChange, projectId, projectTitle,
               ) : (
                 <>
                   <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select project" /></SelectTrigger>
+                    <SelectTrigger aria-label="Select project" className="mt-1"><SelectValue placeholder="Select project" /></SelectTrigger>
                     <SelectContent>
                       {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
                     </SelectContent>
@@ -128,7 +128,7 @@ export function AddShootDayDialog({ open, onOpenChange, projectId, projectTitle,
           </div>
           <div className="flex justify-end gap-3 pt-2 border-t">
             <Button type="button" variant="outline" onClick={() => { reset(); onOpenChange(false); }}>Cancel</Button>
-            <Button type="submit" disabled={saving} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white">
+            <Button variant="primary" type="submit" disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
               {saving ? "Adding..." : "Add Shoot Day"}
             </Button>

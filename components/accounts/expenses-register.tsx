@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/app/stat-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -85,18 +86,9 @@ function ExpenseSummaryCards({ items }: { items: ConsolidatedExpenseItem[] }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {cards.map((c) => (
-        <Card key={c.label} className="bg-card/50 border-border/50">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <c.icon className={`w-4 h-4 ${c.color}`} />
-              <span className="text-[11px] text-muted-foreground uppercase tracking-wider">{c.label}</span>
-            </div>
-            <p className="text-lg font-bold">{formatCompactINR(c.value)}</p>
-            <p className="text-[10px] text-muted-foreground">{formatCurrency(c.value)}</p>
-          </CardContent>
-        </Card>
+        <StatCard key={c.label} compact label={c.label} icon={c.icon} value={formatCompactINR(c.value)} hint={formatCurrency(c.value)} />
       ))}
     </div>
   );
@@ -510,7 +502,7 @@ export function ExpensesRegister({ projectId }: Props) {
                       )}
                       <td className="p-3 text-xs">{item.departmentDisplay}</td>
                       <td className="p-3">
-                        <Badge variant="outline" className="text-[10px] font-normal">{item.sourceModule}</Badge>
+                        <Badge variant="outline" className="text-xs font-normal">{item.sourceModule}</Badge>
                       </td>
                       <td className="p-3 text-sm truncate max-w-[120px]">{item.vendorPayee}</td>
                       <td className="p-3 text-right text-amber-400">{formatCompactINR(item.inrAmount)}</td>
@@ -519,7 +511,7 @@ export function ExpensesRegister({ projectId }: Props) {
                         {item.outstandingAmount > 0 ? formatCompactINR(item.outstandingAmount) : "—"}
                       </td>
                       <td className="p-3">
-                        <Badge className={`text-[10px] ${PAYMENT_STATUS_COLORS[item.paymentStatus] || "bg-slate-500/20 text-slate-300"}`}>
+                        <Badge className={`text-xs ${PAYMENT_STATUS_COLORS[item.paymentStatus] || "bg-slate-500/20 text-slate-300"}`}>
                           {statusLabel(item.paymentStatus)}
                         </Badge>
                       </td>

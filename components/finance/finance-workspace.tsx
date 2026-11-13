@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
@@ -16,6 +18,8 @@ import {
   Layers,
   Search,
   Filter,
+  IndianRupee,
+  Info,
 } from "lucide-react";
 import { useProject, useSelectedProjectId, useProjects } from "@/lib/project-store";
 import { useAppDataSlice, updateAppDataSlice } from "@/lib/app-data-store";
@@ -23,6 +27,8 @@ import { useCastByProject } from "@/lib/cast-store";
 import { useCrewByProject } from "@/lib/crew-store";
 import type { ExpenseItem, BudgetLineItem, PayrollEntry } from "@/lib/types";
 import { ProjectSelector } from "@/components/app/project-selector";
+import { PageHeader } from "@/components/app/page-header";
+import { EmptyState } from "@/components/app/empty-state";
 import { formatINR } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +41,7 @@ interface FinanceWorkspaceProps {
 }
 
 export function FinanceWorkspace({ projectId }: FinanceWorkspaceProps) {
+  const confirm = useConfirm();
   const centralSelectedId = useSelectedProjectId();
   const activeProjectId = projectId || centralSelectedId || "p1";
 
@@ -82,10 +89,10 @@ export function FinanceWorkspace({ projectId }: FinanceWorkspaceProps) {
 
   if (!project) {
     return (
-      <div className="mx-auto max-w-[1400px] space-y-6 p-6">
+      <div className="space-y-6">
         <ProjectSelector currentProjectId={activeProjectId} />
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Project not found.</p>
+        <Card>
+          <EmptyState title="Project not found" description="This project may have been removed, or the link is incorrect." />
         </Card>
       </div>
     );
@@ -219,7 +226,7 @@ export function FinanceWorkspace({ projectId }: FinanceWorkspaceProps) {
   };
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-6">
+    <div className="space-y-6">
       {/* 1. Global Project Selector Card */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card/80 p-4 shadow-sm backdrop-blur">
         <ProjectSelector currentProjectId={activeProjectId} />
@@ -243,51 +250,60 @@ export function FinanceWorkspace({ projectId }: FinanceWorkspaceProps) {
       </div>
 
       {/* Header Banner */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Finance · {project.title}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Real-time ledger, line-item budget tracking, cast/crew payroll liabilities, and cash flow forecast.
-          </p>
-        </div>
+      <PageHeader
+        as="h1"
+        icon={IndianRupee}
+        title={`Finance · ${project.title}`}
+        description="Real-time ledger, line-item budget tracking, cast/crew payroll liabilities, and cash flow forecast."
+      />
+
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 text-sm">
+        <Info className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+        <span className="text-muted-foreground">
+          This is the legacy Finance ledger. <strong className="font-medium text-foreground">Budgets &amp; Accounts</strong> is
+          the authoritative financial view — commitments, payments and approvals reconcile there.
+        </span>
+        <Button asChild variant="outline" size="sm" className="ml-auto">
+          <Link href={`/dashboard/projects/${project.id}/accounts`}>Open Budgets &amp; Accounts</Link>
+        </Button>
       </div>
 
       {message && <p role="status" className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3 text-sm text-emerald-600 dark:text-emerald-400 font-medium">{message}</p>}
 
       {/* 2. Primary Financial KPI Metrics Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-xl border bg-card p-3 text-center transition-all hover:border-primary/40">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Budget</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Budget</p>
           <p className="mt-1 text-base sm:text-lg font-bold tracking-tight text-foreground">{formatINR(totalBudget)}</p>
         </div>
         <div className="rounded-xl border bg-card p-3 text-center transition-all hover:border-primary/40">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Committed</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Committed</p>
           <p className="mt-1 text-base sm:text-lg font-bold tracking-tight text-blue-500">{formatINR(totalCommitted)}</p>
         </div>
         <div className="rounded-xl border bg-card p-3 text-center transition-all hover:border-primary/40">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Actual</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Actual</p>
           <p className="mt-1 text-base sm:text-lg font-bold tracking-tight text-amber-500">{formatINR(totalSpent)}</p>
         </div>
         <div className="rounded-xl border bg-card p-3 text-center transition-all hover:border-primary/40">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Forecast</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Forecast</p>
           <p className="mt-1 text-base sm:text-lg font-bold tracking-tight text-foreground">{formatINR(forecast)}</p>
         </div>
         <div className="rounded-xl border bg-card p-3 text-center transition-all hover:border-primary/40">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Variance</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Variance</p>
           <p className={`mt-1 text-base sm:text-lg font-bold tracking-tight ${variance >= 0 ? "text-emerald-500" : "text-red-500"}`}>
             {formatINR(variance)}
           </p>
         </div>
         <div className="rounded-xl border bg-card p-3 text-center transition-all hover:border-primary/40">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Paid</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Paid</p>
           <p className="mt-1 text-base sm:text-lg font-bold tracking-tight text-emerald-600">{formatINR(paidExpenses)}</p>
         </div>
         <div className="rounded-xl border bg-card p-3 text-center transition-all hover:border-primary/40">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Payables</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Payables</p>
           <p className="mt-1 text-base sm:text-lg font-bold tracking-tight text-red-400">{formatINR(totalPayables)}</p>
         </div>
         <div className="rounded-xl border bg-card p-3 text-center transition-all hover:border-primary/40">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Receivables</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Receivables</p>
           <p className="mt-1 text-base sm:text-lg font-bold tracking-tight text-cyan-500">{formatINR(receivables)}</p>
         </div>
       </div>
@@ -521,8 +537,8 @@ export function FinanceWorkspace({ projectId }: FinanceWorkspaceProps) {
                       size="sm"
                       variant="ghost"
                       className="text-red-500 hover:text-red-700"
-                      onClick={() => {
-                        if (window.confirm(`Delete expense "${item.description}"?`)) {
+                      onClick={async () => {
+                        if (await confirm({ title: `Delete expense "${item.description}"?`, description: "This expense will be permanently removed.", confirmLabel: "Delete" })) {
                           updateAppDataSlice("expenseItems", (current) =>
                             current.filter((record) => !(record.id === item.id && record.projectId === activeProjectId))
                           );

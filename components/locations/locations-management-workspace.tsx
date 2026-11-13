@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useState } from "react";
 import { MapPin, Plus, Lock, AlertCircle, Edit2, Trash2, Building, Eye, CheckCircle2, Crop, ShieldCheck, Upload, Image as ImageIcon } from "lucide-react";
 import { useAppDataSlice, updateAppDataSlice } from "@/lib/app-data-store";
@@ -21,36 +23,14 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ImageCropModal } from "@/components/images/image-crop-modal";
+import { PageHeader } from "@/components/app/page-header";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge } from "@/components/app/status-badge";
+import { EmptyState } from "@/components/app/empty-state";
 import { LocationPermitDialog } from "./location-permit-dialog";
 
-const StatusColors = {
-  "locked": "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-  "scouting": "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30",
-  "permit-pending": "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
-};
-
-const DefaultLocationImages: Record<string, string> = {
-  "heritage": "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80",
-  "cafe": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80",
-  "transit": "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=800&q=80",
-  "rail": "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=800&q=80",
-  "backlot": "https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?auto=format&fit=crop&w=800&q=80",
-  "river": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
-  "night": "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=800&q=80",
-  "housing": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
-  "classroom": "https://images.unsplash.com/photo-1520523839898-507127054c3f?auto=format&fit=crop&w=800&q=80",
-  "music": "https://images.unsplash.com/photo-1520523839898-507127054c3f?auto=format&fit=crop&w=800&q=80",
-  "studio": "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&w=800&q=80",
-  "default": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
-};
-
 export function getLocationImage(loc: ProjectLocation): string {
-  if (loc.coverImage) return loc.coverImage;
-  const searchStr = `${loc.type} ${loc.name} ${loc.city}`.toLowerCase();
-  for (const [k, url] of Object.entries(DefaultLocationImages)) {
-    if (searchStr.includes(k)) return url;
-  }
-  return DefaultLocationImages.default;
+  return loc.coverImage ?? "";
 }
 
 interface LocationsManagementWorkspaceProps {
@@ -58,6 +38,7 @@ interface LocationsManagementWorkspaceProps {
 }
 
 export function LocationsManagementWorkspace({ projectId: scopedProjectId }: LocationsManagementWorkspaceProps) {
+  const confirm = useConfirm();
   const projects = useProjects();
   const locations = useAppDataSlice("locations");
   const scopedProject = useProject(scopedProjectId || "");
@@ -198,9 +179,9 @@ export function LocationsManagementWorkspace({ projectId: scopedProjectId }: Loc
     setEditingLocation(null);
   };
 
-  const handleDeleteLocation = (id: string, name?: string) => {
+  const handleDeleteLocation = async (id: string, name?: string) => {
     const displayName = name || "this location";
-    if (confirm(`Are you sure you want to remove "${displayName}" from locations?`)) {
+    if (await confirm({ title: `Remove "${displayName}"?`, description: "This location will be removed from the locations list.", confirmLabel: "Remove" })) {
       updateAppDataSlice("locations", (current) => current.filter((l) => l.id !== id));
       toast.info(`Location "${displayName}" removed.`);
       if (editingLocation?.id === id) setEditingLocation(null);
@@ -223,65 +204,29 @@ export function LocationsManagementWorkspace({ projectId: scopedProjectId }: Loc
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            {scopedProject ? `${scopedProject.title} · Locations` : "Location Management"}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {scopedProject
-              ? `Scout, lock, and manage shooting venues for ${scopedProject.title}`
-              : "Scout, lock, and manage shooting locations across your feature slates"}
-          </p>
-        </div>
-        <Button onClick={handleOpenAdd} className="gap-2 shrink-0 bg-primary font-semibold">
-          <Plus className="w-4 h-4" />
-          Add Location
-        </Button>
-      </div>
+      <PageHeader
+        as={scopedProjectId ? "h2" : "h1"}
+        icon={MapPin}
+        title={scopedProject ? "Locations" : "Location Management"}
+        description={
+          scopedProject
+            ? `Scout, lock, and manage shooting venues for ${scopedProject.title}`
+            : "Scout, lock, and manage shooting locations across your productions"
+        }
+        actions={
+          <Button onClick={handleOpenAdd} variant="primary" className="gap-2">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add Location
+          </Button>
+        }
+      />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-              Total Locations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-              Locked
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-500">{stats.locked}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-              Scouting
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-500">{stats.scouting}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-              Permits Pending
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-500">{stats.permitPending}</div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <StatCard label="Total Locations" value={stats.total} icon={MapPin} />
+        <StatCard label="Locked" value={stats.locked} icon={Lock} hint="Confirmed venues" />
+        <StatCard label="Scouting" value={stats.scouting} icon={Eye} hint="Under review" />
+        <StatCard label="Permits Pending" value={stats.permitPending} icon={ShieldCheck} hint="Awaiting approval" />
       </div>
 
       {/* Filters */}
@@ -335,25 +280,28 @@ export function LocationsManagementWorkspace({ projectId: scopedProjectId }: Loc
                 className="group border hover:border-primary/50 transition-all shadow-sm overflow-hidden flex flex-col justify-between"
               >
                 <div>
-                  <div className="h-44 bg-muted overflow-hidden relative">
-                    <img
-                      src={getLocationImage(location)}
-                      alt={location.name}
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = DefaultLocationImages.default;
-                      }}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                  <div className="relative h-44 overflow-hidden bg-muted">
+                    {getLocationImage(location) ? (
+                      <img
+                        src={getLocationImage(location)}
+                        alt={location.name}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/40">
+                        <ImageIcon className="h-10 w-10 text-muted-foreground/40" aria-hidden="true" />
+                        <span className="sr-only">No photo for {location.name}</span>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-                    <div className="absolute top-2.5 left-2.5">
-                      <span className="inline-flex items-center rounded-md bg-black/70 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-white capitalize border border-white/10">
+                    <div className="absolute left-2.5 top-2.5">
+                      <span className="inline-flex items-center rounded-md border border-white/10 bg-black/70 px-2 py-0.5 text-xs font-medium capitalize text-white backdrop-blur-sm">
                         {location.type}
                       </span>
                     </div>
 
                     {/* Quick Crop / Change Photo Button */}
-                    <div className="absolute top-2.5 right-2.5 z-10">
+                    <div className="absolute right-2.5 top-2.5 z-10">
                       <button
                         type="button"
                         onClick={(e) => {
@@ -361,10 +309,10 @@ export function LocationsManagementWorkspace({ projectId: scopedProjectId }: Loc
                           setCropperTargetLocation(location);
                           setCropperOpen(true);
                         }}
-                        title="Upload, change, or crop location photo"
-                        className="inline-flex items-center gap-1 rounded-md bg-black/70 backdrop-blur-md px-2.5 py-1 text-[11px] font-semibold text-white/95 hover:text-white hover:bg-black/90 border border-white/15 transition-colors shadow-sm"
+                        aria-label={`Upload, change, or crop photo for ${location.name}`}
+                        className="inline-flex items-center gap-1 rounded-md border border-white/15 bg-black/70 px-2.5 py-1 text-xs font-semibold text-white/95 backdrop-blur-md transition-colors hover:bg-black/90 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                       >
-                        <Crop className="w-3 h-3 text-primary" /> Crop / Photo
+                        <Crop className="h-3 w-3" aria-hidden="true" /> Crop / Photo
                       </button>
                     </div>
                   </div>
@@ -383,19 +331,17 @@ export function LocationsManagementWorkspace({ projectId: scopedProjectId }: Loc
                           )}
                         </CardDescription>
                       </div>
-                      <Badge
-                        variant="outline"
-                        className={`capitalize font-semibold text-xs shrink-0 cursor-pointer hover:opacity-80 transition-opacity ${
-                          StatusColors[location.status as keyof typeof StatusColors] || ""
-                        }`}
+                      <button
+                        type="button"
+                        className="shrink-0 rounded-md transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                         onClick={() => {
                           setPermitTargetLocation(location);
                           setPermitModalOpen(true);
                         }}
-                        title="Click to view full municipal permit documentation"
+                        aria-label={`View permit documentation for ${location.name}. Status: ${location.status.replace(/-/g, " ")}`}
                       >
-                        {location.status.replace(/-/g, " ")}
-                      </Badge>
+                        <StatusBadge status={location.status} />
+                      </button>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3 pt-0">
@@ -511,16 +457,18 @@ export function LocationsManagementWorkspace({ projectId: scopedProjectId }: Loc
             );
           })
         ) : (
-          <div className="col-span-full text-center py-16 rounded-xl border border-dashed">
-            <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-30" />
-            <h3 className="font-semibold text-base mb-1">No locations found</h3>
-            <p className="text-muted-foreground text-sm max-w-sm mx-auto mb-4">
-              Add a scouting or locked location to begin managing shoot sites.
-            </p>
-            <Button onClick={handleOpenAdd} size="sm" className="gap-1.5">
-              <Plus className="w-4 h-4" />
-              Add First Location
-            </Button>
+          <div className="col-span-full rounded-lg border border-dashed">
+            <EmptyState
+              icon={MapPin}
+              title="No locations found"
+              description="Add a scouting or locked location to begin managing shoot sites."
+              action={
+                <Button onClick={handleOpenAdd} variant="primary" size="sm" className="gap-1.5">
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  Add First Location
+                </Button>
+              }
+            />
           </div>
         )}
       </div>
@@ -673,7 +621,7 @@ export function LocationsManagementWorkspace({ projectId: scopedProjectId }: Loc
                     <Upload className="w-4 h-4 text-primary" />
                     <span className="font-medium text-foreground">Click to upload file, paste URL or pick preset</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground/75 mt-0.5">
+                  <p className="text-xs text-muted-foreground/75 mt-0.5">
                     Supports 16:9 & 2.39:1 anamorphic crop, zoom & pan framing
                   </p>
                 </div>
@@ -853,7 +801,7 @@ export function LocationsManagementWorkspace({ projectId: scopedProjectId }: Loc
                     <Upload className="w-4 h-4 text-primary" />
                     <span className="font-medium text-foreground">Click to upload file, paste URL or pick preset</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground/75 mt-0.5">
+                  <p className="text-xs text-muted-foreground/75 mt-0.5">
                     Supports 16:9 & 2.39:1 anamorphic crop, zoom & pan framing
                   </p>
                 </div>

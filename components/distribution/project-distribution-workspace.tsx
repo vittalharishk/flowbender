@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
@@ -25,9 +27,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { formatINR } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { PageHeader } from "@/components/app/page-header";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge } from "@/components/app/status-badge";
+import { EmptyState } from "@/components/app/empty-state";
 
 const emptyDeal = {
   territory: "",
@@ -51,6 +58,7 @@ const ALL_RIGHTS_TYPES = [
 ] as const;
 
 export function ProjectDistributionWorkspace({ projectId }: { projectId?: string }) {
+  const confirm = useConfirm();
   const centralSelectedId = useSelectedProjectId();
   const activeProjectId = projectId || centralSelectedId || "p1";
 
@@ -79,7 +87,7 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
 
   if (!project) {
     return (
-      <div className="mx-auto max-w-[1400px] p-8 text-center space-y-4">
+      <div className="mx-auto p-8 text-center space-y-4">
         <p className="text-muted-foreground">Select an active flowbender project to view distribution & rights.</p>
         <ProjectSelector />
       </div>
@@ -154,8 +162,8 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
     setMessage(`Rights deal for "${record.territory}" saved successfully.`);
   }
 
-  function deleteDeal(dealId: string) {
-    if (confirm("Delete this rights deal?")) {
+  async function deleteDeal(dealId: string) {
+    if (await confirm({ title: "Delete rights deal?", description: "This rights deal will be permanently removed.", confirmLabel: "Delete" })) {
       updateAppDataSlice("rightsDeals", (current) => current.filter((d) => d.id !== dealId));
       if (selectedId === dealId) {
         setIsFormOpen(false);
@@ -186,30 +194,20 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
   });
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-6 pb-12">
+    <div className="space-y-6 pb-12">
       {/* Top Banner with Project Context Selector */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border bg-card/60 backdrop-blur-sm shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-            <Megaphone className="w-5 h-5" />
+      <PageHeader
+        as="h1"
+        title="Distribution & Rights Management"
+        description="Territory licensing, minimum guarantees, digital platform sales & advances"
+        icon={Megaphone}
+        badge={<Badge variant="outline" className="text-xs lowercase">flowbender hub</Badge>}
+        actions={
+          <div className="w-full sm:w-auto">
+            <ProjectSelector currentProjectId={activeProjectId} />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold">Distribution & Rights Management</h1>
-              <Badge variant="outline" className="text-xs lowercase">
-                flowbender hub
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Territory licensing, minimum guarantees, digital platform sales & advances
-            </p>
-          </div>
-        </div>
-
-        <div className="w-full sm:w-auto">
-          <ProjectSelector currentProjectId={activeProjectId} />
-        </div>
-      </div>
+        }
+      />
 
       {message && (
         <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs flex items-center justify-between">
@@ -228,14 +226,12 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
             <Badge variant="secondary" className="capitalize">
               {project.type.replace("-", " ")}
             </Badge>
-            <Badge variant="outline" className="capitalize text-amber-500 border-amber-500/30">
-              {project.status}
-            </Badge>
+            <StatusBadge status={project.status} />
           </div>
           <p className="text-xs text-muted-foreground mt-1 max-w-2xl">{project.logline}</p>
         </div>
 
-        <Button onClick={startNewDeal} className="gap-1.5 bg-amber-600 hover:bg-amber-700 text-white">
+        <Button onClick={startNewDeal} variant="primary" className="gap-1.5">
           <Plus className="w-3.5 h-3.5" />
           Add Rights Deal
         </Button>
@@ -255,8 +251,9 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
           <CardContent>
             <form onSubmit={saveDeal} className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium">Territory / Territory Group</label>
+                <Label htmlFor="deal-territory" className="text-xs font-medium">Territory / Territory Group</Label>
                 <Input
+                  id="deal-territory"
                   required
                   placeholder="e.g. Nizam & Hyderabad Urban or North America Theatrical"
                   value={form.territory}
@@ -265,8 +262,9 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium">Distributor / Buyer / Platform</label>
+                <Label htmlFor="deal-distributor" className="text-xs font-medium">Distributor / Buyer / Platform</Label>
                 <Input
+                  id="deal-distributor"
                   required
                   placeholder="e.g. Asian Cinemas / Netflix India / Zee Telugu"
                   value={form.distributor}
@@ -275,8 +273,9 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium">Rights Type</label>
+                <Label htmlFor="deal-rights-type" className="text-xs font-medium">Rights Type</Label>
                 <select
+                  id="deal-rights-type"
                   className="w-full h-9 rounded-md border bg-background px-3 text-xs capitalize"
                   value={form.rightsType}
                   onChange={(e) =>
@@ -295,8 +294,9 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium">Minimum Guarantee (MG in ₹)</label>
+                <Label htmlFor="deal-mg" className="text-xs font-medium">Minimum Guarantee (MG in INR)</Label>
                 <Input
+                  id="deal-mg"
                   type="number"
                   min="0"
                   step="1000"
@@ -307,8 +307,9 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium">Advance Received (₹)</label>
+                <Label htmlFor="deal-advance" className="text-xs font-medium">Advance Received (INR)</Label>
                 <Input
+                  id="deal-advance"
                   type="number"
                   min="0"
                   step="1000"
@@ -319,8 +320,9 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium">Deal Status</label>
+                <Label htmlFor="deal-status" className="text-xs font-medium">Deal Status</Label>
                 <select
+                  id="deal-status"
                   className="w-full h-9 rounded-md border bg-background px-3 text-xs"
                   value={form.status}
                   onChange={(e) =>
@@ -338,8 +340,9 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
               </div>
 
               <div className="space-y-1.5 md:col-span-3">
-                <label className="text-xs font-medium">Delivery Status (Asset Handover)</label>
+                <Label htmlFor="deal-delivery" className="text-xs font-medium">Delivery Status (Asset Handover)</Label>
                 <select
+                  id="deal-delivery"
                   className="w-full h-9 rounded-md border bg-background px-3 text-xs"
                   value={form.deliveryStatus}
                   onChange={(e) =>
@@ -361,7 +364,7 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
                 <Button type="button" variant="outline" size="sm" onClick={() => setIsFormOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
+                <Button type="submit" size="sm" variant="primary">
                   Save Rights Deal
                 </Button>
               </div>
@@ -372,65 +375,21 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
 
       {/* 6 KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <Card>
-          <CardContent className="p-4 space-y-1">
-            <p className="text-xs text-muted-foreground">Gross Rights</p>
-            <p className="text-lg font-bold text-amber-500 truncate">{formatINR(grossRightsValue)}</p>
-            <p className="text-[10px] text-muted-foreground">{deals.length} total deals</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 space-y-1">
-            <p className="text-xs text-muted-foreground">Advances Received</p>
-            <p className="text-lg font-bold text-emerald-500 truncate">{formatINR(totalAdvances)}</p>
-            <p className="text-[10px] text-muted-foreground">
-              {grossRightsValue > 0
-                ? `${Math.round((totalAdvances / grossRightsValue) * 100)}% collected`
-                : "0%"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 space-y-1">
-            <p className="text-xs text-muted-foreground">Balance Due</p>
-            <p className="text-lg font-bold truncate">{formatINR(outstandingBalance)}</p>
-            <p className="text-[10px] text-muted-foreground">Pending delivery release</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 space-y-1">
-            <p className="text-xs text-muted-foreground">Open / Negotiating</p>
-            <p className="text-lg font-bold text-blue-500">{openNegotiatingDeals}</p>
-            <p className="text-[10px] text-muted-foreground">Active pipeline</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 space-y-1">
-            <p className="text-xs text-muted-foreground">Signed / Closed</p>
-            <p className="text-lg font-bold text-emerald-500">{signedClosedDeals}</p>
-            <p className="text-[10px] text-muted-foreground">Confirmed agreements</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 space-y-1">
-            <p className="text-xs text-muted-foreground">Deliverables Ready</p>
-            <p className="text-lg font-bold text-purple-500">{deliveredPercent}%</p>
-            <Progress value={deliveredPercent} className="h-1 mt-1" />
-          </CardContent>
-        </Card>
+        <StatCard label="Gross Rights" value={formatINR(grossRightsValue)} icon={IndianRupee} hint={`${deals.length} total deals`} />
+        <StatCard label="Advances Received" value={formatINR(totalAdvances)} hint={grossRightsValue > 0 ? `${Math.round((totalAdvances / grossRightsValue) * 100)}% collected` : "0%"} />
+        <StatCard label="Balance Due" value={formatINR(outstandingBalance)} hint="Pending delivery release" />
+        <StatCard label="Open / Negotiating" value={String(openNegotiatingDeals)} hint="Active pipeline" />
+        <StatCard label="Signed / Closed" value={String(signedClosedDeals)} hint="Confirmed agreements" />
+        <StatCard label="Deliverables Ready" value={`${deliveredPercent}%`} hint={<Progress value={deliveredPercent} className="h-1 mt-1" />} />
       </div>
 
       {/* Filter Bar */}
       <div className="flex items-center justify-between gap-3 p-3 rounded-xl border bg-card/40">
         <div className="flex items-center gap-2">
-          <Filter className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-xs font-medium">Filter Rights Type:</span>
+          <Filter className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+          <Label htmlFor="proj-dist-rights-filter" className="text-xs font-medium">Filter Rights Type:</Label>
           <select
+            id="proj-dist-rights-filter"
             className="h-8 rounded-md border bg-background px-2 text-xs capitalize"
             value={filterRights}
             onChange={(e) => setFilterRights(e.target.value)}
@@ -463,24 +422,11 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
               <div className="space-y-1.5 min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold text-sm">{deal.territory}</span>
-                  <Badge variant="secondary" className="text-[10px] capitalize">
+                  <Badge variant="secondary" className="text-xs capitalize">
                     {deal.rightsType}
                   </Badge>
-                  <Badge
-                    variant="outline"
-                    className={`text-[10px] capitalize ${
-                      deal.status === "closed" || deal.status === "signed"
-                        ? "border-emerald-500/40 text-emerald-500"
-                        : deal.status === "negotiating"
-                        ? "border-amber-500/40 text-amber-500"
-                        : "border-blue-500/40 text-blue-500"
-                    }`}
-                  >
-                    {deal.status}
-                  </Badge>
-                  <Badge variant="outline" className="text-[10px]">
-                    Delivery: {deal.deliveryStatus}
-                  </Badge>
+                  <StatusBadge status={deal.status} />
+                  <StatusBadge status={deal.deliveryStatus} label={`Delivery: ${deal.deliveryStatus}`} />
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Distributor / Partner: <span className="text-foreground font-medium">{deal.distributor}</span>
@@ -489,12 +435,12 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="text-left sm:text-right space-y-0.5">
-                  <div className="text-sm font-bold text-amber-500">{formatINR(deal.minimumGuarantee)}</div>
+                  <div className="text-sm font-bold text-amber-600 dark:text-amber-400">{formatINR(deal.minimumGuarantee)}</div>
                   <div className="text-xs text-muted-foreground">
                     Advance: {formatINR(deal.advanceReceived)} ({advanceRatio}%)
                   </div>
                   {balance > 0 && (
-                    <div className="text-[10px] text-muted-foreground">Balance: {formatINR(balance)}</div>
+                    <div className="text-xs text-muted-foreground">Balance: {formatINR(balance)}</div>
                   )}
                 </div>
 
@@ -517,9 +463,7 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
         })}
 
         {visibleDeals.length === 0 && (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            No rights deals found for this filter. Click &quot;Add Rights Deal&quot; to register a territory agreement.
-          </div>
+          <EmptyState title="No rights deals" description='No rights deals found for this filter. Click "Add Rights Deal" to register a territory agreement.' icon={FileText} />
         )}
       </div>
     </div>

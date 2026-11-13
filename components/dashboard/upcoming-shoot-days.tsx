@@ -29,7 +29,7 @@ export function UpcomingShootDays({ entries }: UpcomingShootDaysProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Upcoming Shoot Days</h3>
+        <p className="text-lg font-semibold">Upcoming Shoot Days</p>
         <Link href="/dashboard/schedule" className="text-sm text-primary hover:underline">Full schedule</Link>
       </div>
       <div className="rounded-xl border bg-card overflow-hidden">

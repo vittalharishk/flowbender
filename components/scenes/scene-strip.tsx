@@ -44,10 +44,10 @@ export function SceneStrip({ scene, projectScope, basePath }: Props) {
               <span className="text-lg font-bold text-foreground group-hover:text-amber-400 transition-colors">
                 {scene.sceneNumber}
               </span>
-              <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded", intExtColors[scene.intExt])}>
+              <span className={cn("text-xs font-semibold px-1.5 py-0.5 rounded", intExtColors[scene.intExt])}>
                 {scene.intExt}
               </span>
-              <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded", todColors[scene.timeOfDay])}>
+              <span className={cn("text-xs font-semibold px-1.5 py-0.5 rounded", todColors[scene.timeOfDay])}>
                 {scene.timeOfDay}
               </span>
             </div>
@@ -79,11 +79,11 @@ export function SceneStrip({ scene, projectScope, basePath }: Props) {
             {/* Status + shoot info */}
             <div className="flex items-center gap-2 shrink-0 self-start">
               {scene.shootDate && (
-                <span className="text-[11px] text-muted-foreground hidden md:block">
+                <span className="text-xs text-muted-foreground hidden md:block">
                   Day {scene.shootDay}
                 </span>
               )}
-              <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full border", sceneStatusColors[scene.status])}>
+              <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full border", sceneStatusColors[scene.status])}>
                 {sceneStatusLabels[scene.status]}
               </span>
             </div>

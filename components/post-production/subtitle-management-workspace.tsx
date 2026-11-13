@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -51,6 +53,7 @@ interface SubtitleManagementWorkspaceProps {
 }
 
 export function SubtitleManagementWorkspace({ projectId: scopedProjectId }: SubtitleManagementWorkspaceProps) {
+  const confirm = useConfirm();
   const projects = useProjects();
   const scopedProject = useProject(scopedProjectId || "");
 
@@ -199,8 +202,8 @@ export function SubtitleManagementWorkspace({ projectId: scopedProjectId }: Subt
     setEditingSub(null);
   };
 
-  const handleDeleteSub = (id: string) => {
-    if (confirm("Are you sure you want to delete this subtitle track?")) {
+  const handleDeleteSub = async (id: string) => {
+    if (await confirm({ title: "Delete subtitle track?", description: "This subtitle track will be permanently removed.", confirmLabel: "Delete" })) {
       updateAppDataSlice("subtitleLanguages", (cur) => cur.filter((s) => s.id !== id));
       toast.info("Subtitle track removed.");
       if (editingSub?.id === id) setEditingSub(null);

@@ -2,9 +2,8 @@
 
 import { useMemo } from "react";
 import { Download } from "lucide-react";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCastMembers } from "@/lib/cast-store";
 import { useCastContracts } from "@/lib/casting-store";
@@ -13,9 +12,12 @@ import { useAttendanceRecords } from "@/lib/attendance-store";
 import { useProjects } from "@/lib/project-store";
 import { exportToCsv, formatFilterContext } from "@/lib/report-export";
 import { formatCrore, pct, filterByProject, groupBy } from "@/lib/report-utils";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge } from "@/components/app/status-badge";
+import { ChartContainer, seriesColors } from "@/components/app/chart-container";
+import { DataTable, type DataTableColumn } from "@/components/app/data-table";
+import { EmptyState } from "@/components/app/empty-state";
 import type { ReportFilterState } from "./report-filters";
-
-const COLORS = ["#f59e0b", "#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
 
 interface Props {
   projectId?: string;
@@ -110,8 +112,27 @@ export function CastCrewReport({ projectId, filters, projectName }: Props) {
   };
 
   if (cast.length === 0 && crew.length === 0) {
-    return <Card><CardContent className="p-8 text-center text-muted-foreground">No cast or crew data available for the selected filters.</CardContent></Card>;
+    return <EmptyState title="No cast or crew data" description="No cast or crew data available for the selected filters." />;
   }
+
+  type CastRow = (typeof castWithContracts)[number];
+  type CrewRow = (typeof crew)[number];
+
+  const castColumns = useMemo((): DataTableColumn<CastRow>[] => [
+    { key: "name", header: "Name", cell: (r) => <span className="font-medium">{r.name}</span>, sortValue: (r) => r.name },
+    { key: "character", header: "Character", cell: (r) => <span className="text-muted-foreground">{r.character}</span> },
+    { key: "contractAmt", header: "Contract Amt", cell: (r) => r.contractAmount > 0 ? formatCrore(r.contractAmount) : "—", align: "right", sortValue: (r) => r.contractAmount },
+    { key: "stage", header: "Stage", cell: (r) => <StatusBadge status={r.contractStage} /> },
+  ], []);
+
+  const crewColumns = useMemo((): DataTableColumn<CrewRow>[] => [
+    { key: "name", header: "Name", cell: (r) => <span className="font-medium">{r.name}</span>, sortValue: (r) => r.name },
+    { key: "dept", header: "Department", cell: (r) => r.department, sortValue: (r) => r.department },
+    { key: "role", header: "Role", cell: (r) => <span className="text-muted-foreground">{r.role}</span> },
+    { key: "contract", header: "Contract", cell: (r) => <StatusBadge status={r.contractStatus} /> },
+    { key: "availability", header: "Availability", cell: (r) => <StatusBadge status={r.availability} /> },
+    { key: "daysWorked", header: "Days Worked", cell: (r) => `${r.daysWorked}/${r.totalDays}`, align: "right" },
+  ], []);
 
   return (
     <div className="space-y-4">
@@ -124,55 +145,30 @@ export function CastCrewReport({ projectId, filters, projectName }: Props) {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI label="Total Cast" value={String(cast.length)} />
-        <KPI label="Total Crew" value={String(crew.length)} tone="text-blue-400" />
-        <KPI label="Active Contracts" value={String(activeContracts)} tone="text-emerald-400" />
-        <KPI label="Attendance Rate" value={`${attendanceRate}%`} tone="text-amber-400" />
+        <StatCard label="Total Cast" value={String(cast.length)} />
+        <StatCard label="Total Crew" value={String(crew.length)} />
+        <StatCard label="Active Contracts" value={String(activeContracts)} />
+        <StatCard label="Attendance Rate" value={`${attendanceRate}%`} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Cast table */}
-        <Card>
-          <CardHeader><CardTitle className="text-sm">Cast ({cast.length})</CardTitle></CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-card">
-                  <tr className="border-b text-xs text-muted-foreground">
-                    <th className="text-left p-3">Name</th>
-                    <th className="text-left p-3">Character</th>
-                    <th className="text-right p-3">Contract Amt</th>
-                    <th className="text-left p-3">Stage</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {castWithContracts.map((c) => (
-                    <tr key={c.id} className="border-b hover:bg-muted/30">
-                      <td className="p-3 font-medium">{c.name}</td>
-                      <td className="p-3 text-muted-foreground">{c.character}</td>
-                      <td className="p-3 text-right">{c.contractAmount > 0 ? formatCrore(c.contractAmount) : "—"}</td>
-                      <td className="p-3"><Badge variant="outline" className="text-xs">{c.contractStage}</Badge></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        <div>
+          <h3 className="text-sm font-semibold mb-2">Cast ({cast.length})</h3>
+          <DataTable columns={castColumns} rows={castWithContracts} rowKey={(r) => r.id} caption="Cast members" />
+        </div>
 
-        {/* Crew dept pie */}
         <Card>
           <CardHeader><CardTitle className="text-sm">Crew by Department</CardTitle></CardHeader>
           <CardContent>
             {crewDeptDistribution.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
+              <ChartContainer label="Crew by department pie chart" height={300}>
                 <PieChart>
                   <Pie data={crewDeptDistribution} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
-                    {crewDeptDistribution.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    {crewDeptDistribution.map((_, i) => <Cell key={i} fill={seriesColors[i % seriesColors.length]} />)}
                   </Pie>
                   <Tooltip />
                 </PieChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             ) : (
               <p className="text-sm text-muted-foreground text-center py-8">No crew data.</p>
             )}
@@ -180,43 +176,8 @@ export function CastCrewReport({ projectId, filters, projectName }: Props) {
         </Card>
       </div>
 
-      {/* Crew table */}
-      <Card>
-        <CardHeader><CardTitle className="text-sm">Crew ({crew.length})</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-xs text-muted-foreground">
-                  <th className="text-left p-3">Name</th>
-                  <th className="text-left p-3">Department</th>
-                  <th className="text-left p-3">Role</th>
-                  <th className="text-left p-3">Contract</th>
-                  <th className="text-left p-3">Availability</th>
-                  <th className="text-right p-3">Days Worked</th>
-                </tr>
-              </thead>
-              <tbody>
-                {crew.slice(0, 100).map((c) => (
-                  <tr key={c.id} className="border-b hover:bg-muted/30">
-                    <td className="p-3 font-medium">{c.name}</td>
-                    <td className="p-3">{c.department}</td>
-                    <td className="p-3 text-muted-foreground">{c.role}</td>
-                    <td className="p-3"><Badge variant="outline" className="text-xs">{c.contractStatus}</Badge></td>
-                    <td className="p-3"><Badge variant="outline" className={`text-xs ${c.availability === "available" ? "border-emerald-500/30 text-emerald-400" : ""}`}>{c.availability}</Badge></td>
-                    <td className="p-3 text-right">{c.daysWorked}/{c.totalDays}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {crew.length > 100 && <p className="text-xs text-muted-foreground text-center py-2">Showing first 100 of {crew.length}.</p>}
-          </div>
-        </CardContent>
-      </Card>
+      <h3 className="text-sm font-semibold">Crew ({crew.length})</h3>
+      <DataTable columns={crewColumns} rows={crew} rowKey={(r) => r.id} caption="Crew members" />
     </div>
   );
-}
-
-function KPI({ label, value, tone = "text-foreground" }: { label: string; value: string; tone?: string }) {
-  return <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{label}</p><p className={`text-lg font-semibold mt-1 ${tone}`}>{value}</p></CardContent></Card>;
 }

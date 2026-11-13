@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useDPRReports } from "@/lib/dpr-store";
 import { useCallSheets } from "@/lib/call-sheet-store";
@@ -11,6 +10,9 @@ import { useAppDataSlice } from "@/lib/app-data-store";
 import { useAttendanceRecords } from "@/lib/attendance-store";
 import { exportToCsv, formatFilterContext } from "@/lib/report-export";
 import { filterByDateRange, pct } from "@/lib/report-utils";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge } from "@/components/app/status-badge";
+import { EmptyState } from "@/components/app/empty-state";
 import type { ReportFilterState } from "./report-filters";
 
 interface Props {
@@ -68,11 +70,7 @@ export function DailyProductionReport({ projectId, filters, projectName }: Props
   };
 
   if (filteredDPRs.length === 0) {
-    return (
-      <Card><CardContent className="p-8 text-center text-muted-foreground">
-        No daily production reports available for the selected filters.
-      </CardContent></Card>
-    );
+    return <EmptyState title="No daily production reports" description="No daily production reports available for the selected filters." />;
   }
 
   return (
@@ -82,69 +80,39 @@ export function DailyProductionReport({ projectId, filters, projectName }: Props
         <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExport}><Download className="w-3.5 h-3.5" /> CSV</Button>
       </div>
 
-      {/* KPI */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI label="DPR Reports" value={String(totals.count)} />
-        <KPI label="Scenes Planned" value={String(totals.totalPlanned)} tone="text-blue-400" />
-        <KPI label="Scenes Completed" value={String(totals.totalCompleted)} tone="text-emerald-400" />
-        <KPI label="Scene Completion" value={totals.totalPlanned > 0 ? `${pct(totals.totalCompleted, totals.totalPlanned)}%` : "—"} tone="text-amber-400" />
+        <StatCard label="DPR Reports" value={String(totals.count)} />
+        <StatCard label="Scenes Planned" value={String(totals.totalPlanned)} />
+        <StatCard label="Scenes Completed" value={String(totals.totalCompleted)} />
+        <StatCard label="Scene Completion" value={totals.totalPlanned > 0 ? `${pct(totals.totalCompleted, totals.totalPlanned)}%` : "—"} />
       </div>
 
-      {/* DPR Cards */}
       <div className="space-y-3">
         {filteredDPRs.map((dpr) => (
           <Card key={dpr.id}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm">
-                  Day {dpr.shootDayNumber} — {dpr.date}
-                </CardTitle>
-                <Badge variant="outline" className={`text-xs ${dpr.status === "approved" ? "border-emerald-500/30 text-emerald-400" : dpr.status === "submitted" ? "border-blue-500/30 text-blue-400" : ""}`}>
-                  {dpr.status}
-                </Badge>
+                <CardTitle className="text-sm">Day {dpr.shootDayNumber} — {dpr.date}</CardTitle>
+                <StatusBadge status={dpr.status} />
               </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <p className="text-xs text-muted-foreground">Location</p>
-                  <p className="mt-0.5">{dpr.location || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Director</p>
-                  <p className="mt-0.5">{dpr.director || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Call / Wrap</p>
-                  <p className="mt-0.5">{dpr.actualCallTime || dpr.callTime || "—"} – {dpr.actualWrapTime || dpr.wrapTime || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Attendance</p>
-                  <p className="mt-0.5">Cast: {dpr.castPresent}, Crew: {dpr.crewPresent}</p>
-                </div>
+                <div><p className="text-xs text-muted-foreground">Location</p><p className="mt-0.5">{dpr.location || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">Director</p><p className="mt-0.5">{dpr.director || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">Call / Wrap</p><p className="mt-0.5">{dpr.actualCallTime || dpr.callTime || "—"} – {dpr.actualWrapTime || dpr.wrapTime || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">Attendance</p><p className="mt-0.5">Cast: {dpr.castPresent}, Crew: {dpr.crewPresent}</p></div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm mt-3">
-                <div>
-                  <p className="text-xs text-muted-foreground">Scenes Planned</p>
-                  <p className="mt-0.5 font-medium">{dpr.scenesPlanned}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Scenes Completed</p>
-                  <p className="mt-0.5 font-medium text-emerald-400">{dpr.scenesCompleted}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Pages Planned</p>
-                  <p className="mt-0.5">{dpr.pagesPlanned}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Pages Completed</p>
-                  <p className="mt-0.5">{dpr.pagesCompleted}</p>
-                </div>
+                <div><p className="text-xs text-muted-foreground">Scenes Planned</p><p className="mt-0.5 font-medium">{dpr.scenesPlanned}</p></div>
+                <div><p className="text-xs text-muted-foreground">Scenes Completed</p><p className="mt-0.5 font-medium text-emerald-600 dark:text-emerald-400">{dpr.scenesCompleted}</p></div>
+                <div><p className="text-xs text-muted-foreground">Pages Planned</p><p className="mt-0.5">{dpr.pagesPlanned}</p></div>
+                <div><p className="text-xs text-muted-foreground">Pages Completed</p><p className="mt-0.5">{dpr.pagesCompleted}</p></div>
               </div>
               {dpr.issues && (
                 <div className="mt-3 text-sm">
                   <p className="text-xs text-muted-foreground">Issues / Notes</p>
-                  <p className="mt-0.5 text-amber-400">{dpr.issues}</p>
+                  <p className="mt-0.5 text-amber-600 dark:text-amber-400">{dpr.issues}</p>
                 </div>
               )}
               {dpr.scenes && dpr.scenes.length > 0 && (
@@ -156,7 +124,7 @@ export function DailyProductionReport({ projectId, filters, projectName }: Props
                         <span className="font-medium w-16">{sc.sceneNumber}</span>
                         <span className="flex-1 truncate text-muted-foreground">{sc.heading}</span>
                         <span>{sc.pagesCompleted}/{sc.pagesPlanned} pg</span>
-                        <Badge variant="outline" className="text-[10px]">{sc.status}</Badge>
+                        <StatusBadge status={sc.status} />
                       </div>
                     ))}
                   </div>
@@ -168,8 +136,4 @@ export function DailyProductionReport({ projectId, filters, projectName }: Props
       </div>
     </div>
   );
-}
-
-function KPI({ label, value, tone = "text-foreground" }: { label: string; value: string; tone?: string }) {
-  return <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{label}</p><p className={`text-lg font-semibold mt-1 ${tone}`}>{value}</p></CardContent></Card>;
 }

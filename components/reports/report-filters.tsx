@@ -68,9 +68,9 @@ export function ReportFilterBar({
       <CardContent className="p-4">
         <div className="flex flex-wrap items-end gap-4">
           <div className="min-w-[180px]">
-            <Label className="text-xs">Project</Label>
+            <Label htmlFor="report-project-filter" className="text-xs">Project</Label>
             <Select value={filters.projectId} onValueChange={(v) => updateFilter("projectId", v)}>
-              <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="report-project-filter" aria-label="Filter by project" className="mt-1 h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All projects</SelectItem>
                 {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
@@ -78,16 +78,16 @@ export function ReportFilterBar({
             </Select>
           </div>
           <div className="min-w-[140px]">
-            <Label className="text-xs">Date from</Label>
-            <Input type="date" className="mt-1 h-9" value={filters.dateFrom} onChange={(e) => {
+            <Label htmlFor="report-date-from" className="text-xs">Date from</Label>
+            <Input id="report-date-from" type="date" className="mt-1 h-9" value={filters.dateFrom} onChange={(e) => {
               const v = e.target.value;
               if (filters.dateTo && v > filters.dateTo) return;
               updateFilter("dateFrom", v);
             }} />
           </div>
           <div className="min-w-[140px]">
-            <Label className="text-xs">Date to</Label>
-            <Input type="date" className="mt-1 h-9" value={filters.dateTo} onChange={(e) => {
+            <Label htmlFor="report-date-to" className="text-xs">Date to</Label>
+            <Input id="report-date-to" type="date" className="mt-1 h-9" value={filters.dateTo} onChange={(e) => {
               const v = e.target.value;
               if (filters.dateFrom && v < filters.dateFrom) return;
               updateFilter("dateTo", v);
@@ -95,9 +95,9 @@ export function ReportFilterBar({
           </div>
           {showDepartment && (
             <div className="min-w-[160px]">
-              <Label className="text-xs">Department</Label>
+              <Label htmlFor="report-dept-filter" className="text-xs">Department</Label>
               <Select value={filters.department} onValueChange={(v) => updateFilter("department", v)}>
-                <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="report-dept-filter" className="mt-1 h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All departments</SelectItem>
                   {(departments || []).map((d) => <SelectItem key={d.key} value={d.key}>{d.display}</SelectItem>)}
@@ -107,9 +107,9 @@ export function ReportFilterBar({
           )}
           {showStatus && (
             <div className="min-w-[140px]">
-              <Label className="text-xs">Status</Label>
+              <Label htmlFor="report-status-filter" className="text-xs">Status</Label>
               <Select value={filters.status} onValueChange={(v) => updateFilter("status", v)}>
-                <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="report-status-filter" className="mt-1 h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
                   {(statuses || []).map((s) => <SelectItem key={s.key} value={s.key}>{s.display}</SelectItem>)}

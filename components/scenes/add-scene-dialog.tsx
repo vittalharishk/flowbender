@@ -191,7 +191,7 @@ export function AddSceneDialog({ open, onOpenChange, projectId, onCreated }: Pro
 
           <div className="flex justify-end gap-3 pt-2 border-t">
             <Button type="button" variant="outline" onClick={() => { reset(); onOpenChange(false); }}>Cancel</Button>
-            <Button type="submit" disabled={saving} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white">
+            <Button variant="primary" type="submit" disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
               {saving ? "Adding..." : "Add Scene"}
             </Button>

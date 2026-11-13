@@ -329,3 +329,11 @@ Sidebar, header, and layout work well. Mobile sidebar via Sheet.
 ### Priority: MEDIUM (U8)
 ### Dependencies: StatCard, EmptyState, ChartContainer from U2
 ### Acceptance: Shared components adopted, pagination on revenue
+
+---
+
+## Update (2026-11-12)
+U2 shared components and the U3 shell are complete. Module plans above are unchanged; when each module is redesigned (U4–U8) it should:
+- Use `PageHeader` for its title (the app header now shows breadcrumbs, not a page `<h1>`).
+- Use `StatusBadge`, `DataTable`, `EmptyState`, `SearchInput`, `ChartContainer` from `components/app/`.
+- Rely on the layout's `max-w-[1400px]` container instead of its own max-width wrapper.

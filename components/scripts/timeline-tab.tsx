@@ -146,6 +146,7 @@ export function TimelineTab({ scriptId, script }: Props) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            aria-label="Search scenes"
             placeholder="Search scenes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -154,7 +155,7 @@ export function TimelineTab({ scriptId, script }: Props) {
         </div>
         <div className="flex gap-2 flex-wrap">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px] h-9 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectTrigger aria-label="Status" className="w-[140px] h-9 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
               {(Object.entries(statusLabels) as [SceneStatus, string][]).map(([k, v]) => (
@@ -163,7 +164,7 @@ export function TimelineTab({ scriptId, script }: Props) {
             </SelectContent>
           </Select>
           <Select value={intExtFilter} onValueChange={setIntExtFilter}>
-            <SelectTrigger className="w-[110px] h-9 text-xs"><SelectValue placeholder="INT/EXT" /></SelectTrigger>
+            <SelectTrigger aria-label="INT/EXT" className="w-[110px] h-9 text-xs"><SelectValue placeholder="INT/EXT" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="INT">INT</SelectItem>
@@ -172,7 +173,7 @@ export function TimelineTab({ scriptId, script }: Props) {
             </SelectContent>
           </Select>
           <Select value={todFilter} onValueChange={setTodFilter}>
-            <SelectTrigger className="w-[130px] h-9 text-xs"><SelectValue placeholder="Time" /></SelectTrigger>
+            <SelectTrigger aria-label="Time" className="w-[130px] h-9 text-xs"><SelectValue placeholder="Time" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Times</SelectItem>
               <SelectItem value="DAY">Day</SelectItem>
@@ -214,7 +215,7 @@ export function TimelineTab({ scriptId, script }: Props) {
                   <h3 className="font-semibold text-sm">
                     {group.day === "Unassigned" ? "Unassigned" : `Script Day ${group.day}`}
                   </h3>
-                  <Badge variant="secondary" className="text-[10px]">{group.scenes.length} scenes</Badge>
+                  <Badge variant="secondary" className="text-xs">{group.scenes.length} scenes</Badge>
                 </div>
               )}
 
@@ -251,10 +252,10 @@ export function TimelineTab({ scriptId, script }: Props) {
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap mb-1">
                                 <h4 className="font-semibold text-sm">{scene.heading}</h4>
-                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${intExtBadge[scene.intExt] ?? ""}`}>
+                                <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${intExtBadge[scene.intExt] ?? ""}`}>
                                   {scene.intExt}
                                 </span>
-                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${todBadge[scene.timeOfDay] ?? ""}`}>
+                                <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${todBadge[scene.timeOfDay] ?? ""}`}>
                                   {scene.timeOfDay}
                                 </span>
                               </div>
@@ -266,15 +267,15 @@ export function TimelineTab({ scriptId, script }: Props) {
                               </div>
 
                               <div className="flex items-center gap-2 mt-2">
-                                <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusColors[scene.status]}`}>
+                                <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${statusColors[scene.status]}`}>
                                   <span className={`w-1.5 h-1.5 rounded-full ${statusDot[scene.status]}`} />
                                   {statusLabels[scene.status]}
                                 </span>
                                 {scene.blockIds.length > 0 && (
-                                  <span className="text-[10px] text-muted-foreground">{scene.blockIds.length} blocks</span>
+                                  <span className="text-xs text-muted-foreground">{scene.blockIds.length} blocks</span>
                                 )}
                                 {scene.breakdown.length > 0 && (
-                                  <span className="text-[10px] text-muted-foreground">{scene.breakdown.length} breakdown items</span>
+                                  <span className="text-xs text-muted-foreground">{scene.breakdown.length} breakdown items</span>
                                 )}
                               </div>
 
@@ -306,36 +307,36 @@ export function TimelineTab({ scriptId, script }: Props) {
                             <div className="mt-3 pt-3 border-t space-y-3">
                               {scene.description && (
                                 <div>
-                                  <p className="text-[10px] uppercase text-muted-foreground font-semibold mb-1">Description</p>
+                                  <p className="text-xs uppercase text-muted-foreground font-semibold mb-1">Description</p>
                                   <p className="text-xs text-foreground/80 leading-relaxed">{scene.description}</p>
                                 </div>
                               )}
 
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                                 <div className="p-2 rounded-lg bg-muted/40">
-                                  <span className="text-[10px] text-muted-foreground">Pages</span>
+                                  <span className="text-xs text-muted-foreground">Pages</span>
                                   <p className="font-bold">{scene.pages}</p>
                                 </div>
                                 <div className="p-2 rounded-lg bg-muted/40">
-                                  <span className="text-[10px] text-muted-foreground">Eighths</span>
+                                  <span className="text-xs text-muted-foreground">Eighths</span>
                                   <p className="font-bold">{scene.eighths}/8</p>
                                 </div>
                                 <div className="p-2 rounded-lg bg-muted/40">
-                                  <span className="text-[10px] text-muted-foreground">Script Day</span>
+                                  <span className="text-xs text-muted-foreground">Script Day</span>
                                   <p className="font-bold">{scene.scriptDay || "—"}</p>
                                 </div>
                                 <div className="p-2 rounded-lg bg-muted/40">
-                                  <span className="text-[10px] text-muted-foreground">Blocks</span>
+                                  <span className="text-xs text-muted-foreground">Blocks</span>
                                   <p className="font-bold">{scene.blockIds.length}</p>
                                 </div>
                               </div>
 
                               {scene.breakdown.length > 0 && (
                                 <div>
-                                  <p className="text-[10px] uppercase text-muted-foreground font-semibold mb-1">Breakdown</p>
+                                  <p className="text-xs uppercase text-muted-foreground font-semibold mb-1">Breakdown</p>
                                   <div className="flex flex-wrap gap-1.5">
                                     {scene.breakdown.map((item) => (
-                                      <span key={item.id} className="text-[10px] px-2 py-0.5 rounded-full bg-muted/60 text-muted-foreground">
+                                      <span key={item.id} className="text-xs px-2 py-0.5 rounded-full bg-muted/60 text-muted-foreground">
                                         {item.name}
                                       </span>
                                     ))}
@@ -367,7 +368,7 @@ function KpiTile({ icon: Icon, label, value, color }: { icon: typeof Layers; lab
     <div className="rounded-xl border bg-card p-3 text-center">
       <Icon className={`w-4 h-4 mx-auto mb-1 ${color ?? "text-muted-foreground"}`} />
       <p className="text-xl font-bold">{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
     </div>
   );
 }

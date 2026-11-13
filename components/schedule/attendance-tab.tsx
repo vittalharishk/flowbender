@@ -287,7 +287,7 @@ export function AttendanceTab({ projectId: scopedProjectId }: AttendanceTabProps
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">Project:</span>
           <Select value={selectedProjectId} onValueChange={(v) => { setSelectedProjectId(v); setDayIdx(0); }}>
-            <SelectTrigger className="w-64">
+            <SelectTrigger aria-label="Select project" className="w-64">
               <SelectValue placeholder="Select project" />
             </SelectTrigger>
             <SelectContent>
@@ -563,6 +563,7 @@ export function AttendanceTab({ projectId: scopedProjectId }: AttendanceTabProps
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
+                aria-label="Search by name, date, department…"
                 placeholder="Search by name, date, department…"
                 className="pl-8"
                 value={historySearch}
@@ -587,6 +588,7 @@ export function AttendanceTab({ projectId: scopedProjectId }: AttendanceTabProps
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Delta (positive = add, negative = remove)</label>
               <Input
+                aria-label="e.g. +5 or -2"
                 type="number"
                 placeholder="e.g. +5 or -2"
                 value={cateringDelta}
@@ -596,6 +598,7 @@ export function AttendanceTab({ projectId: scopedProjectId }: AttendanceTabProps
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Reason</label>
               <Input
+                aria-label="e.g. Extra VFX team on set"
                 placeholder="e.g. Extra VFX team on set"
                 value={cateringReason}
                 onChange={(e) => setCateringReason(e.target.value)}

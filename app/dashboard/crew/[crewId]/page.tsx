@@ -2,8 +2,11 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { UserX } from "lucide-react";
 import { useCrewMember } from "@/lib/crew-store";
 import { CrewProfile } from "@/components/crew/crew-profile";
+import { EmptyState } from "@/components/app/empty-state";
+import { Button } from "@/components/ui/button";
 
 export default function GlobalCrewProfilePage() {
   const params = useParams();
@@ -11,17 +14,18 @@ export default function GlobalCrewProfilePage() {
 
   if (!member) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] text-center">
-        <h3 className="font-semibold text-lg mb-1">Crew member not found</h3>
-        <p className="text-sm text-muted-foreground">This person may have been removed or the link is incorrect.</p>
-        <Link href="/dashboard/crew" className="mt-4 text-primary underline">Back to Crew</Link>
-      </div>
+      <EmptyState
+        icon={UserX}
+        title="Crew member not found"
+        description="This person may have been removed or the link is incorrect."
+        action={
+          <Button asChild variant="outline">
+            <Link href="/dashboard/crew">Back to Crew</Link>
+          </Button>
+        }
+      />
     );
   }
 
-  return (
-    <div className="max-w-[1400px] mx-auto">
-      <CrewProfile member={member} backHref="/dashboard/crew" backLabel="All Crew" onUpdate={() => undefined} />
-    </div>
-  );
+  return <CrewProfile member={member} backHref="/dashboard/crew" backLabel="All Crew" />;
 }

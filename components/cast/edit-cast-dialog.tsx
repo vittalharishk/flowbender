@@ -287,10 +287,10 @@ export function EditCastDialog({ member, open, onOpenChange, onSaved }: Props) {
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2 border-t">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button
+            <Button variant="primary"
               type="submit"
               disabled={saving}
-              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+             
             >
               {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
               {saving ? "Saving..." : "Save Changes"}

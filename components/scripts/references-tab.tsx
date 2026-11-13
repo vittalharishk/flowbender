@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useState, useMemo } from "react";
 import {
   Music,
@@ -20,6 +22,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -107,6 +110,7 @@ const emptyForm: FormState = {
 };
 
 export function ReferencesTab({ scriptId, script }: Props) {
+  const confirm = useConfirm();
   const refs = script.references ?? [];
   const [activeCategory, setActiveCategory] = useState<ReferenceCategory | "all">("all");
   const [search, setSearch] = useState("");
@@ -220,8 +224,8 @@ export function ReferencesTab({ scriptId, script }: Props) {
     setForm(emptyForm);
   }
 
-  function handleDelete(refId: string) {
-    if (window.confirm("Delete this reference?")) {
+  async function handleDelete(refId: string) {
+    if (await confirm({ title: "Delete reference?", description: "This reference will be permanently removed.", confirmLabel: "Delete" })) {
       removeReference(scriptId, refId);
       if (expandedId === refId) setExpandedId(null);
     }
@@ -235,30 +239,25 @@ export function ReferencesTab({ scriptId, script }: Props) {
   return (
     <section className="space-y-5">
       {/* Category sub-tabs */}
-      <div className="flex gap-1 overflow-auto border-b pb-px">
-        {categories.map((cat) => (
-          <button
-            key={cat.key}
-            onClick={() => setActiveCategory(cat.key)}
-            className={`whitespace-nowrap border-b-2 px-3 py-2 text-xs font-medium transition-colors ${
-              activeCategory === cat.key
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {cat.label}
-            <span className="ml-1.5 text-[10px] opacity-60">
-              {categoryCounts[cat.key] ?? 0}
-            </span>
-          </button>
-        ))}
-      </div>
+      <Tabs value={activeCategory} onValueChange={(v) => setActiveCategory(v as typeof activeCategory)}>
+        <TabsList className="h-auto flex-wrap justify-start">
+          {categories.map((cat) => (
+            <TabsTrigger key={cat.key} value={cat.key} className="gap-1.5 text-xs">
+              {cat.label}
+              <span className="rounded-full bg-muted px-1.5 text-xs text-muted-foreground">
+                {categoryCounts[cat.key] ?? 0}
+              </span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            aria-label="Search references"
             placeholder="Search references..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -266,7 +265,7 @@ export function ReferencesTab({ scriptId, script }: Props) {
           />
         </div>
         <Select value={sceneFilter} onValueChange={setSceneFilter}>
-          <SelectTrigger className="w-[200px] h-9 text-xs">
+          <SelectTrigger aria-label="Filter by scene" className="w-[200px] h-9 text-xs">
             <SelectValue placeholder="Filter by scene" />
           </SelectTrigger>
           <SelectContent>
@@ -316,7 +315,7 @@ export function ReferencesTab({ scriptId, script }: Props) {
                         </p>
                         <Badge
                           variant="outline"
-                          className={`text-[10px] mt-0.5 ${categoryColors[ref.category]}`}
+                          className={`text-xs mt-0.5 ${categoryColors[ref.category]}`}
                         >
                           {ref.category}
                         </Badge>
@@ -390,7 +389,7 @@ export function ReferencesTab({ scriptId, script }: Props) {
                         return scene ? (
                           <span
                             key={sid}
-                            className="px-1.5 py-0.5 rounded text-[10px] bg-muted/60 text-muted-foreground"
+                            className="px-1.5 py-0.5 rounded text-xs bg-muted/60 text-muted-foreground"
                           >
                             Sc. {scene.number}
                           </span>
@@ -405,7 +404,7 @@ export function ReferencesTab({ scriptId, script }: Props) {
                       {ref.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-500"
+                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs bg-amber-500/10 text-amber-500"
                         >
                           <Tag className="w-2.5 h-2.5" />
                           {tag}
@@ -519,6 +518,7 @@ export function ReferencesTab({ scriptId, script }: Props) {
             <div>
               <Label>Title *</Label>
               <Input
+                aria-label="Reference title"
                 value={form.title}
                 onChange={(e) =>
                   setForm({ ...form, title: e.target.value })
@@ -544,6 +544,7 @@ export function ReferencesTab({ scriptId, script }: Props) {
             <div>
               <Label>URL</Label>
               <Input
+                aria-label="https://"
                 value={form.url}
                 onChange={(e) =>
                   setForm({ ...form, url: e.target.value })
@@ -556,6 +557,7 @@ export function ReferencesTab({ scriptId, script }: Props) {
             <div>
               <Label>Linked Scenes (comma-separated scene numbers)</Label>
               <Input
+                aria-label="e.g. 1, 3, 15"
                 value={form.linkedSceneNumbers}
                 onChange={(e) =>
                   setForm({
@@ -566,7 +568,7 @@ export function ReferencesTab({ scriptId, script }: Props) {
                 placeholder="e.g. 1, 3, 15"
                 className="text-xs"
               />
-              <p className="text-[10px] text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Available: {script.scenes.map((s) => s.number).join(", ")}
               </p>
             </div>
@@ -574,6 +576,7 @@ export function ReferencesTab({ scriptId, script }: Props) {
             <div>
               <Label>Linked Characters (comma-separated)</Label>
               <Input
+                aria-label="e.g. PUSHPA, SRIVALLI"
                 value={form.linkedCharacters}
                 onChange={(e) =>
                   setForm({
@@ -589,6 +592,7 @@ export function ReferencesTab({ scriptId, script }: Props) {
             <div>
               <Label>Tags (comma-separated)</Label>
               <Input
+                aria-label="e.g. costume, forest, action"
                 value={form.tags}
                 onChange={(e) =>
                   setForm({ ...form, tags: e.target.value })

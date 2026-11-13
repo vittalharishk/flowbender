@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useState, useMemo } from "react";
 import {
   FileText, Plus, ChevronDown, ChevronRight, CheckCircle2, Clock,
@@ -47,7 +49,7 @@ const stageOrder: ContractStage[] = ["draft", "under-review", "approved", "signe
 
 function StageBadge({ stage }: { stage: ContractStage }) {
   return (
-    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${stageColors[stage]}`}>
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${stageColors[stage]}`}>
       {contractStageLabels[stage]}
     </span>
   );
@@ -214,12 +216,12 @@ function CreateContractDialog({ castMembers, contracts, preselectedCastId, onClo
             <div>
               <Label>Total amount (₹) *</Label>
               <Input type="number" min="0" value={form.amount} onChange={e => set("amount", e.target.value)} placeholder="e.g. 200000000" />
-              {form.amount && <p className="text-[11px] text-muted-foreground mt-0.5">{fmtCr(parseFloat(form.amount) || 0)}</p>}
+              {form.amount && <p className="text-xs text-muted-foreground mt-0.5">{fmtCr(parseFloat(form.amount) || 0)}</p>}
             </div>
             <div>
               <Label>Advance (₹)</Label>
               <Input type="number" min="0" value={form.advance} onChange={e => set("advance", e.target.value)} placeholder="e.g. 50000000" />
-              {form.advance && <p className="text-[11px] text-muted-foreground mt-0.5">{fmtCr(parseFloat(form.advance) || 0)}</p>}
+              {form.advance && <p className="text-xs text-muted-foreground mt-0.5">{fmtCr(parseFloat(form.advance) || 0)}</p>}
             </div>
             <div>
               <Label>Start date *</Label>
@@ -245,7 +247,7 @@ function CreateContractDialog({ castMembers, contracts, preselectedCastId, onClo
 
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex gap-2 pt-1">
-            <Button type="submit" disabled={castMembers.length === 0} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700">
+            <Button variant="primary" type="submit" disabled={castMembers.length === 0}>
               Create contract
             </Button>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
@@ -321,7 +323,7 @@ function MilestoneForm({ contractId, initial, onClose }: MilestoneFormProps) {
             <div>
               <Label>Amount (₹) *</Label>
               <Input type="number" min="0" value={form.amount} onChange={e => set("amount", e.target.value)} />
-              {form.amount && <p className="text-[11px] text-muted-foreground mt-0.5">{fmtCr(parseFloat(form.amount)||0)}</p>}
+              {form.amount && <p className="text-xs text-muted-foreground mt-0.5">{fmtCr(parseFloat(form.amount)||0)}</p>}
             </div>
             <div>
               <Label>Due date</Label>
@@ -353,7 +355,7 @@ function MilestoneForm({ contractId, initial, onClose }: MilestoneFormProps) {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex gap-2 pt-1">
-            <Button type="submit" className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700">
+            <Button variant="primary" type="submit">
               {initial ? "Save changes" : "Add milestone"}
             </Button>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
@@ -377,6 +379,7 @@ interface ContractDetailProps {
 }
 
 function ContractDetail({ contract, artistName, characterName, projectTitle, onClose }: ContractDetailProps) {
+  const confirm = useConfirm();
   const [msForm, setMsForm] = useState<{ open: boolean; initial?: PaymentMilestone } | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({ notes: contract.notes, documentName: contract.documentName ?? "" });
@@ -392,13 +395,13 @@ function ContractDetail({ contract, artistName, characterName, projectTitle, onC
       {/* Header info */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-0.5">
-          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Contract ref</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Contract ref</p>
           <p className="font-bold text-lg text-amber-500">{contract.contractRef}</p>
         </div>
         <div className="flex items-center gap-2">
           <StageBadge stage={contract.contractStage} />
-          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" title="Delete contract" onClick={() => {
-            if (window.confirm(`Delete contract ${contract.contractRef}? This cannot be undone.`)) {
+          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" title="Delete contract" onClick={async () => {
+            if (await confirm({ title: `Delete contract ${contract.contractRef}?`, description: "This cannot be undone.", confirmLabel: "Delete" })) {
               deleteContract(contract.id);
               onClose();
             }
@@ -410,10 +413,10 @@ function ContractDetail({ contract, artistName, characterName, projectTitle, onC
 
       {/* Info grid */}
       <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
-        <div><p className="text-[11px] text-muted-foreground mb-0.5">Artist</p><p className="font-medium">{artistName}</p></div>
-        <div><p className="text-[11px] text-muted-foreground mb-0.5">Character</p><p className="font-medium">{characterName}</p></div>
-        <div><p className="text-[11px] text-muted-foreground mb-0.5">Project</p><p className="font-medium">{projectTitle}</p></div>
-        <div><p className="text-[11px] text-muted-foreground mb-0.5">Period</p><p className="font-medium">{contract.startDate} → {contract.endDate}</p></div>
+        <div><p className="text-xs text-muted-foreground mb-0.5">Artist</p><p className="font-medium">{artistName}</p></div>
+        <div><p className="text-xs text-muted-foreground mb-0.5">Character</p><p className="font-medium">{characterName}</p></div>
+        <div><p className="text-xs text-muted-foreground mb-0.5">Project</p><p className="font-medium">{projectTitle}</p></div>
+        <div><p className="text-xs text-muted-foreground mb-0.5">Period</p><p className="font-medium">{contract.startDate} → {contract.endDate}</p></div>
       </div>
 
       {/* Financials */}
@@ -425,7 +428,7 @@ function ContractDetail({ contract, artistName, characterName, projectTitle, onC
           { label: "Outstanding",   value: fmtCr(outstanding),       color: outstanding > 0 ? "text-red-400" : "text-emerald-400" },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-lg border bg-card px-3 py-2">
-            <p className="text-[11px] text-muted-foreground">{label}</p>
+            <p className="text-xs text-muted-foreground">{label}</p>
             <p className={`text-base font-bold ${color}`}>{value}</p>
           </div>
         ))}
@@ -474,7 +477,7 @@ function ContractDetail({ contract, artistName, characterName, projectTitle, onC
                 value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))}
               />
             </div>
-            <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700" onClick={() => {
+            <Button variant="primary" size="sm" onClick={() => {
               updateContract(contract.id, { notes: editForm.notes, documentName: editForm.documentName || null });
               setEditOpen(false);
             }}>Save</Button>
@@ -530,7 +533,7 @@ function ContractDetail({ contract, artistName, characterName, projectTitle, onC
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium text-sm">{ms.label}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${msColors[ms.status]}`}>{msLabels[ms.status]}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${msColors[ms.status]}`}>{msLabels[ms.status]}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
                   <span>Due: {ms.dueDate}</span>
@@ -544,7 +547,7 @@ function ContractDetail({ contract, artistName, characterName, projectTitle, onC
                 <div className="flex gap-1 mt-1 justify-end">
                   {ms.status !== "paid" && (
                     <button
-                      className="rounded px-1.5 py-0.5 text-[10px] bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                      className="rounded px-1.5 py-0.5 text-xs bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
                       onClick={() => updateMilestone(contract.id, ms.id, { status: "paid", paymentDate: ms.paymentDate || today() })}
                     >
                       Mark paid
@@ -553,8 +556,8 @@ function ContractDetail({ contract, artistName, characterName, projectTitle, onC
                   <button className="rounded p-1 text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => setMsForm({ open: true, initial: ms })}>
                     <Edit2 className="w-3 h-3" />
                   </button>
-                  <button className="rounded p-1 text-muted-foreground hover:text-destructive hover:bg-muted" onClick={() => {
-                    if (window.confirm(`Delete milestone "${ms.label}"?`)) deleteMilestone(contract.id, ms.id);
+                  <button className="rounded p-1 text-muted-foreground hover:text-destructive hover:bg-muted" onClick={async () => {
+                    if (await confirm({ title: `Delete milestone "${ms.label}"?`, description: "This payment milestone will be removed from the contract.", confirmLabel: "Delete" })) deleteMilestone(contract.id, ms.id);
                   }}>
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -679,7 +682,7 @@ export function ContractsTab({ projectId }: ContractsTabProps) {
         <div className="rounded-xl border bg-card px-4 py-3">
           <p className="text-xs text-muted-foreground">Total contracts</p>
           <p className="text-2xl font-bold">{scope.length}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">{byStage("draft")} draft · {byStage("under-review")} review · {byStage("signed")} signed</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{byStage("draft")} draft · {byStage("under-review")} review · {byStage("signed")} signed</p>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3">
           <p className="text-xs text-muted-foreground">Total value</p>
@@ -716,7 +719,7 @@ export function ContractsTab({ projectId }: ContractsTabProps) {
           </SelectContent>
         </Select>
         <div className="sm:ml-auto">
-          <Button className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 gap-2" onClick={() => setCreateOpen(true)}>
+          <Button variant="primary" className="w-full sm:w-auto gap-2" onClick={() => setCreateOpen(true)}>
             <Plus className="w-4 h-4" /> New contract
           </Button>
         </div>

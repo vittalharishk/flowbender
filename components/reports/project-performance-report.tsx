@@ -1,19 +1,21 @@
 "use client";
 
 import { useMemo } from "react";
-import { Download } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Download, LayoutDashboard } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge } from "@/components/app/status-badge";
+import { DataTable, type DataTableColumn } from "@/components/app/data-table";
+import { ChartContainer, seriesColors } from "@/components/app/chart-container";
+import { EmptyState } from "@/components/app/empty-state";
 import { useAccountsDashboard } from "@/lib/accounts-store";
 import { useProjects } from "@/lib/project-store";
 import { useAppDataSlice } from "@/lib/app-data-store";
 import { exportToCsv, formatFilterContext } from "@/lib/report-export";
 import { formatCrore, pct } from "@/lib/report-utils";
 import type { ReportFilterState } from "./report-filters";
-
-const COLORS = ["#f59e0b", "#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
 
 interface Props {
   projectId?: string;
@@ -73,10 +75,20 @@ export function ProjectPerformanceReport({ projectId, filters, projectName }: Pr
   };
 
   if (dashboard.byProject.length === 0) {
-    return (
-      <Card><CardContent className="p-8 text-center text-muted-foreground">No project data available for the selected filters.</CardContent></Card>
-    );
+    return <EmptyState title="No project data" description="No project data available for the selected filters." icon={LayoutDashboard} />;
   }
+
+  type ProjRow = (typeof tableRows)[number];
+  const columns: DataTableColumn<ProjRow>[] = [
+    { key: "name", header: "Project", cell: (r) => <span className="font-medium">{r.projectName}</span>, sortValue: (r) => r.projectName },
+    { key: "status", header: "Status", cell: (r) => <StatusBadge status={r.status} />, sortValue: (r) => r.status },
+    { key: "budget", header: "Approved Budget", cell: (r) => formatCrore(r.approvedBudget), sortValue: (r) => r.approvedBudget, align: "right" },
+    { key: "committed", header: "Committed", cell: (r) => formatCrore(r.committed), sortValue: (r) => r.committed, align: "right" },
+    { key: "paid", header: "Paid", cell: (r) => formatCrore(r.paid), sortValue: (r) => r.paid, align: "right" },
+    { key: "outstanding", header: "Outstanding", cell: (r) => formatCrore(r.outstanding), sortValue: (r) => r.outstanding, align: "right" },
+    { key: "util", header: "Utilization", cell: (r) => `${Math.round(r.utilization)}%`, sortValue: (r) => r.utilization, align: "right" },
+    { key: "scene", header: "Scene Progress", cell: (r) => r.sceneTotal > 0 ? `${r.sceneCompleted}/${r.sceneTotal} (${r.sceneProgress}%)` : "—", sortValue: (r) => r.sceneProgress, align: "right" },
+  ];
 
   return (
     <div className="space-y-4">
@@ -85,85 +97,40 @@ export function ProjectPerformanceReport({ projectId, filters, projectName }: Pr
         <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExport}><Download className="w-3.5 h-3.5" /> CSV</Button>
       </div>
 
-      {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <KPI label="Total Budget" value={formatCrore(summary.totalApprovedBudget)} />
-        <KPI label="Committed" value={formatCrore(summary.totalCommitted)} tone="text-amber-400" />
-        <KPI label="Paid" value={formatCrore(summary.totalPaid)} tone="text-emerald-400" />
-        <KPI label="Outstanding" value={formatCrore(summary.totalOutstanding)} tone="text-red-400" />
-        <KPI label="Available" value={formatCrore(summary.availableBudget)} tone="text-blue-400" />
+        <StatCard label="Total Budget" value={formatCrore(summary.totalApprovedBudget)} icon={LayoutDashboard} />
+        <StatCard label="Committed" value={formatCrore(summary.totalCommitted)} />
+        <StatCard label="Paid" value={formatCrore(summary.totalPaid)} />
+        <StatCard label="Outstanding" value={formatCrore(summary.totalOutstanding)} />
+        <StatCard label="Available" value={formatCrore(summary.availableBudget)} />
       </div>
 
-      {/* Chart */}
       {chartData.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-sm">Budget vs Committed vs Paid (₹ Lakhs)</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm">Budget vs Committed vs Paid (INR Lakhs)</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ChartContainer label="Budget vs committed vs paid chart" height={300}>
               <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
-                <Bar dataKey="Budget" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Committed" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Paid" fill={COLORS[2]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Budget" fill={seriesColors[0]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Committed" fill={seriesColors[1]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Paid" fill={seriesColors[2]} radius={[4, 4, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       )}
 
-      {/* Table */}
       <Card>
         <CardHeader><CardTitle className="text-sm">Project Details</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-xs text-muted-foreground">
-                  <th className="text-left p-3">Project</th>
-                  <th className="text-left p-3">Status</th>
-                  <th className="text-right p-3">Approved Budget</th>
-                  <th className="text-right p-3">Committed</th>
-                  <th className="text-right p-3">Paid</th>
-                  <th className="text-right p-3">Outstanding</th>
-                  <th className="text-right p-3">Utilization</th>
-                  <th className="text-right p-3">Scene Progress</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tableRows.map((r) => (
-                  <tr key={r.projectId} className="border-b hover:bg-muted/30">
-                    <td className="p-3 font-medium">{r.projectName}</td>
-                    <td className="p-3"><Badge variant="outline" className="text-xs">{r.status}</Badge></td>
-                    <td className="p-3 text-right">{formatCrore(r.approvedBudget)}</td>
-                    <td className="p-3 text-right">{formatCrore(r.committed)}</td>
-                    <td className="p-3 text-right">{formatCrore(r.paid)}</td>
-                    <td className="p-3 text-right">{formatCrore(r.outstanding)}</td>
-                    <td className="p-3 text-right">{Math.round(r.utilization)}%</td>
-                    <td className="p-3 text-right">
-                      {r.sceneTotal > 0 ? `${r.sceneCompleted}/${r.sceneTotal} (${r.sceneProgress}%)` : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <CardContent>
+          <DataTable columns={columns} rows={tableRows} rowKey={(r) => r.projectId} caption="Project details" />
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function KPI({ label, value, tone = "text-foreground" }: { label: string; value: string; tone?: string }) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={`text-lg font-semibold mt-1 ${tone}`}>{value}</p>
-      </CardContent>
-    </Card>
   );
 }

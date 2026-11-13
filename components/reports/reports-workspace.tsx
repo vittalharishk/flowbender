@@ -19,8 +19,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/app/page-header";
 import { ReportFilterBar, useReportFilters } from "./report-filters";
 import { ProjectPerformanceReport } from "./project-performance-report";
 import { ProductionProgressReport } from "./production-progress-report";
@@ -76,36 +75,27 @@ export function ReportsWorkspace() {
   const filterState = useReportFilters();
 
   const activeDef = CATEGORIES.find((c) => c.key === activeCategory)!;
-  const ActiveIcon = activeDef.icon;
 
   return (
-    <div className="space-y-4 max-w-[1400px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div className="flex gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-600/10 flex items-center justify-center shrink-0">
-            <BarChart3 className="w-5 h-5 text-amber-500" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-2xl font-bold">Reports & Analytics</h2>
-              <Badge variant="outline" className="text-xs">{activeDef.label}</Badge>
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              Production, finance, asset, and operational intelligence across all modules.
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        as="h2"
+        title="Reports & Analytics"
+        description="Production, finance, asset, and operational intelligence across all modules."
+        icon={BarChart3}
+        badge={<Badge variant="outline" className="text-xs">{activeDef.label}</Badge>}
+      />
 
       {/* Category navigation */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin" role="tablist" aria-label="Report categories">
         {CATEGORIES.map((cat) => {
           const Icon = cat.icon;
           const isActive = cat.key === activeCategory;
           return (
             <button
               key={cat.key}
+              role="tab"
+              aria-selected={isActive}
               onClick={() => setActiveCategory(cat.key)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors
                 ${isActive

@@ -154,7 +154,7 @@ export function ShootDayDetail({ day, backHref, backLabel, onUpdate }: Props) {
                       {sc.characters.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           {sc.characters.map((ch) => (
-                            <span key={ch} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{ch}</span>
+                            <span key={ch} className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{ch}</span>
                           ))}
                         </div>
                       )}
@@ -218,7 +218,7 @@ export function ShootDayDetail({ day, backHref, backLabel, onUpdate }: Props) {
                       />
                       <div className="min-w-0">
                         <span className="font-medium text-xs block truncate">{eq.name}</span>
-                        {eq.notes && <p className="text-[11px] text-muted-foreground truncate">{eq.notes}</p>}
+                        {eq.notes && <p className="text-xs text-muted-foreground truncate">{eq.notes}</p>}
                       </div>
                     </div>
                   );

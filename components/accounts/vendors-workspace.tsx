@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/app/empty-state";
+import { StatCard } from "@/components/app/stat-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,17 +66,9 @@ function DashboardCards({ dashboard }: { dashboard: ReturnType<typeof useVendorD
     { label: "Open Exceptions", value: String(dashboard.openExceptions), icon: AlertTriangle, color: dashboard.openExceptions > 0 ? "text-red-400" : "text-slate-400" },
   ];
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {cards.map((c) => (
-        <Card key={c.label} className="bg-card/50 border-border/50">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <c.icon className={`w-4 h-4 ${c.color}`} />
-              <span className="text-[11px] text-muted-foreground uppercase tracking-wider">{c.label}</span>
-            </div>
-            <p className="text-lg font-bold">{c.value}</p>
-          </CardContent>
-        </Card>
+        <StatCard key={c.label} compact label={c.label} icon={c.icon} value={c.value} />
       ))}
     </div>
   );
@@ -165,10 +159,8 @@ function VendorDirectoryTab({ projectId, onSelectVendor }: Props & { onSelectVen
           <TableBody>
             {paged.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                  {search || statusFilter !== "all" || categoryFilter !== "all"
-                    ? "No vendors match filters"
-                    : "No vendors registered"}
+                <TableCell colSpan={10}>
+                  <EmptyState icon={Building2} title={search || statusFilter !== "all" || categoryFilter !== "all" ? "No vendors match filters" : "No vendors registered"} description={search || statusFilter !== "all" || categoryFilter !== "all" ? "Try clearing the search or filters." : "Vendors you register will appear here."} className="py-6" />
                 </TableCell>
               </TableRow>
             ) : paged.map((v) => {
@@ -400,7 +392,7 @@ function VendorDetailSheet({ vendorId, projectId, onClose }: { vendorId: string;
             <h4 className="text-sm font-semibold mb-2">Transaction History ({transactions.length})</h4>
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
               {transactions.length === 0 ? (
-                <div className="text-sm text-muted-foreground py-4 text-center">No transactions found</div>
+                <EmptyState title="No transactions found" description="Payments and invoices for this vendor will appear here." className="py-4" />
               ) : transactions.slice(0, 20).map((t) => (
                 <div key={t.id} className="border rounded p-2 text-xs space-y-1">
                   <div className="flex justify-between">
@@ -409,7 +401,7 @@ function VendorDetailSheet({ vendorId, projectId, onClose }: { vendorId: string;
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                     <span>{t.transactionType} • {t.reference}</span>
-                    <Badge variant="outline" className="text-[10px]">{t.paymentStatus}</Badge>
+                    <Badge variant="outline" className="text-xs">{t.paymentStatus}</Badge>
                   </div>
                   <div className="text-muted-foreground">{t.projectName} • {t.transactionDate}</div>
                 </div>
@@ -517,7 +509,7 @@ function TransactionLedgerTab({ projectId }: Props) {
           <TableBody>
             {paged.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No transactions found</TableCell>
+                <TableCell colSpan={8}><EmptyState title="No transactions found" description="Vendor transactions will appear here." className="py-6" /></TableCell>
               </TableRow>
             ) : paged.map((t) => (
               <TableRow key={t.id}>
@@ -698,7 +690,7 @@ function ReconciliationTab({ projectId }: Props) {
                   </div>
                   <div className="flex gap-1 flex-wrap">
                     {ex.sourceRecords.map((sr, i) => (
-                      <Badge key={i} variant="outline" className="text-[10px]">{sr.type}: {sr.reference}</Badge>
+                      <Badge key={i} variant="outline" className="text-xs">{sr.type}: {sr.reference}</Badge>
                     ))}
                   </div>
                   {ex.resolutionHistory.length > 0 && (

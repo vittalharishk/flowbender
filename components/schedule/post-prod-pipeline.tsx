@@ -413,14 +413,14 @@ function PipelineTab({ items, projects }: { items: PostProductionItem[]; project
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
         <Select value={selectedProject} onValueChange={setSelectedProject}>
-          <SelectTrigger className="h-8 w-48 text-xs"><SelectValue placeholder="All Projects" /></SelectTrigger>
+          <SelectTrigger aria-label="All Projects" className="h-8 w-48 text-xs"><SelectValue placeholder="All Projects" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Projects</SelectItem>
             {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-          <SelectTrigger className="h-8 w-40 text-xs"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+          <SelectTrigger aria-label="All Statuses" className="h-8 w-40 text-xs"><SelectValue placeholder="All Statuses" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             {Object.entries(STATUS_LABELS).filter(([k]) => !k.includes("review") || k === "in-review").map(([k, v]) => (
@@ -552,14 +552,14 @@ function TaskBoardTab({ items, projects }: { items: PostProductionItem[]; projec
       <div className="flex flex-wrap items-center gap-2">
         <Input className="h-8 w-48 text-xs" placeholder="Search tasks…" value={search} onChange={e => setSearch(e.target.value)} />
         <Select value={filterProject} onValueChange={setFilterProject}>
-          <SelectTrigger className="h-8 w-44 text-xs"><SelectValue placeholder="All Projects" /></SelectTrigger>
+          <SelectTrigger aria-label="All Projects" className="h-8 w-44 text-xs"><SelectValue placeholder="All Projects" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Projects</SelectItem>
             {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={filterDept} onValueChange={setFilterDept}>
-          <SelectTrigger className="h-8 w-44 text-xs"><SelectValue placeholder="All Departments" /></SelectTrigger>
+          <SelectTrigger aria-label="All Departments" className="h-8 w-44 text-xs"><SelectValue placeholder="All Departments" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Departments</SelectItem>
             {DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
@@ -746,7 +746,7 @@ function MilestonesTab({ projects }: { projects: { id: string; title: string }[]
               <div>
                 <label className="mb-1 block text-xs text-muted-foreground">Title</label>
                 <Select value={addForm.title} onValueChange={v => setAddForm(f => ({ ...f, title: v }))}>
-                  <SelectTrigger className="text-xs"><SelectValue placeholder="Select milestone" /></SelectTrigger>
+                  <SelectTrigger aria-label="Select milestone" className="text-xs"><SelectValue placeholder="Select milestone" /></SelectTrigger>
                   <SelectContent>{MILESTONE_TITLES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
@@ -879,7 +879,7 @@ export function PostProdPipeline({ projectId }: PostProdPipelineProps) {
         <TabsTrigger value="approvals">
           Approvals
           {items.filter(i => i.status === "review" || i.status === "in-review").length > 0 && (
-            <span className="ml-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] text-black font-bold">
+            <span className="ml-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-xs text-black font-bold">
               {items.filter(i => i.status === "review" || i.status === "in-review").length}
             </span>
           )}

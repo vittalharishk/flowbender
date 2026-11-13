@@ -1,11 +1,12 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useMemo, useState } from "react";
 import { useAttendanceRecords, useCateringAdjustments, calcCateringCount } from "@/lib/attendance-store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Copy, FileCheck2, Plus, Printer, Search, Trash2 } from "lucide-react";
-import { BackLink } from "@/components/app/back-link";
+import { CheckCircle2, Copy, FileCheck2, Plus, Printer, Trash2 } from "lucide-react";
 import {
   callSheetWorkflowOptions,
   createCallSheet,
@@ -18,21 +19,26 @@ import {
 import { useAppDataSelector } from "@/lib/app-data-store";
 import type { AppDataState } from "@/lib/app-data-store";
 import type { CallSheet, CallSheetStatus, CallSheetWorkflow, CallSheetRow } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PageHeader } from "@/components/app/page-header";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge, type StatusTone } from "@/components/app/status-badge";
+import { EmptyState } from "@/components/app/empty-state";
+import { SearchInput } from "@/components/app/search-input";
 
 const statuses: CallSheetStatus[] = ["Draft", "Ready for Review", "Approved", "Published", "Revised", "Completed"];
-const statusClass: Record<CallSheetStatus, string> = {
-  Draft: "border-zinc-500/20 bg-zinc-500/10 text-zinc-400",
-  "Ready for Review": "border-amber-500/20 bg-amber-500/10 text-amber-400",
-  Approved: "border-teal-500/20 bg-teal-500/10 text-teal-400",
-  Published: "border-emerald-500/20 bg-emerald-500/10 text-emerald-400",
-  Revised: "border-blue-500/20 bg-blue-500/10 text-blue-400",
-  Completed: "border-violet-500/20 bg-violet-500/10 text-violet-400",
+const statusTone: Record<CallSheetStatus, StatusTone> = {
+  Draft: "neutral",
+  "Ready for Review": "warning",
+  Approved: "info",
+  Published: "success",
+  Revised: "info",
+  Completed: "success",
 };
 const nowText = () => new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
 const dateLabel = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
@@ -70,6 +76,7 @@ export function CallSheetWorkspace(props: { detailId?: string; projectId?: strin
 }
 
 function CallSheetWorkspaceContent({ detailId, projectId }: { detailId?: string; projectId?: string }) {
+  const confirm = useConfirm();
   const router = useRouter();
   const sheets = useCallSheets();
   const data = useAppDataSelector((state) => state);
@@ -112,12 +119,32 @@ function CallSheetWorkspaceContent({ detailId, projectId }: { detailId?: string;
   }
   if (detailId && selectedId) return <div className="space-y-4"><p>Call sheet not found.</p><Link className="underline" href={projectId ? `/dashboard/projects/${projectId}/call-sheets` : "/call-sheets"}>Back to call sheets</Link></div>;
   return (
-    <div className="mx-auto max-w-[1600px] space-y-6">
-      {projectId ? <Link className="text-sm text-muted-foreground" href={`/dashboard/projects/${projectId}`}>← Back to project</Link> : <BackLink />}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex gap-3"><FileCheck2 className="mt-1 h-8 w-8 text-amber-500" /><div><h1 className="text-2xl font-bold">Call Sheets</h1><p className="text-sm text-muted-foreground">Live, relationship-driven production documents.</p></div></div>
-        <div className="flex w-full flex-wrap gap-2 sm:w-auto">{!projectId && <select aria-label="Filter call sheets by project" className="min-w-0 flex-1 rounded-md border bg-background p-2 text-sm sm:w-52 sm:flex-none" value={projectFilter} onChange={(event) => { setProjectFilter(event.target.value); setSelectedId(""); }}><option value="all">All projects</option>{data.projects.map((project) => <option key={project.id} value={project.id}>{project.title}</option>)}</select>}<Button onClick={create} disabled={!effectiveProjectId} className="gap-2"><Plus className="h-4 w-4" /> Create Call Sheet</Button></div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        as={projectId ? "h2" : "h1"}
+        icon={FileCheck2}
+        title="Call Sheets"
+        description="Live, relationship-driven production documents."
+        actions={
+          <>
+            {!projectId && (
+              <>
+                <label htmlFor="call-sheet-project-filter" className="sr-only">Filter call sheets by project</label>
+                <Select value={projectFilter} onValueChange={(value) => { setProjectFilter(value); setSelectedId(""); }}>
+                  <SelectTrigger id="call-sheet-project-filter" className="h-10 w-[200px]">
+                    <SelectValue placeholder="All projects" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All projects</SelectItem>
+                    {data.projects.map((project) => <SelectItem key={project.id} value={project.id}>{project.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+            <Button onClick={create} disabled={!effectiveProjectId} variant="primary" className="gap-2"><Plus className="h-4 w-4" aria-hidden="true" /> Create Call Sheet</Button>
+          </>
+        }
+      />
       {toast && <div className="rounded border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-400"><CheckCircle2 className="mr-2 inline h-4 w-4" />{toast}</div>}
       {(() => {
         const today = new Date().toISOString().slice(0, 10);
@@ -136,27 +163,47 @@ function CallSheetWorkspaceContent({ detailId, projectId }: { detailId?: string;
                     <span className="font-medium">{s.project}</span>
                     <span className="ml-2 text-muted-foreground">Day {s.shootDay} · {dateLabel(s.date)}</span>
                   </span>
-                  <Badge variant="outline" className={statusClass[s.status]}>{s.status}</Badge>
+                  <StatusBadge status={s.status} tone={statusTone[s.status]} label={s.status} />
                 </button>
               ))}
             </CardContent>
           </Card>
         );
       })()}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">{statuses.map((item) => <Card key={item}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{item}</p><p className="text-2xl font-semibold">{scopedSheets.filter((s) => s.status === item).length}</p></CardContent></Card>)}</div>
-      <Card><CardContent className="flex flex-col gap-3 p-4 md:flex-row"><div className="relative flex-1"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="pl-9" placeholder="Search number, project, episode, location…" value={query} onChange={(e) => setQuery(e.target.value)} /></div><select className="rounded-md border bg-background px-3 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="all">All statuses</option>{statuses.map((s) => <option key={s}>{s}</option>)}</select><select className="rounded-md border bg-background px-3 text-sm" value={workflowFilter} onChange={(e) => setWorkflowFilter(e.target.value)}><option value="all">All workflows</option>{callSheetWorkflowOptions.map((s) => <option key={s}>{s}</option>)}</select></CardContent></Card>
-      <Card><CardHeader><CardTitle className="text-base">Production call sheets</CardTitle></CardHeader><CardContent className="overflow-x-auto p-0">
-        <table className="w-full min-w-[1100px] text-sm"><thead><tr className="border-b text-left text-xs text-muted-foreground">{["Call Sheet #", "Project", "Workflow", "Shoot Day", "Date", "Location", "Call Time", "First Shot", "Cast assigned", "Crew assigned", "Status", "Version", "Last Updated", "Actions"].map((heading) => <th key={heading} className="px-4 py-3">{heading}</th>)}</tr></thead>
-          <tbody>{filtered.map((raw) => { const sheet = normalizeSheet(raw); return <tr key={sheet.id} className="border-b last:border-0 hover:bg-muted/30">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-6">{statuses.map((item) => <StatCard key={item} compact label={item} value={scopedSheets.filter((s) => s.status === item).length} />)}</div>
+      <Card><CardContent className="flex flex-col gap-3 p-4 md:flex-row">
+        <SearchInput label="Search call sheets" placeholder="Search number, project, episode, location…" value={query} onChange={(e) => setQuery(e.target.value)} className="h-10" wrapperClassName="flex-1" />
+        <div><label htmlFor="call-sheet-status-filter" className="sr-only">Filter by status</label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger id="call-sheet-status-filter" className="h-10 w-full md:w-[190px]"><SelectValue placeholder="All statuses" /></SelectTrigger>
+            <SelectContent><SelectItem value="all">All statuses</SelectItem>{statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div><label htmlFor="call-sheet-workflow-filter" className="sr-only">Filter by workflow</label>
+          <Select value={workflowFilter} onValueChange={setWorkflowFilter}>
+            <SelectTrigger id="call-sheet-workflow-filter" className="h-10 w-full md:w-[190px]"><SelectValue placeholder="All workflows" /></SelectTrigger>
+            <SelectContent><SelectItem value="all">All workflows</SelectItem>{callSheetWorkflowOptions.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+      </CardContent></Card>
+      <Card><CardHeader><CardTitle className="text-base">Production call sheets</CardTitle></CardHeader><CardContent className="p-0">
+        {filtered.length === 0 ? (
+          <EmptyState icon={FileCheck2} title="No call sheets match your filters" description="Adjust the search or filters, or create a new call sheet." />
+        ) : (
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[900px] text-sm"><caption className="sr-only">Production call sheets</caption><thead><tr className="border-b text-left text-xs text-muted-foreground">{["Call Sheet #", "Project", "Workflow", "Shoot Day", "Date", "Location", "Call Time", "First Shot", "Cast assigned", "Crew assigned", "Status", "Version", "Last Updated", "Actions"].map((heading) => <th scope="col" key={heading} className="px-4 py-3 font-medium">{heading}</th>)}</tr></thead>
+          <tbody>{filtered.map((raw) => { const sheet = normalizeSheet(raw); return <tr key={sheet.id} className="border-b last:border-0 hover:bg-muted/50">
             {[sheet.id, sheet.project, sheet.workflow, `Day ${sheet.shootDay}`, dateLabel(sheet.date), sheet.location, sheet.callTime, sheet.firstShot, sheet.castAssignments?.length ?? 0, sheet.crewAssignments?.length ?? 0].map((value, index) => <td key={index} className="px-4 py-3">{value}</td>)}
-            <td className="px-4 py-3"><Badge variant="outline" className={statusClass[sheet.status]}>{sheet.status}</Badge></td><td className="px-4 py-3">V{sheet.version}</td><td className="px-4 py-3">{sheet.updated}</td>
+            <td className="px-4 py-3"><StatusBadge status={sheet.status} tone={statusTone[sheet.status]} label={sheet.status} /></td><td className="px-4 py-3">V{sheet.version}</td><td className="px-4 py-3">{sheet.updated}</td>
             <td className="px-4 py-3"><div className="flex gap-1">
               <Button size="sm" variant="ghost" onClick={() => { setPreview(false); setSelectedId(sheet.id); }}>View / Edit</Button>
-              <Button size="icon" variant="ghost" title="Duplicate" aria-label={`Duplicate ${sheet.id}`} onClick={() => { const copy = duplicateCallSheet(sheet.id); if (copy) notify(`${copy.id} duplicated.`); }}><Copy className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" title="Print preview" aria-label={`Print preview ${sheet.id}`} onClick={() => { setPreview(true); setSelectedId(sheet.id); }}><Printer className="h-4 w-4" /></Button>
-              <Button size="icon" variant="ghost" title="Delete" aria-label={`Delete ${sheet.id}`} onClick={() => { if (window.confirm(`Delete ${sheet.id}?`)) { deleteCallSheet(sheet.id); notify("Call sheet deleted."); } }}><Trash2 className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" aria-label={`Duplicate ${sheet.id}`} onClick={() => { const copy = duplicateCallSheet(sheet.id); if (copy) notify(`${copy.id} duplicated.`); }}><Copy className="h-4 w-4" aria-hidden="true" /></Button>
+              <Button size="icon" variant="ghost" aria-label={`Print preview ${sheet.id}`} onClick={() => { setPreview(true); setSelectedId(sheet.id); }}><Printer className="h-4 w-4" aria-hidden="true" /></Button>
+              <Button size="icon" variant="ghost" aria-label={`Delete ${sheet.id}`} onClick={async () => { if (await confirm({ title: `Delete ${sheet.id}?`, description: "This call sheet will be permanently removed.", confirmLabel: "Delete" })) { deleteCallSheet(sheet.id); notify("Call sheet deleted."); } }}><Trash2 className="h-4 w-4" aria-hidden="true" /></Button>
             </div></td></tr>; })}</tbody>
-        </table>{filtered.length === 0 && <p className="p-10 text-center text-muted-foreground">No call sheets match your filters.</p>}
+        </table>
+        </div>
+        )}
       </CardContent></Card>
     </div>
   );
@@ -188,15 +235,15 @@ function SheetEditor({ sheet, data, onBack, notify, initialPreview }: { sheet: C
   const syncCast = () => patch({ castAssignments: cast.filter((m) => sceneRecords.some((s) => s.characters.includes(m.character))).map((m) => sheet.castAssignments?.find((item) => item.castId === m.id) ?? ({ id: m.id, castId: m.id, name: m.name, character: m.character, status: "W", pickup: "", call: sheet.callTime ?? "06:00", makeup: "", costume: "", onSet: "", wrap: sheet.packUp ?? "18:30", transport: "", notes: "" })) });
   const transition = (next: CallSheetStatus) => { if (next === "Published" && (!project || !sheet.date || !sheet.shootDay || !sheet.location.trim() || sheet.location === "Location to be confirmed" || !sheet.callTime || !sheet.firstShot)) { notify("Complete required project, date, shoot day, call time, first shot, and confirmed location fields."); return; } patch({ status: next }); notify(next === "Published" ? "Published locally. No email, SMS, or WhatsApp was sent. Use Print / PDF to distribute this document." : `Call sheet ${next.toLowerCase()}.`); };
   const addRevision = () => { createCallSheetRevision(sheet.id, "Call sheet revision created"); notify("Revision created without destroying the prior version."); };
-  return <div className="mx-auto max-w-[1600px] space-y-5 print:max-w-none">
+  return <div className="space-y-5 print:max-w-none">
     <div className="flex flex-wrap items-center gap-3 print:hidden"><Button variant="outline" onClick={() => setPreview(!preview)}>{preview ? "Back to editing" : "Document preview"}</Button><p className="text-xs text-muted-foreground">Saved in this app. Publishing does not send messages to recipients.</p></div>
     <div className={preview ? "" : "hidden print:block"}><CallSheetDocument sheet={sheet} />{preview && <div className="my-4 flex gap-2 print:hidden"><Button onClick={() => window.print()}>Print / Save PDF</Button><Button variant="outline" onClick={onBack}>All call sheets</Button></div>}</div>
     <div className={preview ? "hidden" : "space-y-5 print:hidden"}>
     <div className="flex flex-wrap items-center justify-between gap-3 print:hidden"><Button variant="ghost" onClick={onBack}>← All call sheets</Button><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" /> Print / PDF</Button>{sheet.status === "Draft" && <Button onClick={() => transition("Ready for Review")}>Submit for Review</Button>}{sheet.status === "Ready for Review" && <Button onClick={() => transition("Approved")}>Approve</Button>}{sheet.status === "Approved" && <Button onClick={() => transition("Published")}>Publish</Button>}{sheet.status === "Published" && <Button variant="outline" onClick={addRevision}>Create Revision</Button>}{sheet.status === "Revised" && <Button onClick={() => transition("Published")}>Publish Revision</Button>}{sheet.status !== "Completed" && <Button variant="outline" onClick={() => transition("Completed")}>Mark Completed</Button>}</div></div>
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
       <div className="space-y-5 print:col-span-2">
-        <Card className="overflow-hidden"><div className="bg-slate-950 p-6 text-white"><div className="flex justify-between gap-4"><div className="flex items-center gap-4">{sheet.projectImage && <img src={sheet.projectImage} alt="" className="h-16 w-12 rounded object-cover" />}<div><p className="text-xs uppercase tracking-[.25em] text-amber-300">{sheet.workflow} · {sheet.productionCompany ?? project?.productionHouse ?? "Production Company"}</p><h1 className="mt-2 text-3xl font-bold">{project?.title ?? sheet.project}</h1><p className="mt-2 text-slate-300">{sheet.id} · Shoot Day {sheet.shootDay} · {dateLabel(sheet.date)} · V{sheet.version ?? 1}</p></div></div><Badge className={statusClass[sheet.status]}>{sheet.status}</Badge></div></div><CardContent className="grid grid-cols-2 gap-3 p-5 md:grid-cols-6"><EditField label="General Call" value={sheet.callTime ?? ""} type="time" onChange={(v) => patch({ callTime: v })} required /><EditField label="First Shot" value={sheet.firstShot ?? ""} type="time" onChange={(v) => patch({ firstShot: v })} required /><EditField label="Pack Up" value={sheet.packUp ?? ""} type="time" onChange={(v) => patch({ packUp: v })} /><EditField label="Shoot Date" value={sheet.date} type="date" onChange={(v) => patch({ date: v })} required /><div><Label>Location</Label><select className="mt-1 w-full rounded-md border bg-background px-2 py-2 text-sm" value={sheet.location} onChange={(e) => patch({ location: e.target.value })}><option value="">Select location</option>{locations.map((l) => <option key={l.id} value={l.name}>{l.name}</option>)}<option value={sheet.location}>{sheet.location}</option></select></div><div><Label>Project</Label><p className="mt-2 font-medium">{project?.title ?? sheet.project}</p></div></CardContent></Card>
-        <Card><CardHeader><CardTitle>Project & shoot day information</CardTitle></CardHeader><CardContent className="grid gap-4 md:grid-cols-4"><div><Label>Shoot day</Label><select className="mt-1 w-full rounded border bg-background p-2" value={sheet.shootDayId ?? ""} onChange={(e) => { const day = shootDays.find((d) => d.id === e.target.value); if (day) patch({ shootDayId: day.id, shootDay: day.shootDayNumber, date: day.date, location: day.location, callTime: day.callTime, packUp: day.wrapTime }); }}><option value="">Select shoot day</option>{shootDays.map((d) => <option key={d.id} value={d.id}>Day {d.shootDayNumber} · {d.date}</option>)}</select></div><Read label="Type" value={project?.type ?? sheet.workflow} /><Read label="Producer" value={project?.producer ?? sheet.producer ?? ""} /><Read label="Director" value={project?.director ?? sheet.director} /><Read label="Language" value={project?.language ?? sheet.language ?? ""} /><Read label="Genre" value={project?.genre ?? sheet.genre ?? ""} /><Read label="Day of week" value={new Date(`${sheet.date}T12:00:00`).toLocaleDateString("en-IN", { weekday: "long" })} /><Read label="Production days" value={`${sheet.shootDay} of ${project?.totalShootDays ?? shootDays.length}`} /></CardContent></Card>
+        <Card className="overflow-hidden"><div className="bg-slate-950 p-6 text-white"><div className="flex justify-between gap-4"><div className="flex items-center gap-4">{sheet.projectImage && <img src={sheet.projectImage} alt="" className="h-16 w-12 rounded object-cover" />}<div><p className="text-xs uppercase tracking-[.25em] text-amber-300">{sheet.workflow} · {sheet.productionCompany ?? project?.productionHouse ?? "Production Company"}</p><h2 className="mt-2 text-2xl font-bold">{project?.title ?? sheet.project}</h2><p className="mt-2 text-slate-300">{sheet.id} · Shoot Day {sheet.shootDay} · {dateLabel(sheet.date)} · V{sheet.version ?? 1}</p></div></div><StatusBadge status={sheet.status} tone={statusTone[sheet.status]} label={sheet.status} /></div></div><CardContent className="grid grid-cols-2 gap-3 p-5 md:grid-cols-6"><EditField label="General Call" value={sheet.callTime ?? ""} type="time" onChange={(v) => patch({ callTime: v })} required /><EditField label="First Shot" value={sheet.firstShot ?? ""} type="time" onChange={(v) => patch({ firstShot: v })} required /><EditField label="Pack Up" value={sheet.packUp ?? ""} type="time" onChange={(v) => patch({ packUp: v })} /><EditField label="Shoot Date" value={sheet.date} type="date" onChange={(v) => patch({ date: v })} required /><div><Label htmlFor="call-sheet-location">Location</Label><Select value={sheet.location || undefined} onValueChange={(v) => patch({ location: v })}><SelectTrigger id="call-sheet-location" className="mt-1"><SelectValue placeholder="Select location" /></SelectTrigger><SelectContent>{sheet.location && !locations.some((l) => l.name === sheet.location) && <SelectItem value={sheet.location}>{sheet.location}</SelectItem>}{locations.map((l) => <SelectItem key={l.id} value={l.name}>{l.name}</SelectItem>)}</SelectContent></Select></div><div><Label>Project</Label><p className="mt-2 font-medium">{project?.title ?? sheet.project}</p></div></CardContent></Card>
+        <Card><CardHeader><CardTitle>Project & shoot day information</CardTitle></CardHeader><CardContent className="grid gap-4 md:grid-cols-4"><div><Label htmlFor="call-sheet-shoot-day">Shoot day</Label><Select value={sheet.shootDayId || undefined} onValueChange={(value) => { const day = shootDays.find((d) => d.id === value); if (day) patch({ shootDayId: day.id, shootDay: day.shootDayNumber, date: day.date, location: day.location, callTime: day.callTime, packUp: day.wrapTime }); }}><SelectTrigger id="call-sheet-shoot-day" className="mt-1"><SelectValue placeholder="Select shoot day" /></SelectTrigger><SelectContent>{shootDays.map((d) => <SelectItem key={d.id} value={d.id}>Day {d.shootDayNumber} · {d.date}</SelectItem>)}</SelectContent></Select></div><Read label="Type" value={project?.type ?? sheet.workflow} /><Read label="Producer" value={project?.producer ?? sheet.producer ?? ""} /><Read label="Director" value={project?.director ?? sheet.director} /><Read label="Language" value={project?.language ?? sheet.language ?? ""} /><Read label="Genre" value={project?.genre ?? sheet.genre ?? ""} /><Read label="Day of week" value={new Date(`${sheet.date}T12:00:00`).toLocaleDateString("en-IN", { weekday: "long" })} /><Read label="Production days" value={`${sheet.shootDay} of ${project?.totalShootDays ?? shootDays.length}`} /></CardContent></Card>
         <Card><CardHeader><CardTitle>Weather & production notice</CardTitle></CardHeader><CardContent className="grid gap-4 md:grid-cols-3"><EditField label="Temperature / condition" value={sheet.weather?.temperature ?? ""} onChange={(v) => patch({ weather: { ...(sheet.weather ?? { high: "", low: "", condition: "", sunrise: "", sunset: "", rainChance: "", notes: "" }), temperature: v } })} /><EditField label="Rain chance" value={sheet.weather?.rainChance ?? ""} onChange={(v) => patch({ weather: { ...(sheet.weather ?? { temperature: "", high: "", low: "", condition: "", sunrise: "", sunset: "", notes: "" }), rainChance: v } })} /><EditField label="Production message" value={sheet.productionMessage?.message ?? ""} onChange={(v) => patch({ productionMessage: { message: v, priority: sheet.productionMessage?.priority ?? "Normal" } })} /></CardContent></Card>
         <Section title={`Scenes · ${sceneRecords.length} selected · ${totalPages} pages`}><div className="grid gap-2 md:grid-cols-2">{scenes.map((scene) => <label key={scene.id} className="flex cursor-pointer gap-2 rounded border p-3 text-sm"><input type="checkbox" checked={sheet.sceneIds?.includes(scene.id)} onChange={() => toggleScene(scene.id)} /><span><b>Scene {scene.sceneNumber}</b> · {scene.heading}<br /><span className="text-xs text-muted-foreground">{scene.intExt} / {scene.timeOfDay} · {scene.pages} pages · {scene.characters.join(", ")}</span></span></label>)}</div></Section>
         <EditableTable title={`Locations · ${(sheet.locations ?? []).length}`} rows={sheet.locations ?? []} fields={["Set Location", "Address", "Contact", "Parking", "Notes"]} onAdd={() => addRow("locations")} onDelete={(id) => removeRow("locations", id)} onChange={(id, f, v) => updateRow("locations", id, f, v)} />
@@ -207,10 +254,10 @@ function SheetEditor({ sheet, data, onBack, notify, initialPreview }: { sheet: C
           <CardHeader><CardTitle className="text-sm">Live Catering Set Count</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-lg border bg-card px-3 py-2"><p className="text-[11px] text-muted-foreground">Cast Meals</p><p className="text-xl font-bold text-emerald-400">{liveCatering.castCount}</p></div>
-              <div className="rounded-lg border bg-card px-3 py-2"><p className="text-[11px] text-muted-foreground">Crew Meals</p><p className="text-xl font-bold text-blue-400">{liveCatering.crewCount}</p></div>
-              <div className="rounded-lg border bg-card px-3 py-2"><p className="text-[11px] text-muted-foreground">Visitors</p><p className="text-xl font-bold text-violet-400">{liveCatering.visitorCount}</p></div>
-              <div className="rounded-lg border bg-amber-500/20 px-3 py-2"><p className="text-[11px] text-muted-foreground">Total Set Count</p><p className="text-xl font-bold text-amber-400">{liveCatering.total}</p></div>
+              <div className="rounded-lg border bg-card px-3 py-2"><p className="text-xs text-muted-foreground">Cast Meals</p><p className="text-xl font-bold text-emerald-400">{liveCatering.castCount}</p></div>
+              <div className="rounded-lg border bg-card px-3 py-2"><p className="text-xs text-muted-foreground">Crew Meals</p><p className="text-xl font-bold text-blue-400">{liveCatering.crewCount}</p></div>
+              <div className="rounded-lg border bg-card px-3 py-2"><p className="text-xs text-muted-foreground">Visitors</p><p className="text-xl font-bold text-violet-400">{liveCatering.visitorCount}</p></div>
+              <div className="rounded-lg border bg-amber-500/20 px-3 py-2"><p className="text-xs text-muted-foreground">Total Set Count</p><p className="text-xl font-bold text-amber-400">{liveCatering.total}</p></div>
             </div>
             {liveCatering.adjustmentDelta !== 0 && <p className="mt-2 text-xs text-muted-foreground">Includes manual adjustment: {liveCatering.adjustmentDelta > 0 ? "+" : ""}{liveCatering.adjustmentDelta}</p>}
             <p className="mt-2 text-xs text-muted-foreground">Based on attendance records for {sheet.date}. Update in the Attendance module.</p>
@@ -232,7 +279,7 @@ function EditableTable({ title, rows, fields, onAdd, onDelete, onChange }: { tit
 
 function CallSheetDocument({ sheet }: { sheet: CallSheet }) {
   return <article aria-label="Call sheet print preview" className="space-y-5 rounded border bg-white p-6 text-black print:border-0 print:p-0">
-    <header className="border-b pb-4"><h1 className="text-2xl font-bold">{sheet.project}</h1><p>{sheet.id} · V{sheet.version} · {sheet.status}</p><p>{dateLabel(sheet.date)} · Day {sheet.shootDay} · {sheet.location}</p><p>General call: {sheet.callTime} · First shot: {sheet.firstShot} · Pack up: {sheet.packUp}</p></header>
+    <header className="border-b pb-4"><h2 className="text-2xl font-bold">{sheet.project}</h2><p>{sheet.id} · V{sheet.version} · {sheet.status}</p><p>{dateLabel(sheet.date)} · Day {sheet.shootDay} · {sheet.location}</p><p>General call: {sheet.callTime} · First shot: {sheet.firstShot} · Pack up: {sheet.packUp}</p></header>
     {sheet.productionMessage?.message && <p><b>Production notice:</b> {sheet.productionMessage.message}</p>}
     {sheet.weather && <p><b>Weather:</b> {sheet.weather.temperature} {sheet.weather.condition} · Rain: {sheet.weather.rainChance}</p>}
     <section><h2 className="font-bold">Scenes · {sheet.scenes.reduce((total, scene) => total + scene.pages, 0)} pages</h2>{sheet.scenes.length ? sheet.scenes.map((scene, index) => <p key={`${scene.number}:${index}`} className="border-b py-2">{scene.number} · {scene.description} · {scene.setting} / {scene.time} · {scene.pages} pages · {scene.characters}</p>) : <p>No scenes selected.</p>}</section>

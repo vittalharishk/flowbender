@@ -122,7 +122,7 @@ function EventBadge({ event, onClick }: { event: CalendarEvent; onClick?: () => 
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left text-[10px] px-1.5 py-0.5 rounded border truncate ${TYPE_COLOR[event.type] ?? TYPE_COLOR.other} hover:opacity-80 transition-opacity`}
+      className={`w-full text-left text-xs px-1.5 py-0.5 rounded border truncate ${TYPE_COLOR[event.type] ?? TYPE_COLOR.other} hover:opacity-80 transition-opacity`}
       title={event.title}
     >
       {event.title}
@@ -249,7 +249,7 @@ function EventFormDialog({
             set("projectId", v === "__none__" ? undefined : v);
             set("projectTitle", p?.title ?? "");
           }}>
-            <SelectTrigger className="mt-1"><SelectValue placeholder="All projects" /></SelectTrigger>
+            <SelectTrigger aria-label="All projects" className="mt-1"><SelectValue placeholder="All projects" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__none__">All projects</SelectItem>
               {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
@@ -367,7 +367,7 @@ function DashboardTab({ allEvents }: { allEvents: CalendarEvent[] }) {
         ].map(c => (
           <Card key={c.label} className="border-border/40">
             <CardContent className="px-4 py-3">
-              <p className="text-[11px] text-muted-foreground">{c.label}</p>
+              <p className="text-xs text-muted-foreground">{c.label}</p>
               <p className={`text-2xl font-bold ${c.color}`}>{c.value}</p>
             </CardContent>
           </Card>
@@ -382,7 +382,7 @@ function DashboardTab({ allEvents }: { allEvents: CalendarEvent[] }) {
               <div key={e.id} className={`flex items-center gap-3 rounded-lg border px-3 py-2 ${TYPE_COLOR[e.type] ?? TYPE_COLOR.other}`}>
                 <span className="text-xs font-medium flex-1 truncate">{e.title}</span>
                 {e.time && <span className="text-xs text-muted-foreground">{e.time}</span>}
-                {e.projectTitle && <Badge variant="outline" className="text-[10px]">{e.projectTitle}</Badge>}
+                {e.projectTitle && <Badge variant="outline" className="text-xs">{e.projectTitle}</Badge>}
               </div>
             ))}
           </CardContent>
@@ -429,7 +429,7 @@ function DashboardTab({ allEvents }: { allEvents: CalendarEvent[] }) {
               <div key={e.id} className="flex items-center gap-3 text-xs">
                 <span className="w-20 text-muted-foreground flex-shrink-0">{fmt(e.date)}</span>
                 <span className="flex-1 truncate">{e.title}</span>
-                {e.projectTitle && <Badge variant="outline" className="text-[10px]">{e.projectTitle}</Badge>}
+                {e.projectTitle && <Badge variant="outline" className="text-xs">{e.projectTitle}</Badge>}
               </div>
             ))}
           </CardContent>
@@ -476,7 +476,7 @@ function MonthView({
           <Button variant="outline" size="sm" onClick={() => { const n = new Date(); setCur({ year: n.getFullYear(), month: n.getMonth() }); }}>Today</Button>
           <Button variant="outline" size="sm" onClick={() => setCur(c => { const d = new Date(c.year, c.month + 1); return { year: d.getFullYear(), month: d.getMonth() }; })}><ChevronRight className="w-4 h-4" /></Button>
         </div>
-        <div className="grid grid-cols-7 gap-px text-center text-[11px] text-muted-foreground">
+        <div className="grid grid-cols-7 gap-px text-center text-xs text-muted-foreground">
           {DAYS.map(d => <div key={d} className="py-1 font-medium">{d}</div>)}
         </div>
         <div className="grid grid-cols-7 gap-px">
@@ -491,7 +491,7 @@ function MonthView({
                 onClick={() => setSelectedDay(dateStr === selectedDay ? null : dateStr)}
                 className={`min-h-[72px] p-1 rounded text-left border transition-colors ${isSelected ? "border-primary" : "border-transparent"} ${isToday ? "bg-amber-500/10" : "bg-muted/10 hover:bg-muted/20"}`}
               >
-                <span className={`text-[11px] font-medium block mb-1 ${isToday ? "text-amber-400" : "text-muted-foreground"}`}>
+                <span className={`text-xs font-medium block mb-1 ${isToday ? "text-amber-400" : "text-muted-foreground"}`}>
                   {new Date(dateStr + "T00:00:00").getDate()}
                 </span>
                 <div className="space-y-px">
@@ -568,12 +568,12 @@ function WeekView({ allEvents, onSelect }: { allEvents: CalendarEvent[]; onSelec
           const d = new Date(dateStr + "T00:00:00");
           return (
             <div key={dateStr} className={`min-h-[120px] rounded-lg border p-2 ${isToday ? "border-amber-500/30 bg-amber-500/5" : "border-border/30 bg-muted/5"}`}>
-              <p className={`text-[11px] font-medium mb-1 ${isToday ? "text-amber-400" : "text-muted-foreground"}`}>
+              <p className={`text-xs font-medium mb-1 ${isToday ? "text-amber-400" : "text-muted-foreground"}`}>
                 {DAYS[d.getDay()]} {d.getDate()}
               </p>
               <div className="space-y-1">
                 {evts.map(e => <EventBadge key={e.id} event={e} onClick={() => onSelect(e)} />)}
-                {evts.length === 0 && <p className="text-[10px] text-muted-foreground/40 text-center mt-4">—</p>}
+                {evts.length === 0 && <p className="text-xs text-muted-foreground/40 text-center mt-4">—</p>}
               </div>
             </div>
           );
@@ -613,7 +613,7 @@ function DayView({ allEvents, onSelect }: { allEvents: CalendarEvent[]; onSelect
                 </div>
                 <div className="text-right text-xs text-muted-foreground flex-shrink-0">
                   {e.time && <p>{e.time}{e.endTime ? `–${e.endTime}` : ""}</p>}
-                  {e.projectTitle && <Badge variant="outline" className="text-[10px] mt-1">{e.projectTitle}</Badge>}
+                  {e.projectTitle && <Badge variant="outline" className="text-xs mt-1">{e.projectTitle}</Badge>}
                 </div>
               </div>
             </button>
@@ -648,8 +648,8 @@ function AgendaView({ allEvents, onSelect }: { allEvents: CalendarEvent[]; onSel
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${TYPE_DOT[e.type] ?? "bg-slate-400"}`} />
                 <span className="flex-1 truncate font-medium">{e.title}</span>
                 {e.time && <span className="text-muted-foreground">{e.time}</span>}
-                {e.projectTitle && <Badge variant="outline" className="text-[10px]">{e.projectTitle}</Badge>}
-                <Badge variant="outline" className="text-[10px]">{e.status}</Badge>
+                {e.projectTitle && <Badge variant="outline" className="text-xs">{e.projectTitle}</Badge>}
+                <Badge variant="outline" className="text-xs">{e.status}</Badge>
               </button>
             ))}
           </div>
@@ -729,7 +729,7 @@ export function MasterCalendar({ projectId }: MasterCalendarProps) {
         />
         {!projectId && (
           <Select value={filterProject} onValueChange={setFilterProject}>
-            <SelectTrigger className="w-44"><SelectValue placeholder="All projects" /></SelectTrigger>
+            <SelectTrigger aria-label="All projects" className="w-44"><SelectValue placeholder="All projects" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__all__">All projects</SelectItem>
               {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
@@ -737,14 +737,14 @@ export function MasterCalendar({ projectId }: MasterCalendarProps) {
           </Select>
         )}
         <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="All categories" /></SelectTrigger>
+          <SelectTrigger aria-label="All categories" className="w-44"><SelectValue placeholder="All categories" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="__all__">All categories</SelectItem>
             {EVENT_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="All statuses" /></SelectTrigger>
+          <SelectTrigger aria-label="All statuses" className="w-36"><SelectValue placeholder="All statuses" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="__all__">All statuses</SelectItem>
             {EVENT_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}

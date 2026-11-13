@@ -307,14 +307,14 @@ export function ScriptUploadDialog({
                   <span className="font-semibold text-sm group-hover:text-amber-500 transition-colors">
                     Pushpa 2: The Rule
                   </span>
-                  <Badge variant="secondary" className="text-[10px]">
+                  <Badge variant="secondary" className="text-xs">
                     3 Scenes · Period Action
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2">
                   Features deep Seshachalam forest rain confrontation, holy Jathara temple festival faceoff with Shekhawat, and international convoy launch.
                 </p>
-                <div className="flex gap-1.5 text-[10px] text-amber-500/90 font-mono">
+                <div className="flex gap-1.5 text-xs text-amber-500/90 font-mono">
                   <span>Pushpa Raj</span> • <span>Srivalli</span> • <span>Bhanwar Singh</span>
                 </div>
               </div>
@@ -327,14 +327,14 @@ export function ScriptUploadDialog({
                   <span className="font-semibold text-sm group-hover:text-sky-400 transition-colors">
                     Kalki 2898 AD
                   </span>
-                  <Badge variant="secondary" className="text-[10px]">
+                  <Badge variant="secondary" className="text-xs">
                     3 Scenes · Sci-Fi Epic
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2">
                   Features Kasi dystopian outskirts bounty dialogue with AI supercar Bujji, Shambhala battle against Ashwatthama, and Supreme Yaskin&apos;s apex chamber.
                 </p>
-                <div className="flex gap-1.5 text-[10px] text-sky-400 font-mono">
+                <div className="flex gap-1.5 text-xs text-sky-400 font-mono">
                   <span>Bhairava</span> • <span>Ashwatthama</span> • <span>Supreme Yaskin</span>
                 </div>
               </div>
@@ -347,14 +347,14 @@ export function ScriptUploadDialog({
                   <span className="font-semibold text-sm group-hover:text-blue-400 transition-colors">
                     Devara: Part 1
                   </span>
-                  <Badge variant="secondary" className="text-[10px]">
+                  <Badge variant="secondary" className="text-xs">
                     3 Scenes · Coastal Action
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2">
                   Features Red Sea stormy cliff duel against Bhaira, deep-sea underwater reef assault, and coastal dawn legacy handoff to Varadha.
                 </p>
-                <div className="flex gap-1.5 text-[10px] text-blue-400 font-mono">
+                <div className="flex gap-1.5 text-xs text-blue-400 font-mono">
                   <span>Devara</span> • <span>Bhaira</span> • <span>Varadha</span>
                 </div>
               </div>
@@ -393,7 +393,7 @@ export function ScriptUploadDialog({
                 <Label htmlFor="paste-script" className="text-xs font-semibold">
                   Paste Standard Screenplay Text
                 </Label>
-                <span className="text-[11px] text-muted-foreground font-mono">
+                <span className="text-xs text-muted-foreground font-mono">
                   {pastedText.split(/\r?\n/).filter(Boolean).length} lines
                 </span>
               </div>
@@ -438,7 +438,7 @@ export function ScriptUploadDialog({
               {/* Metric Highlight Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div className="p-3 rounded-xl border bg-card/60">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                     Total Scenes
                   </span>
                   <div className="mt-1 flex items-baseline gap-1">
@@ -448,7 +448,7 @@ export function ScriptUploadDialog({
                 </div>
 
                 <div className="p-3 rounded-xl border bg-card/60">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                     Characters
                   </span>
                   <div className="mt-1 flex items-baseline gap-1">
@@ -458,7 +458,7 @@ export function ScriptUploadDialog({
                 </div>
 
                 <div className="p-3 rounded-xl border bg-card/60">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                     Dialogue Cues
                   </span>
                   <div className="mt-1 flex items-baseline gap-1">
@@ -468,7 +468,7 @@ export function ScriptUploadDialog({
                 </div>
 
                 <div className="p-3 rounded-xl border bg-card/60">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                     Spoken Words
                   </span>
                   <div className="mt-1 flex items-baseline gap-1">
@@ -478,7 +478,7 @@ export function ScriptUploadDialog({
                 </div>
 
                 <div className="p-3 rounded-xl border bg-card/60">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                     Est. Duration
                   </span>
                   <div className="mt-1 flex items-baseline gap-1">
@@ -488,11 +488,11 @@ export function ScriptUploadDialog({
                 </div>
 
                 <div className="p-3 rounded-xl border bg-card/60">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
                     Day vs Night
                   </span>
                   <div className="mt-1 text-xs space-y-1">
-                    <div className="flex justify-between font-mono text-[11px]">
+                    <div className="flex justify-between font-mono text-xs">
                       <span>{analysisResult.dayPercent}% Day</span>
                       <span>{analysisResult.nightPercent}% Night</span>
                     </div>
@@ -536,7 +536,7 @@ export function ScriptUploadDialog({
                                 <span className="font-semibold text-sm tracking-tight">{char.normalizedName}</span>
                                 <Badge
                                   variant="secondary"
-                                  className={`text-[10px] ${
+                                  className={`text-xs ${
                                     char.roleTier === "Lead"
                                       ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
                                       : char.roleTier === "Major Supporting"
@@ -549,7 +549,7 @@ export function ScriptUploadDialog({
                               </div>
                               <p className="text-xs text-muted-foreground mt-0.5">
                                 Appears in {char.sceneCount} {char.sceneCount === 1 ? "scene" : "scenes"}:{" "}
-                                <span className="font-mono text-[11px] text-foreground/80">
+                                <span className="font-mono text-xs text-foreground/80">
                                   {char.scenes.map((s) => `Sc. ${s}`).join(", ")}
                                 </span>
                               </p>
@@ -559,8 +559,8 @@ export function ScriptUploadDialog({
                           <div className="text-right shrink-0 min-w-[120px]">
                             <div className="flex items-baseline justify-end gap-1.5">
                               <span className="text-base font-bold text-primary">{char.dialogueCount}</span>
-                              <span className="text-[11px] text-muted-foreground">dialogues</span>
-                              <span className="text-[11px] font-mono font-semibold ml-1">({char.percentage}%)</span>
+                              <span className="text-xs text-muted-foreground">dialogues</span>
+                              <span className="text-xs font-mono font-semibold ml-1">({char.percentage}%)</span>
                             </div>
                             <div className="w-28 ml-auto mt-1">
                               <Progress value={Math.min(100, char.percentage * 2)} className="h-1.5" />
@@ -595,11 +595,11 @@ export function ScriptUploadDialog({
                     <div className="flex-1 overflow-y-auto space-y-3 max-h-[340px] pr-1">
                       <div className="grid grid-cols-2 gap-2 text-center p-2 rounded-lg bg-muted/40 text-xs">
                         <div>
-                          <span className="text-[10px] text-muted-foreground">Total Lines</span>
+                          <span className="text-xs text-muted-foreground">Total Lines</span>
                           <p className="font-bold text-base">{selectedCharacter.dialogueCount}</p>
                         </div>
                         <div>
-                          <span className="text-[10px] text-muted-foreground">Spoken Words</span>
+                          <span className="text-xs text-muted-foreground">Spoken Words</span>
                           <p className="font-bold text-base">{selectedCharacter.wordCount}</p>
                         </div>
                       </div>
@@ -607,12 +607,12 @@ export function ScriptUploadDialog({
                       <div className="space-y-2">
                         {selectedCharacter.dialogues.map((quote, qIdx) => (
                           <div key={qIdx} className="p-2.5 rounded-lg border bg-background/60 space-y-1 text-xs">
-                            <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
                               <span>Scene {quote.sceneNumber}</span>
                               <span className="truncate max-w-[150px]">{quote.sceneHeading}</span>
                             </div>
                             {quote.parenthetical && (
-                              <p className="italic text-muted-foreground text-[11px]">{quote.parenthetical}</p>
+                              <p className="italic text-muted-foreground text-xs">{quote.parenthetical}</p>
                             )}
                             <p className="font-medium text-foreground leading-relaxed">&ldquo;{quote.text}&rdquo;</p>
                           </div>
@@ -637,7 +637,7 @@ export function ScriptUploadDialog({
                   {analysisResult.scenes.map((scene) => (
                     <div key={scene.number} className="p-3 rounded-xl border bg-card/40 space-y-2 text-xs">
                       <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="font-mono text-[10px]">
+                        <Badge variant="outline" className="font-mono text-xs">
                           Sc. {scene.number}
                         </Badge>
                         <div className="flex gap-1">
@@ -652,14 +652,14 @@ export function ScriptUploadDialog({
 
                       <p className="font-semibold text-xs leading-snug line-clamp-1">{scene.heading}</p>
 
-                      <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t">
                         <span>{scene.pages} pages</span>
                         <span className="text-primary font-mono">{scene.dialogueCount} dialogues</span>
                       </div>
 
                       <div className="flex flex-wrap gap-1 pt-1">
                         {scene.characters.map((char) => (
-                          <span key={char} className="px-1.5 py-0.5 rounded bg-muted/60 text-[10px] text-foreground/80">
+                          <span key={char} className="px-1.5 py-0.5 rounded bg-muted/60 text-xs text-foreground/80">
                             {char}
                           </span>
                         ))}

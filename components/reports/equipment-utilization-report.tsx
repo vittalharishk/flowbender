@@ -2,16 +2,18 @@
 
 import { useMemo } from "react";
 import { Download } from "lucide-react";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useEquipmentInventory, useEquipmentAllocations, useEquipmentMaintenance, calcEquipmentStats } from "@/lib/equipment-store";
 import { exportToCsv, formatFilterContext } from "@/lib/report-export";
 import { pct } from "@/lib/report-utils";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge } from "@/components/app/status-badge";
+import { ChartContainer, seriesColors } from "@/components/app/chart-container";
+import { DataTable, type DataTableColumn } from "@/components/app/data-table";
+import { EmptyState } from "@/components/app/empty-state";
 import type { ReportFilterState } from "./report-filters";
-
-const COLORS = ["#10b981", "#f59e0b", "#3b82f6", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
 
 interface Props {
   projectId?: string;
@@ -33,10 +35,10 @@ export function EquipmentUtilizationReport({ projectId, filters, projectName }: 
 
   const statusPieData = useMemo(() => {
     return [
-      { name: "Available", value: stats.available, fill: "#10b981" },
-      { name: "Reserved", value: stats.reserved, fill: "#f59e0b" },
-      { name: "In Use", value: stats.inUse, fill: "#3b82f6" },
-      { name: "Maintenance", value: stats.maintenance, fill: "#ef4444" },
+      { name: "Available", value: stats.available, fill: seriesColors[2] },
+      { name: "Reserved", value: stats.reserved, fill: seriesColors[0] },
+      { name: "In Use", value: stats.inUse, fill: seriesColors[1] },
+      { name: "Maintenance", value: stats.maintenance, fill: seriesColors[3] },
     ].filter((d) => d.value > 0);
   }, [stats]);
 
@@ -86,18 +88,19 @@ export function EquipmentUtilizationReport({ projectId, filters, projectName }: 
   };
 
   if (equipment.length === 0) {
-    return <Card><CardContent className="p-8 text-center text-muted-foreground">No equipment data available for the selected filters.</CardContent></Card>;
+    return <EmptyState title="No equipment data" description="No equipment data available for the selected filters." />;
   }
 
-  const statusColor = (s: string) => {
-    switch (s) {
-      case "available": return "border-emerald-500/30 text-emerald-400";
-      case "in-use": return "border-blue-500/30 text-blue-400";
-      case "reserved": return "border-amber-500/30 text-amber-400";
-      case "maintenance": return "border-red-500/30 text-red-400";
-      default: return "";
-    }
-  };
+  type EqRow = (typeof tableRows)[number];
+
+  const columns = useMemo((): DataTableColumn<EqRow>[] => [
+    { key: "name", header: "Name", cell: (r) => <span className="font-medium">{r.name}</span>, sortValue: (r) => r.name },
+    { key: "category", header: "Category", cell: (r) => r.category, sortValue: (r) => r.category },
+    { key: "status", header: "Status", cell: (r) => <StatusBadge status={r.status} /> },
+    { key: "qty", header: "Qty", cell: (r) => r.quantity, align: "right", sortValue: (r) => r.quantity },
+    { key: "alloc", header: "Active Alloc.", cell: (r) => r.activeAllocations, align: "right", sortValue: (r) => r.activeAllocations },
+    { key: "maint", header: "Last Maintenance", cell: (r) => r.lastMaintenance },
+  ], []);
 
   return (
     <div className="space-y-4">
@@ -107,11 +110,11 @@ export function EquipmentUtilizationReport({ projectId, filters, projectName }: 
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <KPI label="Total Equipment" value={String(stats.total)} />
-        <KPI label="Available" value={String(stats.available)} tone="text-emerald-400" />
-        <KPI label="In Use" value={String(stats.inUse)} tone="text-blue-400" />
-        <KPI label="Under Maintenance" value={String(stats.maintenance)} tone="text-red-400" />
-        <KPI label="Utilization" value={`${utilization}%`} tone="text-amber-400" />
+        <StatCard label="Total Equipment" value={String(stats.total)} />
+        <StatCard label="Available" value={String(stats.available)} />
+        <StatCard label="In Use" value={String(stats.inUse)} />
+        <StatCard label="Under Maintenance" value={String(stats.maintenance)} />
+        <StatCard label="Utilization" value={`${utilization}%`} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -119,14 +122,14 @@ export function EquipmentUtilizationReport({ projectId, filters, projectName }: 
           <Card>
             <CardHeader><CardTitle className="text-sm">Status Distribution</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={260}>
+              <ChartContainer label="Equipment status distribution pie chart" height={260}>
                 <PieChart>
                   <Pie data={statusPieData} cx="50%" cy="50%" outerRadius={90} dataKey="value" label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
                     {statusPieData.map((d, i) => <Cell key={i} fill={d.fill} />)}
                   </Pie>
                   <Tooltip />
                 </PieChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         )}
@@ -135,55 +138,22 @@ export function EquipmentUtilizationReport({ projectId, filters, projectName }: 
           <Card>
             <CardHeader><CardTitle className="text-sm">Equipment by Category</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={260}>
+              <ChartContainer label="Equipment by category bar chart" height={260}>
                 <BarChart data={categoryChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" height={60} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                  <Bar dataKey="count" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" fill={seriesColors[2]} radius={[4, 4, 0, 0]} />
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         )}
       </div>
 
-      <Card>
-        <CardHeader><CardTitle className="text-sm">Equipment Details</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-xs text-muted-foreground">
-                  <th className="text-left p-3">Name</th>
-                  <th className="text-left p-3">Category</th>
-                  <th className="text-left p-3">Status</th>
-                  <th className="text-right p-3">Qty</th>
-                  <th className="text-right p-3">Active Alloc.</th>
-                  <th className="text-left p-3">Last Maintenance</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tableRows.map((r) => (
-                  <tr key={r.id} className="border-b hover:bg-muted/30">
-                    <td className="p-3 font-medium">{r.name}</td>
-                    <td className="p-3">{r.category}</td>
-                    <td className="p-3"><Badge variant="outline" className={`text-xs ${statusColor(r.status)}`}>{r.status}</Badge></td>
-                    <td className="p-3 text-right">{r.quantity}</td>
-                    <td className="p-3 text-right">{r.activeAllocations}</td>
-                    <td className="p-3">{r.lastMaintenance}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <h3 className="text-sm font-semibold">Equipment Details</h3>
+      <DataTable columns={columns} rows={tableRows} rowKey={(r) => r.id} caption="Equipment details" />
     </div>
   );
-}
-
-function KPI({ label, value, tone = "text-foreground" }: { label: string; value: string; tone?: string }) {
-  return <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{label}</p><p className={`text-lg font-semibold mt-1 ${tone}`}>{value}</p></CardContent></Card>;
 }

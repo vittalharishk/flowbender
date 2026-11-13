@@ -5,11 +5,14 @@ import { Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { useAccountsDashboard, useConsolidatedExpenses } from "@/lib/accounts-store";
 import { useAppDataSlice } from "@/lib/app-data-store";
 import { exportToCsv, formatFilterContext } from "@/lib/report-export";
 import { formatCrore, pct, filterByProject } from "@/lib/report-utils";
+import { StatCard } from "@/components/app/stat-card";
+import { ChartContainer, seriesColors } from "@/components/app/chart-container";
+import { DataTable, type DataTableColumn } from "@/components/app/data-table";
 import type { ReportFilterState } from "./report-filters";
 
 interface Props {
@@ -69,6 +72,26 @@ export function BudgetExpenseReport({ projectId, filters, projectName }: Props) 
 
   const s = data.summary;
 
+  type DeptRow = (typeof data.byDepartment)[number];
+  type CatRow = (typeof data.byCategory)[number];
+
+  const deptColumns = useMemo((): DataTableColumn<DeptRow>[] => [
+    { key: "dept", header: "Department", cell: (r) => <span className="font-medium">{r.display}</span>, sortValue: (r) => r.display },
+    { key: "allocated", header: "Allocated", cell: (r) => formatCrore(r.allocated), align: "right", sortValue: (r) => r.allocated },
+    { key: "committed", header: "Committed", cell: (r) => formatCrore(r.committed), align: "right", sortValue: (r) => r.committed },
+    { key: "paid", header: "Paid", cell: (r) => formatCrore(r.paid), align: "right", sortValue: (r) => r.paid },
+    { key: "outstanding", header: "Outstanding", cell: (r) => formatCrore(r.outstanding), align: "right", sortValue: (r) => r.outstanding },
+    { key: "variance", header: "Variance", cell: (r) => <span className={r.variance < 0 ? "text-red-400" : ""}>{formatCrore(r.variance)}</span>, align: "right", sortValue: (r) => r.variance },
+  ], []);
+
+  const catColumns = useMemo((): DataTableColumn<CatRow>[] => [
+    { key: "cat", header: "Category", cell: (r) => <span className="font-medium">{r.category}</span>, sortValue: (r) => r.category },
+    { key: "committed", header: "Committed", cell: (r) => formatCrore(r.committed), align: "right", sortValue: (r) => r.committed },
+    { key: "paid", header: "Paid", cell: (r) => formatCrore(r.paid), align: "right", sortValue: (r) => r.paid },
+    { key: "deposits", header: "Deposits", cell: (r) => formatCrore(r.deposits), align: "right", sortValue: (r) => r.deposits },
+    { key: "outstanding", header: "Outstanding", cell: (r) => formatCrore(r.outstanding), align: "right", sortValue: (r) => r.outstanding },
+  ], []);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -78,37 +101,35 @@ export function BudgetExpenseReport({ projectId, filters, projectName }: Props) 
         </Button>
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI label="Approved Budget" value={formatCrore(s.totalApprovedBudget)} />
-        <KPI label="Committed" value={formatCrore(s.totalCommitted)} tone="text-amber-400" />
-        <KPI label="Paid" value={formatCrore(s.totalPaid)} tone="text-emerald-400" />
-        <KPI label="Outstanding" value={formatCrore(s.totalOutstanding)} tone={s.totalOutstanding > 0 ? "text-red-400" : "text-foreground"} />
+        <StatCard label="Approved Budget" value={formatCrore(s.totalApprovedBudget)} />
+        <StatCard label="Committed" value={formatCrore(s.totalCommitted)} />
+        <StatCard label="Paid" value={formatCrore(s.totalPaid)} />
+        <StatCard label="Outstanding" value={formatCrore(s.totalOutstanding)} />
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI label="Deposits" value={formatCrore(s.totalDeposits)} />
-        <KPI label="PO Commitment" value={formatCrore(s.poCommitment)} />
-        <KPI label="Available Budget" value={formatCrore(s.availableBudget)} tone={s.availableBudget >= 0 ? "text-emerald-400" : "text-red-400"} />
-        <KPI label="Budget Utilization" value={`${data.utilization}%`} tone={data.utilization > 100 ? "text-red-400" : data.utilization > 80 ? "text-amber-400" : "text-foreground"} />
+        <StatCard label="Deposits" value={formatCrore(s.totalDeposits)} />
+        <StatCard label="PO Commitment" value={formatCrore(s.poCommitment)} />
+        <StatCard label="Available Budget" value={formatCrore(s.availableBudget)} />
+        <StatCard label="Budget Utilization" value={`${data.utilization}%`} />
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {data.categoryChart.length > 0 && (
           <Card>
             <CardHeader><CardTitle className="text-sm">By Category (₹ Lakhs)</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ChartContainer label="Budget by category bar chart" height={300}>
                 <BarChart data={data.categoryChart} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                   <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="committed" fill="#f59e0b" name="Committed" />
-                  <Bar dataKey="paid" fill="#10b981" name="Paid" />
+                  <Bar dataKey="committed" fill={seriesColors[0]} name="Committed" />
+                  <Bar dataKey="paid" fill={seriesColors[2]} name="Paid" />
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         )}
@@ -116,82 +137,36 @@ export function BudgetExpenseReport({ projectId, filters, projectName }: Props) 
           <Card>
             <CardHeader><CardTitle className="text-sm">By Project (₹ Lakhs)</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ChartContainer label="Budget by project bar chart" height={300}>
                 <BarChart data={data.projectChart}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                   <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="committed" fill="#f59e0b" name="Committed" />
-                  <Bar dataKey="paid" fill="#10b981" name="Paid" />
+                  <Bar dataKey="committed" fill={seriesColors[0]} name="Committed" />
+                  <Bar dataKey="paid" fill={seriesColors[2]} name="Paid" />
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         )}
       </div>
 
-      {/* Department table */}
       {data.byDepartment.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-sm">Department Breakdown</CardTitle></CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead><tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="p-3">Department</th><th className="p-3 text-right">Allocated</th>
-                  <th className="p-3 text-right">Committed</th><th className="p-3 text-right">Paid</th>
-                  <th className="p-3 text-right">Outstanding</th><th className="p-3 text-right">Variance</th>
-                </tr></thead>
-                <tbody>
-                  {data.byDepartment.map((d) => (
-                    <tr key={d.departmentKey} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="p-3 font-medium">{d.display}</td>
-                      <td className="p-3 text-right">{formatCrore(d.allocated)}</td>
-                      <td className="p-3 text-right">{formatCrore(d.committed)}</td>
-                      <td className="p-3 text-right">{formatCrore(d.paid)}</td>
-                      <td className="p-3 text-right">{formatCrore(d.outstanding)}</td>
-                      <td className={`p-3 text-right ${d.variance < 0 ? "text-red-400" : ""}`}>{formatCrore(d.variance)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        <>
+          <h3 className="text-sm font-semibold">Department Breakdown</h3>
+          <DataTable columns={deptColumns} rows={data.byDepartment} rowKey={(r) => r.departmentKey} caption="Department breakdown" />
+        </>
       )}
 
-      {/* Category table */}
       {data.byCategory.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-sm">Category Breakdown</CardTitle></CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead><tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="p-3">Category</th><th className="p-3 text-right">Committed</th>
-                  <th className="p-3 text-right">Paid</th><th className="p-3 text-right">Deposits</th>
-                  <th className="p-3 text-right">Outstanding</th>
-                </tr></thead>
-                <tbody>
-                  {data.byCategory.map((c) => (
-                    <tr key={c.category} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="p-3 font-medium">{c.category}</td>
-                      <td className="p-3 text-right">{formatCrore(c.committed)}</td>
-                      <td className="p-3 text-right">{formatCrore(c.paid)}</td>
-                      <td className="p-3 text-right">{formatCrore(c.deposits)}</td>
-                      <td className="p-3 text-right">{formatCrore(c.outstanding)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        <>
+          <h3 className="text-sm font-semibold">Category Breakdown</h3>
+          <DataTable columns={catColumns} rows={data.byCategory} rowKey={(r) => r.category} caption="Category breakdown" />
+        </>
       )}
 
-      {/* PO Summary */}
       {data.pos.length > 0 && (
         <Card>
           <CardHeader><CardTitle className="text-sm">Purchase Order Summary (separate from expense totals)</CardTitle></CardHeader>
@@ -206,14 +181,5 @@ export function BudgetExpenseReport({ projectId, filters, projectName }: Props) 
         </Card>
       )}
     </div>
-  );
-}
-
-function KPI({ label, value, tone = "text-foreground" }: { label: string; value: string; tone?: string }) {
-  return (
-    <Card><CardContent className="p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`text-xl font-semibold mt-1 ${tone}`}>{value}</p>
-    </CardContent></Card>
   );
 }

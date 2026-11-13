@@ -106,13 +106,13 @@ export function ScriptOverview({ scenes, versions }: Props) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">v{v.version}</span>
-                    {v.isCurrent && <span className="text-[10px] text-amber-400 font-semibold uppercase">Current</span>}
+                    {v.isCurrent && <span className="text-xs text-amber-400 font-semibold uppercase">Current</span>}
                   </div>
                   <p className="text-xs text-muted-foreground truncate">{v.notes}</p>
                 </div>
                 <div className="text-right shrink-0 hidden sm:block">
                   <p className="text-xs">{v.pageCount} pg / {v.sceneCount} sc</p>
-                  <p className="text-[11px] text-muted-foreground">{fmtDate(v.date)}</p>
+                  <p className="text-xs text-muted-foreground">{fmtDate(v.date)}</p>
                 </div>
               </div>
             ))}
@@ -128,7 +128,7 @@ function StatBox({ label, value, icon: Icon, color }: { label: string; value: st
     <div className="rounded-lg border bg-card p-3 text-center">
       {Icon && <Icon className={cn("w-4 h-4 mx-auto mb-1", color ?? "text-muted-foreground")} />}
       <p className="text-xl font-bold">{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
     </div>
   );
 }

@@ -3,17 +3,19 @@
 import { useMemo } from "react";
 import { Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { useAppDataSlice } from "@/lib/app-data-store";
 import { useCameraCards, useStorageDevices, useFootageMetadata, useMediaAssets, calcMediaStats } from "@/lib/media-store";
 import type { MediaVersion } from "@/lib/media-store";
 import { exportToCsv, formatFilterContext } from "@/lib/report-export";
 import { formatCrore, pct } from "@/lib/report-utils";
+import { StatCard } from "@/components/app/stat-card";
+import { StatusBadge } from "@/components/app/status-badge";
+import { ChartContainer, seriesColors } from "@/components/app/chart-container";
+import { DataTable, type DataTableColumn } from "@/components/app/data-table";
+import { EmptyState } from "@/components/app/empty-state";
 import type { ReportFilterState } from "./report-filters";
-
-const COLORS = ["#f59e0b", "#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
 
 interface Props {
   projectId?: string;
@@ -71,53 +73,54 @@ export function MediaFootageReport({ projectId, filters, projectName }: Props) {
   };
 
   if (assets.length === 0 && cards.length === 0 && storage.length === 0 && footage.length === 0) {
-    return (
-      <Card><CardContent className="p-8 text-center text-muted-foreground">
-        No media or footage data available{projectId ? " for this project" : ""}.
-      </CardContent></Card>
-    );
+    return <EmptyState title="No media data" description={`No media or footage data available${projectId ? " for this project" : ""}.`} />;
   }
+
+  type AssetRow = (typeof assets)[number];
+
+  const assetColumns = useMemo((): DataTableColumn<AssetRow>[] => [
+    { key: "title", header: "Title", cell: (r) => <span className="font-medium">{r.title}</span>, sortValue: (r) => r.title },
+    { key: "type", header: "Type", cell: (r) => r.mediaType, sortValue: (r) => r.mediaType },
+    { key: "status", header: "Status", cell: (r) => <StatusBadge status={r.status} /> },
+    { key: "version", header: "Version", cell: (r) => `v${r.currentVersion}` },
+    { key: "tags", header: "Tags", cell: (r) => <span className="text-muted-foreground text-xs">{r.tags.join(", ") || "—"}</span> },
+  ], []);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">Generated: {new Date().toLocaleString()}</p>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExport}>
-          <Download className="w-3.5 h-3.5" /> CSV
-        </Button>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExport}><Download className="w-3.5 h-3.5" /> CSV</Button>
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI label="Total Assets" value={String(assets.length)} />
-        <KPI label="Camera Cards" value={String(data.stats.cards.total)} sub={`${data.stats.cards.active} active`} />
-        <KPI label="Storage Devices" value={String(data.stats.storage.devices)} sub={`${data.stats.storage.usagePercent}% used`} />
-        <KPI label="Footage Records" value={String(data.stats.footage.total)} sub={`${data.stats.footage.synced} synced`} />
+        <StatCard label="Total Assets" value={String(assets.length)} />
+        <StatCard label="Camera Cards" value={String(data.stats.cards.total)} hint={`${data.stats.cards.active} active`} />
+        <StatCard label="Storage Devices" value={String(data.stats.storage.devices)} hint={`${data.stats.storage.usagePercent}% used`} />
+        <StatCard label="Footage Records" value={String(data.stats.footage.total)} hint={`${data.stats.footage.synced} synced`} />
       </div>
 
-      {/* Version summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KPI label="Total Versions" value={String(data.versionCounts.total)} />
-        <KPI label="Active Versions" value={String(data.versionCounts.active)} tone="text-emerald-400" />
-        <KPI label="Superseded" value={String(data.versionCounts.superseded)} tone="text-amber-400" />
-        <KPI label="Rejected" value={String(data.versionCounts.rejected)} tone="text-red-400" />
+        <StatCard label="Total Versions" value={String(data.versionCounts.total)} />
+        <StatCard label="Active Versions" value={String(data.versionCounts.active)} />
+        <StatCard label="Superseded" value={String(data.versionCounts.superseded)} />
+        <StatCard label="Rejected" value={String(data.versionCounts.rejected)} />
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {data.typeChart.length > 0 && (
           <Card>
             <CardHeader><CardTitle className="text-sm">Assets by Type</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
+              <ChartContainer label="Assets by type pie chart" height={250}>
                 <PieChart>
                   <Pie data={data.typeChart} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                    {data.typeChart.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    {data.typeChart.map((_, i) => <Cell key={i} fill={seriesColors[i % seriesColors.length]} />)}
                   </Pie>
                   <Tooltip />
                   <Legend />
                 </PieChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         )}
@@ -125,58 +128,27 @@ export function MediaFootageReport({ projectId, filters, projectName }: Props) {
           <Card>
             <CardHeader><CardTitle className="text-sm">Storage Usage (GB)</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
+              <ChartContainer label="Storage usage bar chart" height={250}>
                 <BarChart data={data.storageChart}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                   <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                   <Tooltip />
-                  <Bar dataKey="capacity" fill="#3b82f6" name="Capacity" />
-                  <Bar dataKey="used" fill="#f59e0b" name="Used" />
+                  <Bar dataKey="capacity" fill={seriesColors[1]} name="Capacity" />
+                  <Bar dataKey="used" fill={seriesColors[0]} name="Used" />
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         )}
       </div>
 
-      {/* Assets table */}
       {assets.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-sm">Media Assets</CardTitle></CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead><tr className="border-b text-left text-xs text-muted-foreground">
-                  <th className="p-3">Title</th><th className="p-3">Type</th><th className="p-3">Status</th>
-                  <th className="p-3">Version</th><th className="p-3">Tags</th>
-                </tr></thead>
-                <tbody>
-                  {assets.map((a) => (
-                    <tr key={a.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="p-3 font-medium">{a.title}</td>
-                      <td className="p-3">{a.mediaType}</td>
-                      <td className="p-3"><Badge variant="outline" className="text-xs">{a.status}</Badge></td>
-                      <td className="p-3">v{a.currentVersion}</td>
-                      <td className="p-3 text-muted-foreground text-xs">{a.tags.join(", ") || "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        <>
+          <h3 className="text-sm font-semibold">Media Assets</h3>
+          <DataTable columns={assetColumns} rows={assets} rowKey={(r) => r.id} caption="Media assets" />
+        </>
       )}
     </div>
-  );
-}
-
-function KPI({ label, value, sub, tone = "text-foreground" }: { label: string; value: string; sub?: string; tone?: string }) {
-  return (
-    <Card><CardContent className="p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`text-xl font-semibold mt-1 ${tone}`}>{value}</p>
-      {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
-    </CardContent></Card>
   );
 }

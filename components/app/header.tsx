@@ -18,7 +18,19 @@ import {
   FileCheck2,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { allNavItems, getWorkspaceTitle } from "@/lib/navigation";
+import { Fragment } from "react";
+import Link from "next/link";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { allNavItems, getBreadcrumbs } from "@/lib/navigation";
+import { cn } from "@/lib/utils";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { useProjects } from "@/lib/project-store";
 import { currentUser } from "@/lib/mock-data";
 import { useAuth } from "@/components/auth-provider";
@@ -51,9 +63,11 @@ function getInitials(name: string) {
 
 interface HeaderProps {
   onMobileMenuOpen: () => void;
+  onSidebarToggle: () => void;
+  sidebarCollapsed: boolean;
 }
 
-export function Header({ onMobileMenuOpen }: HeaderProps) {
+export function Header({ onMobileMenuOpen, onSidebarToggle, sidebarCollapsed }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [commandOpen, setCommandOpen] = useState(false);
@@ -62,7 +76,7 @@ export function Header({ onMobileMenuOpen }: HeaderProps) {
   const { user, logout, hasPermission } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
   const projects = useProjects();
-  const pageTitle = getWorkspaceTitle(pathname);
+  const breadcrumbs = getBreadcrumbs(pathname, (id) => projects.find((p) => p.id === id)?.title);
 
   // Active project context for the clapperboard slate
   const projectMatch = pathname.match(/\/dashboard\/projects\/([^\/]+)/);
@@ -87,21 +101,51 @@ export function Header({ onMobileMenuOpen }: HeaderProps) {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 sm:px-6 border-b bg-background/80 backdrop-blur-lg">
-      <div className="flex min-w-0 items-center gap-3">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b bg-background/80 px-3 backdrop-blur-lg sm:px-6">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden h-9 w-9"
+          className="h-9 w-9 shrink-0 lg:hidden"
           onClick={onMobileMenuOpen}
           aria-label="Open navigation"
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="h-5 w-5" />
         </Button>
-        <h1 className="max-w-[42vw] truncate text-base font-semibold sm:max-w-none sm:text-lg">{pageTitle}</h1>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden h-9 w-9 shrink-0 lg:inline-flex"
+          onClick={onSidebarToggle}
+          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!sidebarCollapsed}
+        >
+          {sidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+        </Button>
+        <Breadcrumb className="min-w-0">
+          <BreadcrumbList className="flex-nowrap">
+            {breadcrumbs.map((crumb, i) => {
+              const isLast = i === breadcrumbs.length - 1;
+              return (
+                <Fragment key={`${crumb.label}-${i}`}>
+                  {i > 0 && <BreadcrumbSeparator className={cn(!isLast && i < breadcrumbs.length - 2 && "hidden md:block")} />}
+                  <BreadcrumbItem className={cn("min-w-0", !isLast && "hidden md:inline-flex", i === breadcrumbs.length - 2 && "sm:inline-flex")}>
+                    {crumb.href && !isLast ? (
+                      <BreadcrumbLink asChild>
+                        <Link href={crumb.href} className="max-w-[160px] truncate">{crumb.label}</Link>
+                      </BreadcrumbLink>
+                    ) : (
+                      <BreadcrumbPage className="truncate text-base font-semibold sm:text-lg">{crumb.label}</BreadcrumbPage>
+                    )}
+                  </BreadcrumbItem>
+                </Fragment>
+              );
+            })}
+          </BreadcrumbList>
+        </Breadcrumb>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         {/* Spotlight Command Palette trigger */}
         <Button
           variant="outline"
@@ -181,7 +225,7 @@ export function Header({ onMobileMenuOpen }: HeaderProps) {
           <CommandEmpty>No matching command or project found.</CommandEmpty>
 
           {/* Quick Actions */}
-          <CommandGroup heading="⚡ Cinema & Quick Actions">
+          <CommandGroup heading="Quick Actions">
             <CommandItem
               value="open digital clapperboard cinema slate mark take"
               onSelect={() => {
@@ -257,7 +301,7 @@ export function Header({ onMobileMenuOpen }: HeaderProps) {
           </CommandGroup>
 
           {/* Active Film Projects */}
-          <CommandGroup heading="🎬 Film Projects">
+          <CommandGroup heading="Projects">
             {projects.map((project) => (
               <CommandItem
                 key={project.id}
@@ -279,7 +323,7 @@ export function Header({ onMobileMenuOpen }: HeaderProps) {
           </CommandGroup>
 
           {/* Department Workspaces */}
-          <CommandGroup heading="📁 Workspaces & Departments">
+          <CommandGroup heading="Workspaces">
             {allNavItems
               .filter((item) => !item.permission || hasPermission(item.permission))
               .map((item) => (

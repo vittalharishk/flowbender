@@ -36,9 +36,9 @@ export function ProjectGridCard({ project }: ProjectGridCardProps) {
         <ProjectPoster title={project.title} image={project.thumbnailImage || project.posterImage} gradient={project.posterColor} className="absolute inset-0 h-full w-full rounded-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute bottom-3 left-3 right-3">
-          <h3 className="text-white font-bold text-lg leading-tight truncate group-hover:text-amber-300 transition-colors">
+          <p className="text-white font-bold text-lg leading-tight truncate group-hover:text-amber-300 transition-colors">
             {project.title}
-          </h3>
+          </p>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-white/70 text-xs">{projectTypeLabels[project.type] ?? project.type}</span>
             <span className="text-white/40">|</span>

@@ -5,20 +5,7 @@ import { Film, FileSignature, IndianRupee } from "lucide-react";
 import { cn, formatINR } from "@/lib/utils";
 import type { CastMember } from "@/lib/types";
 import { castCategoryLabels, castCategoryColors } from "@/lib/cast-store";
-
-const contractColors: Record<string, string> = {
-  signed: "text-emerald-400",
-  negotiating: "text-amber-400",
-  pending: "text-muted-foreground",
-  expired: "text-red-400",
-};
-
-const paymentColors: Record<string, string> = {
-  paid: "text-emerald-400",
-  partial: "text-amber-400",
-  pending: "text-muted-foreground",
-  overdue: "text-red-400",
-};
+import { StatusBadge } from "@/components/app/status-badge";
 
 function fmtShort(v: number) {
   return formatINR(v);
@@ -49,9 +36,9 @@ export function CastListRow({ member, projectScope }: Props) {
         </div>
 
         {/* Category */}
-        <div className="w-32 shrink-0 hidden sm:block">
+        <div className="hidden w-32 shrink-0 sm:block">
           <span className={cn(
-            "text-[10px] font-medium px-2 py-0.5 rounded-full border",
+            "rounded-full border px-2 py-0.5 text-xs font-medium",
             castCategoryColors[member.category]
           )}>
             {castCategoryLabels[member.category]}
@@ -67,25 +54,21 @@ export function CastListRow({ member, projectScope }: Props) {
         )}
 
         {/* Contract */}
-        <div className="w-24 shrink-0 hidden md:flex items-center gap-1 text-xs">
-          <FileSignature className="w-3 h-3 text-muted-foreground" />
-          <span className={contractColors[member.contractStatus]}>
-            {member.contractStatus.charAt(0).toUpperCase() + member.contractStatus.slice(1)}
-          </span>
+        <div className="hidden w-28 shrink-0 items-center gap-1 text-xs md:flex">
+          <FileSignature className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <StatusBadge status={member.contractStatus} className="px-1.5 py-0 text-xs" />
         </div>
 
         {/* Payment */}
-        <div className="w-20 shrink-0 hidden md:flex items-center gap-1 text-xs">
-          <IndianRupee className="w-3 h-3 text-muted-foreground" />
-          <span className={paymentColors[member.paymentStatus]}>
-            {member.paymentStatus.charAt(0).toUpperCase() + member.paymentStatus.slice(1)}
-          </span>
+        <div className="hidden w-24 shrink-0 items-center gap-1 text-xs md:flex">
+          <IndianRupee className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <StatusBadge status={member.paymentStatus} className="px-1.5 py-0 text-xs" />
         </div>
 
         {/* Fee */}
-        <div className="ml-auto text-right shrink-0">
-          <p className="text-sm font-semibold">{fmtShort(member.totalFee)}</p>
-          <p className="text-[11px] text-muted-foreground">
+        <div className="ml-auto shrink-0 text-right">
+          <p className="text-sm font-semibold tabular-nums">{fmtShort(member.totalFee)}</p>
+          <p className="text-xs text-muted-foreground">
             {member.totalFee > 0 ? Math.round((member.paidAmount / member.totalFee) * 100) : 0}% paid
           </p>
         </div>

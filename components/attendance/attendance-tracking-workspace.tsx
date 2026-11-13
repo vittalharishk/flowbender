@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -56,6 +58,7 @@ interface AttendanceTrackingWorkspaceProps {
 }
 
 export function AttendanceTrackingWorkspace({ projectId: scopedProjectId }: AttendanceTrackingWorkspaceProps) {
+  const confirm = useConfirm();
   const projects = useProjects();
   const allRecords = useAppDataSlice("attendanceRecords");
   const scopedProject = useProject(scopedProjectId || "");
@@ -238,8 +241,8 @@ export function AttendanceTrackingWorkspace({ projectId: scopedProjectId }: Atte
     setEditingRecord(null);
   };
 
-  const handleDeleteRecord = (id: string) => {
-    if (confirm("Are you sure you want to delete this attendance log?")) {
+  const handleDeleteRecord = async (id: string) => {
+    if (await confirm({ title: "Delete attendance log?", description: "This attendance log will be permanently removed.", confirmLabel: "Delete" })) {
       updateAppDataSlice("attendanceRecords", (current) => current.filter((r) => r.id !== id));
       toast.info("Attendance log removed.");
       if (editingRecord?.id === id) setEditingRecord(null);
@@ -386,7 +389,7 @@ export function AttendanceTrackingWorkspace({ projectId: scopedProjectId }: Atte
                               <h4 className="font-semibold text-sm truncate">{record.name}</h4>
                               <Badge
                                 variant="outline"
-                                className={`text-[10px] uppercase font-bold px-1.5 py-0 ${getStatusBadgeColor(
+                                className={`text-xs uppercase font-bold px-1.5 py-0 ${getStatusBadgeColor(
                                   record.status
                                 )}`}
                               >
@@ -406,19 +409,19 @@ export function AttendanceTrackingWorkspace({ projectId: scopedProjectId }: Atte
                         <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0">
                           <div className="flex items-center gap-3 text-xs text-muted-foreground">
                             <div className="bg-muted/50 px-2.5 py-1 rounded-md text-center">
-                              <span className="text-[10px] uppercase block font-semibold text-muted-foreground/70">
+                              <span className="text-xs uppercase block font-semibold text-muted-foreground/70">
                                 In
                               </span>
                               <span className="font-medium text-foreground">{record.checkIn || "—"}</span>
                             </div>
                             <div className="bg-muted/50 px-2.5 py-1 rounded-md text-center">
-                              <span className="text-[10px] uppercase block font-semibold text-muted-foreground/70">
+                              <span className="text-xs uppercase block font-semibold text-muted-foreground/70">
                                 Out
                               </span>
                               <span className="font-medium text-foreground">{record.checkOut || "—"}</span>
                             </div>
                             <div className="bg-muted/50 px-2.5 py-1 rounded-md text-center">
-                              <span className="text-[10px] uppercase block font-semibold text-muted-foreground/70">
+                              <span className="text-xs uppercase block font-semibold text-muted-foreground/70">
                                 Hours
                               </span>
                               <span className="font-bold text-foreground">{record.hoursWorked}h</span>
@@ -526,7 +529,7 @@ export function AttendanceTrackingWorkspace({ projectId: scopedProjectId }: Atte
                     </div>
                     <div className="flex justify-between py-1">
                       <span>Biometric Sync Status</span>
-                      <Badge variant="outline" className="text-[10px] text-emerald-500 border-emerald-500/30">
+                      <Badge variant="outline" className="text-xs text-emerald-500 border-emerald-500/30">
                         Synchronized
                       </Badge>
                     </div>

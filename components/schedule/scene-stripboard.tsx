@@ -1,5 +1,9 @@
 "use client";
 
+import { useConfirm } from "@/components/app/confirm-dialog";
+import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -108,6 +112,7 @@ export const stripColorStyles: Record<
 };
 
 export function SceneStripboard({ shootDays: initialDays, basePath = "/dashboard/schedule", projectId }: StripboardProps) {
+  const confirm = useConfirm();
   const equipmentInventory = useAppDataSlice("equipmentInventory");
   const days = initialDays;
   const allDays = useAppDataSlice("shootDays");
@@ -233,13 +238,13 @@ export function SceneStripboard({ shootDays: initialDays, basePath = "/dashboard
   };
 
   const nextDay = (day: ShootDay) => [...allDays].filter((item) => item.projectId === day.projectId && item.date > day.date && item.status !== "cancelled" && item.status !== "completed").sort((a, b) => a.date.localeCompare(b.date))[0];
-  const moveSceneToNextDay = (fromId: string, sceneIndex: number) => {
+  const moveSceneToNextDay = async (fromId: string, sceneIndex: number) => {
     const from = allDays.find((day) => day.id === fromId);
     const to = from && nextDay(from);
     const scene = from?.scenes[sceneIndex];
     if (!from || !to || !scene) return;
-    if (to.scenes.some((item) => item.sceneNumber === scene.sceneNumber)) { window.alert("That scene is already scheduled on the next day."); return; }
-    if (!window.confirm(`Move scene ${scene.sceneNumber} to Day ${to.shootDayNumber} (${to.date})? Review any existing call sheets after this change.`)) return;
+    if (to.scenes.some((item) => item.sceneNumber === scene.sceneNumber)) { toast.error("That scene is already scheduled on the next day."); return; }
+    if (!(await confirm({ title: `Move scene ${scene.sceneNumber} to Day ${to.shootDayNumber} (${to.date})?`, description: "Review any existing call sheets after this change.", confirmLabel: "Move scene", destructive: false }))) return;
     const patchScenes = (day: ShootDay, scenes: ShootDayScene[]) => updateShootDay(day.id, {
       scenes, totalPages: scenes.reduce((total, item) => total + item.pages, 0),
       castRequired: castRecords.filter((member) => member.projectId === day.projectId && scenes.some((item) => item.characters.includes(member.character))).map((member) => member.name),
@@ -308,7 +313,7 @@ export function SceneStripboard({ shootDays: initialDays, basePath = "/dashboard
               >
                 <div className="flex items-start gap-2">
                   <span
-                    className={`mt-0.5 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                    className={`mt-0.5 rounded px-1.5 py-0.5 text-xs font-bold uppercase ${
                       c.severity === "critical"
                         ? "bg-red-500/20 text-red-400 border border-red-500/30"
                         : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
@@ -341,18 +346,19 @@ export function SceneStripboard({ shootDays: initialDays, basePath = "/dashboard
       {/* Filter Controls */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
-          <select
-            value={projectFilter}
-            onChange={(e) => setProjectFilter(e.target.value)}
-            className="h-9 rounded-md border bg-background px-3 text-xs focus:ring-2 focus:ring-primary"
-          >
-            <option value="all">All Active Productions</option>
-            {projectList.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.title}
-              </option>
-            ))}
-          </select>
+          <Select value={projectFilter} onValueChange={setProjectFilter}>
+            <SelectTrigger className="h-9 w-[220px] text-xs" aria-label="Filter stripboard by production">
+              <SelectValue placeholder="All Active Productions" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Active Productions</SelectItem>
+              {projectList.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {stripFilter !== "all" && (
             <Button
@@ -427,7 +433,7 @@ export function SceneStripboard({ shootDays: initialDays, basePath = "/dashboard
                     {day.totalPages} pgs
                   </Badge>
                   {dayConflicts.length > 0 && (
-                    <span className="flex items-center gap-1 text-[11px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded">
+                    <span className="flex items-center gap-1 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded">
                       <AlertTriangle className="h-3 w-3" /> {dayConflicts.length} Conflict
                     </span>
                   )}
@@ -461,7 +467,7 @@ export function SceneStripboard({ shootDays: initialDays, basePath = "/dashboard
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           {/* Scene Number Plate */}
                           <div className="flex flex-col items-center justify-center w-12 sm:w-14 shrink-0 rounded bg-black/40 text-white font-mono p-1 border border-white/10">
-                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span className="text-xs uppercase tracking-wider text-muted-foreground">
                               Scene
                             </span>
                             <span className="text-base font-extrabold leading-none">
@@ -472,11 +478,11 @@ export function SceneStripboard({ shootDays: initialDays, basePath = "/dashboard
                           {/* Setting Badge (Day/Night & Int/Ext) */}
                           <div className="flex flex-col shrink-0 gap-1">
                             <span
-                              className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${style.badgeBg}`}
+                              className={`rounded px-1.5 py-0.5 text-xs font-bold uppercase tracking-wider border ${style.badgeBg}`}
                             >
                               {scene.intExt} · {todLabel}
                             </span>
-                            <span className="text-[10px] font-mono text-muted-foreground/80">
+                            <span className="text-xs font-mono text-muted-foreground/80">
                               {scene.pages} {scene.pages === 1 ? "page" : "pages"}
                             </span>
                           </div>
@@ -486,11 +492,11 @@ export function SceneStripboard({ shootDays: initialDays, basePath = "/dashboard
                             <h4 className="text-xs sm:text-sm font-bold truncate leading-tight">
                               {scene.heading}
                             </h4>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px]">
+                            <div className="flex items-center gap-2 mt-1 flex-wrap text-xs">
                               {scene.characters.map((char) => (
                                 <span
                                   key={char}
-                                  className="rounded bg-black/30 px-1.5 py-0.2 text-[10px] font-medium border border-black/10"
+                                  className="rounded bg-black/30 px-1.5 py-0.2 text-xs font-medium border border-black/10"
                                 >
                                   {char}
                                 </span>
@@ -555,7 +561,7 @@ export function SceneStripboard({ shootDays: initialDays, basePath = "/dashboard
                         <div className="border-t border-black/10 bg-black/20 p-3 text-xs space-y-2">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
-                              <span className="font-semibold text-muted-foreground block text-[10px] uppercase">
+                              <span className="font-semibold text-muted-foreground block text-xs uppercase">
                                 Estimated Screen Time
                               </span>
                               <p className="font-medium mt-0.5">
@@ -563,13 +569,13 @@ export function SceneStripboard({ shootDays: initialDays, basePath = "/dashboard
                               </p>
                             </div>
                             <div>
-                              <span className="font-semibold text-muted-foreground block text-[10px] uppercase">
+                              <span className="font-semibold text-muted-foreground block text-xs uppercase">
                                 Production Location
                               </span>
                               <p className="font-medium mt-0.5">{scene.location}</p>
                             </div>
                             <div>
-                              <span className="font-semibold text-muted-foreground block text-[10px] uppercase">
+                              <span className="font-semibold text-muted-foreground block text-xs uppercase">
                                 Script Supervision
                               </span>
                               <p className="font-medium mt-0.5">

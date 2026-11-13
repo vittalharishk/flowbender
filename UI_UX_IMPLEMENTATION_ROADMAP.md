@@ -234,3 +234,16 @@ The proposed U2→U9 order is correct based on dependency analysis:
 7. **U9 last** — Full regression after all changes
 
 No reordering recommended.
+
+---
+
+## Progress (2026-11-12)
+
+| Phase | Status |
+|---|---|
+| U1 | Complete |
+| U2 | Complete — all acceptance criteria met (0 window.confirm, 0 inline gradient buttons, StatCard in use, types split, tsc + build pass) |
+| U3 | Complete — landmarks, skip link, breadcrumbs, collapsible groups, shared sidebar, command palette cleanup, loading skeleton; axe landmark violations 0 |
+| U4–U9 | Not started — awaiting approval |
+
+U3 items deferred: legacy Finance redirect (kept to avoid removing a module), `/scripts` and `/call-sheets` URL moves (no `/dashboard/scripts` route exists; routes preserved), woff2 404 (not reproduced — only favicon 404 observed).

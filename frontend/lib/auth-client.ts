@@ -29,7 +29,7 @@ const TOKEN_KEY = "showrunners.access_token";
 const AUTH_MODE = process.env.NEXT_PUBLIC_AUTH_MODE ?? "local";
 export const isDemoMode = AUTH_MODE !== "api";
 const LOCAL_TOKEN_PREFIX = "local-demo-token:";
-const DEMO_ACCOUNTS_STORAGE_KEY = "flowbender.demo-accounts.v1";
+export const DEMO_ACCOUNTS_STORAGE_KEY = "flowbender.demo-accounts.v1";
 const DEMO_VIEW_PERMISSIONS = [
   "cast.view", "crew.view", "scenes.view", "schedule.view", "production.view",
   "call_sheet.view", "finance.view", "post_production.view", "distribution.view", "reports.view", "settings.view",

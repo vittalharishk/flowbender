@@ -1,6 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { createFlowBenderSeedData } from "./flowbender-demo-seed";
-import { getAccessToken, getDemoAccountForUser, getDemoUserFromToken } from "./auth-client";
+import { DEMO_ACCOUNTS_STORAGE_KEY, getAccessToken, getDemoAccountForUser, getDemoAccounts, getDemoUserFromToken } from "./auth-client";
 import type {
   AttendanceRecord,
   CateringAdjustment,
@@ -671,6 +671,12 @@ function attachStorageListener() {
   }
 
   window.addEventListener("storage", (event) => {
+    if (event.key === DEMO_ACCOUNTS_STORAGE_KEY) {
+      // Project access comes from the account list, so recompute what this user may see.
+      visibleStateCache = null;
+      emitChange();
+      return;
+    }
     if (event.key !== APP_DATA_LOCAL_STORAGE_KEY) {
       return;
     }
@@ -858,15 +864,24 @@ function getVisibleAppData(data: AppDataState): AppDataState {
   const token = getAccessToken();
   if (visibleStateSource === data && visibleStateToken === token && visibleStateCache) return visibleStateCache;
   const account = getDemoAccountForUser(getDemoUserFromToken());
-  // Full visibility only for legacy demo producers (no company profile).
-  // Every signed-up account (companyProfile set or pending) sees only its own projects.
-  if (!account || (account.role === "Producer" && account.companyProfile === undefined)) {
+  if (!account) {
     visibleStateSource = data;
     visibleStateToken = token;
     visibleStateCache = data;
     return data;
   }
-  const allowed = new Set(account.assignedProjectIds);
+  // Projects created by signed-up accounts (companyProfile set or pending) are
+  // private to those accounts. The legacy demo producer sees every other project;
+  // everyone else sees only the projects assigned to them.
+  const isDemoProducer = account.role === "Producer" && account.companyProfile === undefined;
+  const privateProjectIds = new Set(
+    getDemoAccounts()
+      .filter((item) => item.companyProfile !== undefined)
+      .flatMap((item) => item.assignedProjectIds)
+  );
+  const allowed = isDemoProducer
+    ? new Set(data.projects.map((project) => project.id).filter((id) => !privateProjectIds.has(id)))
+    : new Set(account.assignedProjectIds);
   const visible = { ...data };
   collectionKeys.forEach((key) => {
     const records = data[key] as Array<{ projectId?: string }>;

@@ -691,8 +691,26 @@ function attachStorageListener() {
   storageListenerAttached = true;
 }
 
-// Saves go to data/flowbender-demo-data.json via /api/demo-data (no database yet).
-// Writes are held until the shared copy has loaded so seed data never overwrites the file.
+// Saves go to PostgreSQL via /api/demo-data; localStorage keeps a copy as a
+// fast-start cache. Writes are held until the shared copy has loaded so seed
+// data never overwrites the database.
+function writeLocalCache(state: AppDataState) {
+  if (!canUseLocalStorage()) return;
+  try {
+    localStorage.setItem(APP_DATA_LOCAL_STORAGE_KEY, JSON.stringify(state));
+  } catch { /* quota exceeded — the database copy is authoritative anyway */ }
+}
+
+function readLocalCache(): unknown {
+  if (!canUseLocalStorage()) return null;
+  try {
+    const raw = localStorage.getItem(APP_DATA_LOCAL_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 function persistState(state: AppDataState) {
   if (typeof window === "undefined") return;
   pendingPersistState = state;
@@ -706,6 +724,7 @@ function flushPersistState() {
   const state = pendingPersistState;
   if (!state) return;
   pendingPersistState = null;
+  writeLocalCache(state);
 
   void fetch("/api/demo-data", {
     method: "PUT",
@@ -713,12 +732,12 @@ function flushPersistState() {
     body: JSON.stringify({ data: state }),
   })
     .then((response) => {
-      if (!response.ok) throw new Error(`Saving shared demo data failed (${response.status}).`);
+      if (!response.ok) throw new Error(`Saving to the database failed (${response.status}).`);
     })
     .catch((error) => {
-      console.error("Unable to save flowbender data to the JSON file.", error);
+      console.error("Unable to save flowbender data to the database.", error);
       window.dispatchEvent(new CustomEvent("flowbender:persistence-error", {
-        detail: "Your last change could not be saved to the server. Export a backup before reloading.",
+        detail: "Your last change could not be saved to the database. Export a backup before reloading.",
       }));
     });
 }
@@ -742,9 +761,10 @@ function hydrateSharedState(localState: AppDataState, hadLocalState: boolean) {
         if (pendingPersistState) persistState(pendingPersistState);
         return;
       }
-      // The JSON file is the source of truth; edits made before it loaded are dropped.
+      // The database copy is the source of truth; edits made before it loaded are dropped.
       pendingPersistState = null;
-      commitState(normalizeInput(payload.data).data, false);
+      const next = commitState(normalizeInput(payload.data).data, false);
+      writeLocalCache(next);
     })
     .catch((error) => {
       console.error("Unable to load shared flowbender demo data; using this browser's local copy.", error);
@@ -778,9 +798,16 @@ function loadState(): AppDataState {
     return normalizeInput({}).data;
   }
 
-  // User requested to disable browser storage for demos, always load fresh
-  const state = commitState({}, false);
-  hydrateSharedState(state, false);
+  // Start from the localStorage cache for an instant first paint, then refresh
+  // from the database (which overwrites this once loaded).
+  const cached = readLocalCache();
+  let state: AppDataState;
+  try {
+    state = commitState(cached ?? {}, false);
+  } catch {
+    state = commitState({}, false);
+  }
+  hydrateSharedState(state, cached !== null);
   return state;
 }
 
@@ -831,7 +858,9 @@ function getVisibleAppData(data: AppDataState): AppDataState {
   const token = getAccessToken();
   if (visibleStateSource === data && visibleStateToken === token && visibleStateCache) return visibleStateCache;
   const account = getDemoAccountForUser(getDemoUserFromToken());
-  if (!account || account.role === "Producer") {
+  // Full visibility only for legacy demo producers (no company profile).
+  // Every signed-up account (companyProfile set or pending) sees only its own projects.
+  if (!account || (account.role === "Producer" && account.companyProfile === undefined)) {
     visibleStateSource = data;
     visibleStateToken = token;
     visibleStateCache = data;

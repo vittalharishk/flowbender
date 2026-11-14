@@ -35,6 +35,15 @@ const DEMO_VIEW_PERMISSIONS = [
   "call_sheet.view", "finance.view", "post_production.view", "distribution.view", "reports.view", "settings.view",
 ];
 
+export interface CompanyProfile {
+  companyName: string;
+  companyType: string;
+  country: string;
+  city?: string;
+  website?: string;
+  createdAt: string;
+}
+
 export interface DemoAccount {
   email: string;
   password: string;
@@ -42,6 +51,8 @@ export interface DemoAccount {
   role: "Producer" | "Production Manager";
   assignedProjectIds: string[];
   user: AuthUser;
+  // undefined = legacy/demo account (no onboarding); null = signup pending company setup
+  companyProfile?: CompanyProfile | null;
 }
 
 function createDemoUser(id: number, email: string, full_name: string, role: string, permissions: string[]): AuthUser {
@@ -119,11 +130,88 @@ export function getDemoAccounts() {
 export function saveDemoAccounts(accounts: DemoAccount[]) {
   window.localStorage.setItem(DEMO_ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
   window.dispatchEvent(new StorageEvent("storage", { key: DEMO_ACCOUNTS_STORAGE_KEY }));
+  // Persist user accounts to the database (localStorage stays as a cache).
+  void fetch("/api/demo-data?slice=accounts", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ accounts }),
+  }).catch((error) => console.error("Unable to save user accounts to the database.", error));
+}
+
+// On startup, pull the account list from the database so users created on any
+// device/browser are available everywhere. If the database has none yet, push
+// this browser's copy (or the defaults) up once.
+if (typeof window !== "undefined") {
+  void fetch("/api/demo-data?slice=accounts", { cache: "no-store" })
+    .then(async (response) => {
+      if (!response.ok) return;
+      const payload = (await response.json()) as { accounts?: DemoAccount[] | null };
+      if (Array.isArray(payload.accounts) && payload.accounts.length > 0) {
+        window.localStorage.setItem(DEMO_ACCOUNTS_STORAGE_KEY, JSON.stringify(payload.accounts));
+        window.dispatchEvent(new StorageEvent("storage", { key: DEMO_ACCOUNTS_STORAGE_KEY }));
+      } else {
+        saveDemoAccounts(getDemoAccounts());
+      }
+    })
+    .catch(() => undefined);
+}
+
+export function registerAccount(fullName: string, email: string, password: string): DemoAccount {
+  const accounts = getDemoAccounts();
+  const clean = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) throw new Error("Enter a valid email address.");
+  if (password.length < 4) throw new Error("Password must be at least 4 characters.");
+  if (accounts.some((a) => a.email.toLowerCase() === clean)) throw new Error("An account with this email already exists. Sign in instead.");
+  const nextId = accounts.reduce((m, a) => Math.max(m, a.user.id), 0) + 1;
+  const account: DemoAccount = {
+    email: clean,
+    password,
+    label: fullName.trim() || clean,
+    role: "Producer",
+    assignedProjectIds: [],
+    companyProfile: null,
+    user: {
+      id: nextId,
+      email: clean,
+      full_name: fullName.trim() || clean,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      roles: [{ name: "Producer", slug: "super-admin", permissions: [] }],
+    },
+  };
+  saveDemoAccounts([...accounts, account]);
+  return account;
+}
+
+export function saveCompanyProfile(userId: number, profile: Omit<CompanyProfile, "createdAt">) {
+  const accounts = getDemoAccounts().map((a) =>
+    a.user.id === userId ? { ...a, companyProfile: { ...profile, createdAt: new Date().toISOString() } } : a
+  );
+  saveDemoAccounts(accounts);
+}
+
+export function accountNeedsOnboarding(user: AuthUser | null): boolean {
+  if (!user) return false;
+  const account = getDemoAccounts().find((a) => a.user.id === user.id);
+  return account?.companyProfile === null;
 }
 
 export const demoUser: AuthUser = {
   ...defaultDemoAccounts[0].user,
 };
+
+// Give the signed-in user access to a project they just created, so accounts
+// only ever see their own projects (legacy demo producer keeps full access).
+export function assignProjectToCurrentUser(projectId: string) {
+  const user = getDemoUserFromToken();
+  if (!user || !Number.isFinite(user.id)) return;
+  const accounts = getDemoAccounts().map((a) =>
+    a.user.id === user.id && !a.assignedProjectIds.includes(projectId)
+      ? { ...a, assignedProjectIds: [...a.assignedProjectIds, projectId] }
+      : a
+  );
+  saveDemoAccounts(accounts);
+}
 
 export function getDemoAccountForUser(user: AuthUser | null): DemoAccount | undefined {
   return getDemoAccounts().find((account) => account.user.id === user?.id);

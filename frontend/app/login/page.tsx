@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/components/auth-provider";
-import { getDemoAccounts, isDemoMode, type DemoAccount } from "@/lib/auth-client";
+import { accountNeedsOnboarding, getDemoAccounts, isDemoMode, registerAccount, type DemoAccount } from "@/lib/auth-client";
 import { getSafeWorkspacePath } from "@/lib/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -23,9 +23,19 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(false);
   const [help, setHelp] = useState<"password" | "access" | null>(null);
   const [demoAccounts, setDemoAccounts] = useState<DemoAccount[]>([]);
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [fullName, setFullName] = useState("");
 
   useEffect(() => {
-    if (isDemoMode) setDemoAccounts(getDemoAccounts());
+    if (isDemoMode) {
+      // Only built-in demo accounts are listed; signed-up accounts log in by typing credentials.
+      const builtIn = () => getDemoAccounts().filter((a) => a.companyProfile === undefined);
+      setDemoAccounts(builtIn());
+      // Refresh when the account list syncs in from the database.
+      const onStorage = () => setDemoAccounts(builtIn());
+      window.addEventListener("storage", onStorage);
+      return () => window.removeEventListener("storage", onStorage);
+    }
     if (typeof window !== "undefined" && window.location.search.includes("_v=")) {
       const url = new URL(window.location.href);
       url.searchParams.delete("_v");
@@ -39,7 +49,13 @@ export default function LoginPage() {
   }
 
   useEffect(() => {
-    if (!authLoading && user) router.replace(getSafeWorkspacePath(new URLSearchParams(window.location.search).get("next")));
+    if (!authLoading && user) {
+      if (isDemoMode && accountNeedsOnboarding(user)) {
+        router.replace("/onboarding");
+        return;
+      }
+      router.replace(getSafeWorkspacePath(new URLSearchParams(window.location.search).get("next")));
+    }
   }, [authLoading, user, router]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -47,9 +63,12 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
+      if (mode === "signup") {
+        registerAccount(fullName, email, password);
+      }
       await login(email, password, remember);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : mode === "signup" ? "Sign up failed" : "Login failed");
     } finally {
       setLoading(false);
     }
@@ -59,7 +78,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <Clapperboard className="w-12 h-12 text-green-500 mx-auto mb-4 animate-pulse" />
+          <Clapperboard className="w-12 h-12 text-orange-500 mx-auto mb-4 animate-pulse" />
           <p className="text-slate-400">Loading...</p>
         </div>
       </div>
@@ -70,11 +89,13 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-8 backdrop-blur">
           <div className="flex items-center justify-center mb-8">
-            <Clapperboard className="w-8 h-8 text-green-500 mr-3" />
+            <Clapperboard className="w-8 h-8 text-orange-500 mr-3" />
             <h1 className="text-2xl font-bold text-white">flowbender</h1>
           </div>
 
-          <h2 className="text-center text-slate-200 mb-6">Sign in to your account</h2>
+          <h2 className="text-center text-slate-200 mb-6">
+            {mode === "signup" ? "Create your account" : "Sign in to your account"}
+          </h2>
 
           {error && (
             <div className="mb-4 p-3 bg-red-900/20 border border-red-800 rounded text-red-300 text-sm">
@@ -83,6 +104,22 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === "signup" && (
+              <div>
+                <Label htmlFor="full-name" className="text-slate-300">
+                  Full name
+                </Label>
+                <Input
+                  id="full-name"
+                  type="text"
+                  placeholder="Your name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  disabled={loading}
+                  className="mt-2 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                />
+              </div>
+            )}
             <div>
               <Label htmlFor="email" className="text-slate-300">
                 Email
@@ -106,7 +143,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setHelp("password")}
-                  className="text-xs text-green-500 hover:text-green-400"
+                  className="text-xs text-orange-500 hover:text-orange-400"
                 >
                   Forgot?
                 </button>
@@ -149,14 +186,27 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              disabled={loading || !email || !password}
-              className="w-full bg-green-600 hover:bg-green-700 text-white mt-6"
+              disabled={loading || !email || !password || (mode === "signup" && !fullName)}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white mt-6"
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading
+                ? mode === "signup" ? "Creating account..." : "Signing in..."
+                : mode === "signup" ? "Create account" : "Sign in"}
             </Button>
           </form>
 
-          {isDemoMode && demoAccounts.length > 0 && (
+          <p className="text-center text-sm text-slate-400 mt-4">
+            {mode === "signup" ? "Already have an account? " : "New to flowbender? "}
+            <button
+              type="button"
+              onClick={() => { setMode(mode === "signup" ? "signin" : "signup"); setError(""); }}
+              className="text-orange-500 hover:text-orange-400 font-medium"
+            >
+              {mode === "signup" ? "Sign in" : "Create an account"}
+            </button>
+          </p>
+
+          {isDemoMode && mode === "signin" && demoAccounts.length > 0 && (
             <div className="mt-6 pt-6 border-t border-slate-800">
               <p className="text-xs text-slate-400 text-center mb-3">Demo accounts</p>
               <div className="space-y-2">
@@ -169,7 +219,7 @@ export default function LoginPage() {
                     }}
                     className="w-full text-left p-2 rounded bg-slate-800/50 hover:bg-slate-800 border border-slate-700 text-sm text-slate-300 transition"
                   >
-                    <div className="font-medium">{account.role}</div>
+                    <div className="font-medium">{account.label} <span className="text-xs text-slate-500 font-normal">— {account.role}</span></div>
                     <div className="text-xs text-slate-500">{account.email}</div>
                   </button>
                 ))}

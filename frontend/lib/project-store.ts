@@ -1,4 +1,5 @@
 import type { Project } from "./types";
+import { assignProjectToCurrentUser } from "./auth-client";
 import {
   getAppDataSlice,
   updateAppData,
@@ -97,6 +98,13 @@ export function createProject(input: CreateProjectInput): Project {
     thumbnailImage: input.thumbnailImage ?? null,
     bannerImage: input.bannerImage ?? null,
   };
+  // Assign first so the visibility filter already includes the new project
+  // when the data commit triggers a re-render.
+  try {
+    assignProjectToCurrentUser(project.id);
+  } catch {
+    // non-demo mode: ignore
+  }
   updateAppDataSlice("projects", (current) => [project, ...current]);
   return project;
 }

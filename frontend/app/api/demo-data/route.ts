@@ -1,42 +1,153 @@
+// App data persistence: PostgreSQL is the source of truth (app_state table,
+// one JSONB row per collection). The JSON file remains a local backup/seed:
+// on first run the database is seeded from it, and every save also refreshes it.
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
+import { ensureAppStateTable, getPool } from "@/lib/server/db";
 
 const storageDirectory = path.join(process.cwd(), "data");
 const storageFile = path.join(storageDirectory, "flowbender-demo-data.json");
 
+const META_KEY = "_meta";
+const ACCOUNTS_KEY = "_demoAccounts";
+
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+async function readSeedFile(): Promise<Record<string, unknown> | null> {
   try {
-    const value = await readFile(storageFile, "utf8");
-    try {
-      return NextResponse.json(JSON.parse(value));
-    } catch (parseError) {
-      console.warn("Shared demo data contained invalid JSON. Resetting to empty.", parseError);
-      return NextResponse.json({ data: null });
-    }
+    const raw = await readFile(storageFile, "utf8");
+    const parsed = JSON.parse(raw) as { data?: unknown };
+    return isRecord(parsed.data) ? (parsed.data as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeBackupFile(state: Record<string, unknown>) {
+  try {
+    await mkdir(storageDirectory, { recursive: true });
+    await writeFile(storageFile, JSON.stringify({ data: state }), "utf8");
   } catch (error) {
-    const code = error instanceof Error && "code" in error ? error.code : undefined;
-    if (code === "ENOENT") return NextResponse.json({ data: null }, { status: 404 });
-    console.error("Failed to read shared demo data.", error);
-    return NextResponse.json({ data: null });
+    console.warn("Could not refresh the JSON backup file.", error);
+  }
+}
+
+async function saveStateToDb(state: Record<string, unknown>) {
+  const pool = getPool();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const meta: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(state)) {
+      if (Array.isArray(value)) {
+        await client.query(
+          `INSERT INTO app_state (key, data, updated_at) VALUES ($1, $2::jsonb, now())
+           ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`,
+          [key, JSON.stringify(value)]
+        );
+      } else {
+        meta[key] = value;
+      }
+    }
+    await client.query(
+      `INSERT INTO app_state (key, data, updated_at) VALUES ($1, $2::jsonb, now())
+       ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`,
+      [META_KEY, JSON.stringify(meta)]
+    );
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => undefined);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function loadStateFromDb(): Promise<Record<string, unknown> | null> {
+  const result = await getPool().query<{ key: string; data: unknown }>(
+    "SELECT key, data FROM app_state WHERE key <> $1",
+    [ACCOUNTS_KEY]
+  );
+  if (result.rows.length === 0) return null;
+  const state: Record<string, unknown> = {};
+  for (const row of result.rows) {
+    if (row.key === META_KEY) {
+      if (isRecord(row.data)) Object.assign(state, row.data);
+    } else {
+      state[row.key] = row.data;
+    }
+  }
+  return state;
+}
+
+async function handleAccountsGet() {
+  await ensureAppStateTable();
+  const result = await getPool().query<{ data: unknown }>(
+    "SELECT data FROM app_state WHERE key = $1",
+    [ACCOUNTS_KEY]
+  );
+  return NextResponse.json({ accounts: result.rows[0]?.data ?? null });
+}
+
+async function handleAccountsPut(payload: unknown) {
+  if (!isRecord(payload) || !Array.isArray(payload.accounts)) {
+    return NextResponse.json({ error: "Invalid accounts payload." }, { status: 400 });
+  }
+  await ensureAppStateTable();
+  await getPool().query(
+    `INSERT INTO app_state (key, data, updated_at) VALUES ($1, $2::jsonb, now())
+     ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`,
+    [ACCOUNTS_KEY, JSON.stringify(payload.accounts)]
+  );
+  return NextResponse.json({ saved: true });
+}
+
+export async function GET(request: Request) {
+  const slice = new URL(request.url).searchParams.get("slice");
+  try {
+    if (slice === "accounts") return await handleAccountsGet();
+
+    await ensureAppStateTable();
+    let state = await loadStateFromDb();
+    if (!state) {
+      // First run: seed the database from the bundled dummy-data JSON file.
+      const seed = await readSeedFile();
+      if (!seed) return NextResponse.json({ data: null }, { status: 404 });
+      await saveStateToDb(seed);
+      state = seed;
+    }
+    return NextResponse.json({ data: state, source: "database" });
+  } catch (error) {
+    console.error("Database read failed; falling back to the JSON file.", error);
+    const fallback = await readSeedFile();
+    if (fallback) return NextResponse.json({ data: fallback, source: "file-fallback" });
+    return NextResponse.json({ data: null }, { status: 404 });
   }
 }
 
 export async function PUT(request: Request) {
+  let slice: string | null = null;
   try {
+    slice = new URL(request.url).searchParams.get("slice");
     const payload: unknown = await request.json();
-    if (!payload || typeof payload !== "object" || !("data" in payload)) {
+
+    if (slice === "accounts") return await handleAccountsPut(payload);
+
+    if (!isRecord(payload) || !isRecord(payload.data)) {
       return NextResponse.json({ error: "Invalid demo data payload." }, { status: 400 });
     }
-
-    await mkdir(storageDirectory, { recursive: true });
-    await writeFile(storageFile, JSON.stringify(payload), "utf8");
-    return NextResponse.json({ saved: true });
+    const state = payload.data as Record<string, unknown>;
+    await ensureAppStateTable();
+    await saveStateToDb(state);
+    void writeBackupFile(state);
+    return NextResponse.json({ saved: true, target: "database" });
   } catch (error) {
-    console.error("Failed to save shared demo data.", error);
-    return NextResponse.json({ error: "Unable to save shared demo data." }, { status: 500 });
+    console.error("Failed to save app data to the database.", error);
+    return NextResponse.json({ error: "Unable to save data to the database." }, { status: 500 });
   }
 }
-

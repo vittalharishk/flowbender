@@ -35,7 +35,7 @@ npm run dev        # http://localhost:3000
 
 Demo login: `producer@flowbender.demo` / `demo`
 
-Demo data lives in the browser (localStorage) and `frontend/data/flowbender-demo-data.json`. A real database connection will replace this later.
+App data is stored in PostgreSQL (`app_state` table, one JSONB row per collection) via the `/api/demo-data` route. Set `FLOWBENDER_DATABASE_URL` in `frontend/.env.local` (never committed). localStorage is only a fast-start cache, and `frontend/data/flowbender-demo-data.json` is the first-run seed + backup. User accounts created in Settings also persist to the database.
 
 ### Backend API
 

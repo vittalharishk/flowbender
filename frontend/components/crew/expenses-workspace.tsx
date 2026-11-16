@@ -24,6 +24,7 @@ import type {
   MaintenanceRecord, ExpensePaymentStatus, MaintenanceStatus, MaintenancePriority,
   ExpensePaymentMethod
 } from "@/lib/types";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 interface Props { projectId?: string; }
 
@@ -873,6 +874,9 @@ function ReportsTab({ projectId }: Props) {
 export function ExpensesWorkspace({ projectId }: Props) {
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManagerGroup sections={[{ source: "app", sliceKey: "productionExpenses", label: "Production expense" }, { source: "app", sliceKey: "officeRentals", label: "Office rental" }, { source: "app", sliceKey: "maintenanceRecords", label: "Maintenance record" }]} />
+      </div>
       <Tabs defaultValue="dashboard">
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>

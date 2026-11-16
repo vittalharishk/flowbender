@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 interface FinanceWorkspaceProps {
   projectId?: string;
@@ -256,6 +257,9 @@ export function FinanceWorkspace({ projectId }: FinanceWorkspaceProps) {
         title={`Finance · ${project.title}`}
         description="Real-time ledger, line-item budget tracking, cast/crew payroll liabilities, and cash flow forecast."
       />
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManagerGroup sections={[{ source: "app", sliceKey: "expenseItems", label: "Expense" }, { source: "app", sliceKey: "budgetLineItems", label: "Budget line" }, { source: "app", sliceKey: "payrollEntries", label: "Payroll entry" }]} />
+      </div>
 
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 text-sm">
         <Info className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden="true" />

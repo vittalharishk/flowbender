@@ -35,6 +35,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { StatCard } from "@/components/app/stat-card";
 import { StatusBadge } from "@/components/app/status-badge";
 import { EmptyState } from "@/components/app/empty-state";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 const emptyDeal = {
   territory: "",
@@ -208,6 +209,9 @@ export function ProjectDistributionWorkspace({ projectId }: { projectId?: string
           </div>
         }
       />
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManager source="app" sliceKey="deliverables" label="Deliverable" />
+      </div>
 
       {message && (
         <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs flex items-center justify-between">

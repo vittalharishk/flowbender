@@ -42,6 +42,7 @@ import type {
   RemunerationPaymentStatus,
   RemunerationPeriod,
 } from "@/lib/types";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 interface Props {
   projectId?: string;
@@ -78,6 +79,9 @@ export function CrewDepartmentsWorkspace({ projectId }: Props) {
 
   return (
     <Tabs defaultValue="dashboard" className="space-y-4">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManagerGroup sections={[{ source: "app", sliceKey: "crewMembers", label: "Crew member" }, { source: "app", sliceKey: "remunerationAgreements", label: "Remuneration agreement" }]} />
+      </div>
       <TabsList className="flex-wrap h-auto gap-1">
         <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
         <TabsTrigger value="departments">Departments</TabsTrigger>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -9,6 +9,7 @@ import {
   Building2,
   Globe,
   Pencil,
+  Trash2,
   Film,
   LayoutDashboard,
   Users,
@@ -27,7 +28,8 @@ import {
   HardDrive,
   Zap,
 } from "lucide-react";
-import { useProject } from "@/lib/project-store";
+import { deleteProject, useProject } from "@/lib/project-store";
+import { useConfirm } from "@/components/app/confirm-dialog";
 import { projectTypeLabels } from "@/lib/mock-data";
 import { ProductionBadge } from "@/components/app/production-badge";
 import { ProjectPoster } from "@/components/projects/project-poster";
@@ -72,6 +74,19 @@ export default function ProjectWorkspaceLayout({
   const params = useParams();
   const pathname = usePathname();
   const project = useProject(params.id as string);
+  const router = useRouter();
+  const confirm = useConfirm();
+  async function handleDelete() {
+    if (!project) return;
+    const ok = await confirm({
+      title: `Delete ${project.title}?`,
+      description: "This permanently removes the project and everything in it: cast, crew, schedule, budgets, expenses, post-production and distribution records. This cannot be undone.",
+      confirmLabel: "Delete project",
+    });
+    if (!ok) return;
+    deleteProject(project.id);
+    router.push("/dashboard/projects");
+  }
   const [editing, setEditing] = useState(false);
   const [slateOpen, setSlateOpen] = useState(false);
 
@@ -156,6 +171,10 @@ export default function ProjectWorkspaceLayout({
                   <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => setEditing(true)}>
                     <Pencil className="w-3.5 h-3.5" />
                     Edit Project
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-1.5 shrink-0 text-red-500 hover:text-red-600 hover:bg-red-500/10" onClick={() => void handleDelete()}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete
                   </Button>
                 </div>
               </div>

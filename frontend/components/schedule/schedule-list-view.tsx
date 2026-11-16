@@ -40,6 +40,7 @@ import { DigitalClapperboardModal } from "@/components/production/digital-clappe
 import { useProjects } from "@/lib/project-store";
 import { GanttChartView } from "./gantt-chart-view";
 import { ScheduleDashboardFooter } from "./schedule-dashboard-footer";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 interface Props {
   shootDays: ShootDay[];
@@ -173,6 +174,9 @@ export function ScheduleListView({ shootDays, basePath, projectScope, projectId,
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManager source="app" sliceKey="shootDays" label="Shoot day" defaultProjectId={projectId} />
+      </div>
       {/* Featured Active Unit on Set Card */}
       {featuredDay && (
         <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-r from-card via-card to-amber-950/15 p-5 shadow-sm">

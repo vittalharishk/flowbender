@@ -725,22 +725,59 @@ function persistState(state: AppDataState) {
   persistTimer = setTimeout(flushPersistState, 300);
 }
 
-function flushPersistState() {
+// JSON of each collection as last saved to the database. Only collections whose
+// JSON differs are sent, so a typical edit uploads a few KB instead of the whole state.
+const savedSectionJson = new Map<string, string>();
+
+function rememberSaved(state: Record<string, unknown>) {
+  Object.entries(state).forEach(([key, value]) => {
+    if (Array.isArray(value)) savedSectionJson.set(key, JSON.stringify(value));
+  });
+}
+
+function changedSections(state: AppDataState): { payload: Record<string, unknown>; changed: Map<string, string> } {
+  const payload: Record<string, unknown> = {};
+  const changed = new Map<string, string>();
+  Object.entries(state).forEach(([key, value]) => {
+    if (!Array.isArray(value)) {
+      payload[key] = value;
+      return;
+    }
+    const json = JSON.stringify(value);
+    if (savedSectionJson.get(key) !== json) {
+      payload[key] = value;
+      changed.set(key, json);
+    }
+  });
+  return { payload, changed };
+}
+
+function flushPersistState(onUnload = false) {
   persistTimer = null;
   const state = pendingPersistState;
   if (!state) return;
   pendingPersistState = null;
   writeLocalCache(state);
 
+  const { payload, changed } = changedSections(state);
+  if (changed.size === 0) return;
+  const body = JSON.stringify({ data: payload, partial: true });
+  // mark as saved optimistically so overlapping saves don't resend; undone on failure
+  const previous = new Map(Array.from(changed.keys()).map((key) => [key, savedSectionJson.get(key)]));
+  changed.forEach((json, key) => savedSectionJson.set(key, json));
+
   void fetch("/api/demo-data", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ data: state }),
+    body,
+    // keepalive lets the request finish while the tab closes (browser limit ~64 KB)
+    keepalive: onUnload && body.length < 60_000,
   })
     .then((response) => {
       if (!response.ok) throw new Error(`Saving to the database failed (${response.status}).`);
     })
     .catch((error) => {
+      previous.forEach((json, key) => (json === undefined ? savedSectionJson.delete(key) : savedSectionJson.set(key, json)));
       console.error("Unable to save flowbender data to the database.", error);
       window.dispatchEvent(new CustomEvent("flowbender:persistence-error", {
         detail: "Your last change could not be saved to the database. Export a backup before reloading.",
@@ -751,6 +788,11 @@ function flushPersistState() {
 function hydrateSharedState(localState: AppDataState, hadLocalState: boolean) {
   if (sharedHydrationStarted) return;
   sharedHydrationStarted = true;
+  // Send a pending change right away if the tab is closed before the save timer fires.
+  window.addEventListener("pagehide", () => {
+    if (persistTimer) clearTimeout(persistTimer);
+    flushPersistState(true);
+  });
 
   void fetch("/api/demo-data", { cache: "no-store" })
     .then(async (response) => {
@@ -770,6 +812,7 @@ function hydrateSharedState(localState: AppDataState, hadLocalState: boolean) {
       // The database copy is the source of truth; edits made before it loaded are dropped.
       pendingPersistState = null;
       const next = commitState(normalizeInput(payload.data).data, false);
+      rememberSaved(next as unknown as Record<string, unknown>);
       writeLocalCache(next);
     })
     .catch((error) => {

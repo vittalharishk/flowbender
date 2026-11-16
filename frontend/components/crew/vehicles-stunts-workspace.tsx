@@ -20,6 +20,7 @@ import {
 } from "@/lib/vehicle-stunt-categories";
 import { useAppDataSlice } from "@/lib/app-data-store";
 import type { CrewMember, Vendor } from "@/lib/types";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 interface Props {
   projectId?: string;
@@ -51,6 +52,9 @@ export default function VehiclesStuntsWorkspace({ projectId }: Props) {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManagerGroup sections={[{ source: "app", sliceKey: "productionVehicles", label: "Vehicle" }, { source: "app", sliceKey: "vehicleAllocations", label: "Vehicle allocation" }, { source: "app", sliceKey: "caravans", label: "Caravan" }, { source: "app", sliceKey: "driverProfiles", label: "Driver" }, { source: "app", sliceKey: "driverAssignments", label: "Driver assignment" }, { source: "app", sliceKey: "stuntPlans", label: "Stunt plan" }, { source: "app", sliceKey: "stuntSafetyChecklists", label: "Stunt safety checklist" }, { source: "app", sliceKey: "stuntEquipment", label: "Stunt equipment" }]} />
+      </div>
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="dashboard"><BarChart3 className="h-4 w-4 mr-1" />Dashboard</TabsTrigger>

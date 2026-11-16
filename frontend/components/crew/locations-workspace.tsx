@@ -26,6 +26,7 @@ import { useHotels, useHotelBookings, useHotelPayments } from "@/lib/hotel-store
 import { useTrips, useTravelPayments } from "@/lib/travel-store";
 import { useAppDataSlice } from "@/lib/app-data-store";
 import type { FilmLocation, LocationScouting, Hotel, HotelBooking, Trip } from "@/lib/types";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 // ─── Badge helpers ────────────────────────────────────────────────────────────
 
@@ -798,6 +799,9 @@ function PaymentsTab({ projectId }: { projectId?: string }) {
 export default function LocationsWorkspace({ projectId }: { projectId?: string }) {
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManagerGroup sections={[{ source: "app", sliceKey: "filmLocations", label: "Film location" }, { source: "app", sliceKey: "locationScouting", label: "Scouting visit" }, { source: "app", sliceKey: "locationAgreements", label: "Location agreement" }, { source: "app", sliceKey: "locationPayments", label: "Location payment" }, { source: "app", sliceKey: "hotels", label: "Hotel" }, { source: "app", sliceKey: "hotelBookings", label: "Hotel booking" }, { source: "app", sliceKey: "hotelPayments", label: "Hotel payment" }, { source: "app", sliceKey: "trips", label: "Trip" }]} />
+      </div>
       <div>
         <h2 className="text-xl font-semibold">Locations, Boarding & Travel</h2>
         <p className="text-sm text-muted-foreground">

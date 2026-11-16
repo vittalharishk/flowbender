@@ -25,6 +25,7 @@ import { StatusBadge } from "@/components/app/status-badge";
 import { EmptyState } from "@/components/app/empty-state";
 import { SearchInput } from "@/components/app/search-input";
 import { DigitalClapperboardModal } from "./digital-clapperboard-modal";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 type StatusTab = "all" | "production" | "pre-production" | "post-production";
 
@@ -98,6 +99,9 @@ export function ProductionManagementWorkspace({ scopedProjectId }: ProductionWor
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManagerGroup sections={[{ source: "app", sliceKey: "dprReports", label: "Daily report", defaultProjectId: scopedProjectId }, { source: "app", sliceKey: "shootDays", label: "Shoot day", defaultProjectId: scopedProjectId }]} />
+      </div>
       {/* Quick stats */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Projects" value={scopedProjects.length} icon={Film} hint="In this view" />

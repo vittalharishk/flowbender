@@ -4,7 +4,7 @@
 // The form is built from the fields the section's records already have, so
 // every field stays editable without a hand-written form per module.
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { ExternalLink, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,15 +15,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getModuleSlice, updateModuleSlice, useModuleSlice } from "@/lib/module-store";
 import { getAppDataSlice, updateAppDataSlice, useAppDataSlice, type AppDataCollectionKey } from "@/lib/app-data-store";
-import { useProjects } from "@/lib/project-store";
+import { useProjects, useSelectedProjectId } from "@/lib/project-store";
+import { uploadFile } from "@/lib/file-upload";
 
 type Row = Record<string, unknown> & { id: string };
-type Kind = "text" | "textarea" | "number" | "boolean" | "date" | "select" | "project" | "list" | "json";
+type Kind = "file" | "text" | "textarea" | "number" | "boolean" | "date" | "select" | "project" | "list" | "json";
 type Field = { key: string; kind: Kind; options?: string[] };
 
 const HIDDEN = new Set(["id", "createdAt", "updatedAt", "ownerAccount", "isDemo", "projectTitle"]);
 const ENUM_KEY = /(status|type|category|stage|priority|kind|platform|format|mode|channel|tier|level|method|frequency|currency)$/i;
 const LONG_KEY = /(notes|description|summary|remarks|comment|terms|synopsis|details|reason)$/i;
+// Text fields that hold a file: they get an Upload button (file goes to /api/files).
+const FILE_KEY = /(image|photo|poster|logo|thumbnail|banner|avatar|cover|file|document|attachment|pdf|scan|receipt|proof|artwork|fileLocation|fileReference|url|link)$/i;
 const LABEL_KEYS = ["title", "name", "campaignName", "language", "invoiceNumber", "character", "description", "label"];
 
 function humanize(key: string) {
@@ -44,6 +47,7 @@ function inferFields(rows: Row[]): Field[] {
     if (typeof sample === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sample)) return { key, kind: "date" as Kind };
     const distinct = Array.from(new Set(values.map(String)));
     if (ENUM_KEY.test(key) && distinct.length > 0 && distinct.length <= 12) return { key, kind: "select" as Kind, options: distinct };
+    if (FILE_KEY.test(key) || (typeof sample === "string" && /^(data:|\/api\/files\/|https?:\/\/)/.test(sample))) return { key, kind: "file" as Kind };
     if (LONG_KEY.test(key) || (typeof sample === "string" && sample.length > 80)) return { key, kind: "textarea" as Kind };
     return { key, kind: "text" as Kind };
   });
@@ -124,6 +128,7 @@ function ManagerUi({
   label, rows, schemaRows, write, defaultProjectId,
 }: RecordManagerProps & { rows: Row[]; schemaRows: () => Row[]; write: (fn: (rows: Row[]) => Row[]) => void }) {
   const projects = useProjects();
+  const selectedProjectId = useSelectedProjectId();
   const [open, setOpen] = useState<null | "add" | "edit">(null);
   const [editId, setEditId] = useState<string>("");
   const [draft, setDraft] = useState<Record<string, string | boolean>>({});
@@ -133,7 +138,7 @@ function ManagerUi({
     const f = inferFields(schemaRows().slice(0, 300));
     if (mode === "add") {
       setEditId("");
-      const seed: Record<string, unknown> = { projectId: defaultProjectId ?? projects[0]?.id };
+      const seed: Record<string, unknown> = { projectId: defaultProjectId ?? (projects.some((p) => p.id === selectedProjectId) ? selectedProjectId : projects[0]?.id) };
       f.forEach((x) => { if (x.kind === "select" && x.options?.length) seed[x.key] = x.options[0]; });
       setDraft(toDraft(f, seed as Partial<Row>));
     } else {
@@ -178,6 +183,20 @@ function ManagerUi({
   };
 
   const set = (k: string, v: string | boolean) => setDraft((d) => ({ ...d, [k]: v }));
+  const [uploading, setUploading] = useState<string | null>(null);
+  const upload = async (k: string, file?: File) => {
+    if (!file) return;
+    setUploading(k);
+    try {
+      const stored = await uploadFile(file);
+      set(k, stored.url);
+      toast.success(`${stored.name} uploaded`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(null);
+    }
+  };
 
   return (
     <>
@@ -220,6 +239,18 @@ function ManagerUi({
                       <SelectTrigger id={id}><SelectValue placeholder="Choose" /></SelectTrigger>
                       <SelectContent>{(options ?? []).map((o) => <SelectItem key={o} value={o}>{humanize(o)}</SelectItem>)}</SelectContent>
                     </Select>
+                  ) : kind === "file" ? (
+                    <div className="space-y-1">
+                      <div className="flex gap-2">
+                        <Input id={id} value={String(value ?? "")} placeholder="Upload a file or paste a link" onChange={(e) => set(key, e.target.value)} />
+                        <Button type="button" size="sm" variant="outline" disabled={uploading === key} onClick={() => document.getElementById(`${id}-file`)?.click()}>
+                          <Upload className="mr-1 h-3.5 w-3.5" />{uploading === key ? "Uploading…" : "Upload"}
+                        </Button>
+                        <input id={`${id}-file`} type="file" aria-label={`Upload ${humanize(key)}`} className="hidden" onChange={(e) => { void upload(key, e.target.files?.[0]); e.currentTarget.value = ""; }} />
+                      </div>
+                      {/^(data:image|\/api\/files\/.*\.(png|jpe?g|webp|gif)$)/i.test(String(value ?? "")) && <img src={String(value)} alt="" className="h-20 rounded border object-cover" />}
+                      {/^(\/api\/files\/|https?:\/\/)/.test(String(value ?? "")) && <a href={String(value)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-amber-500 hover:underline"><ExternalLink className="h-3 w-3" />Open file</a>}
+                    </div>
                   ) : wide ? (
                     <Textarea id={id} rows={kind === "json" ? 5 : 3} className={kind === "json" ? "font-mono text-xs" : undefined} value={String(value ?? "")} onChange={(e) => set(key, e.target.value)} />
                   ) : (
@@ -238,5 +269,21 @@ function ManagerUi({
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+/** Several sections on one page: choose the section, then Add / Edit it. */
+export function RecordManagerGroup({ sections }: { sections: RecordManagerProps[] }) {
+  const [index, setIndex] = useState(0);
+  const current = sections[index] ?? sections[0];
+  if (!current) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Select value={String(index)} onValueChange={(v) => setIndex(Number(v))}>
+        <SelectTrigger className="h-9 w-52" aria-label="Section to manage"><SelectValue /></SelectTrigger>
+        <SelectContent>{sections.map((s, i) => <SelectItem key={s.sliceKey} value={String(i)}>{s.label}</SelectItem>)}</SelectContent>
+      </Select>
+      <RecordManager key={current.sliceKey} {...current} />
+    </div>
   );
 }

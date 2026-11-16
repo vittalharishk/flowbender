@@ -17,6 +17,7 @@ import type { Scene, SceneStatus } from "@/lib/types";
 import { sceneStatusLabels, sceneStatusDot } from "@/lib/scene-store";
 import { SceneStrip } from "./scene-strip";
 import { AddSceneDialog } from "./add-scene-dialog";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 interface Props {
   scenes: Scene[];
@@ -99,6 +100,9 @@ export function SceneListView({ scenes, projectId, basePath, onSceneAdded }: Pro
 
   return (
     <div className="space-y-5">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManager source="app" sliceKey="scenes" label="Scene" />
+      </div>
       {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {(Object.entries(sceneStatusLabels) as [SceneStatus, string][]).map(([key, label]) => (

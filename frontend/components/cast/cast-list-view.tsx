@@ -19,6 +19,7 @@ import { castCategoryLabels } from "@/lib/cast-store";
 import { CastCard } from "./cast-card";
 import { CastListRow } from "./cast-list-row";
 import { AddCastDialog } from "./add-cast-dialog";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 interface CastListViewProps {
   members: CastMember[];
@@ -110,6 +111,9 @@ export function CastListView({
 
   return (
     <div className="space-y-5">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManagerGroup sections={[{ source: "app", sliceKey: "castMembers", label: "Cast member" }, { source: "app", sliceKey: "castCandidates", label: "Casting candidate" }, { source: "app", sliceKey: "artistAvailability", label: "Artist availability" }]} />
+      </div>
       <p className="text-xs text-muted-foreground">Seeded cast assignments, contact details, contracts and fees are demo planning data, not casting confirmations. All amounts are INR.</p>
       {/* Summary bar */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

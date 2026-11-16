@@ -40,35 +40,32 @@ async function writeBackupFile(state: Record<string, unknown>) {
   }
 }
 
+// One round trip: every collection in the payload is upserted with a single
+// statement (the remote database is far away, so per-row queries were slow).
+// Partial payloads (only the collections that changed) are the normal case;
+// top-level meta fields are merged into the existing meta row.
 async function saveStateToDb(state: Record<string, unknown>) {
-  const pool = getPool();
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    const meta: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(state)) {
-      if (Array.isArray(value)) {
-        await client.query(
-          `INSERT INTO app_state (key, data, updated_at) VALUES ($1, $2::jsonb, now())
-           ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`,
-          [key, JSON.stringify(value)]
-        );
-      } else {
-        meta[key] = value;
-      }
+  const keys: string[] = [];
+  const values: string[] = [];
+  const meta: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(state)) {
+    if (Array.isArray(value)) {
+      keys.push(key);
+      values.push(JSON.stringify(value));
+    } else {
+      meta[key] = value;
     }
-    await client.query(
-      `INSERT INTO app_state (key, data, updated_at) VALUES ($1, $2::jsonb, now())
-       ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`,
-      [META_KEY, JSON.stringify(meta)]
-    );
-    await client.query("COMMIT");
-  } catch (error) {
-    await client.query("ROLLBACK").catch(() => undefined);
-    throw error;
-  } finally {
-    client.release();
   }
+  keys.push(META_KEY);
+  values.push(JSON.stringify(meta));
+  await getPool().query(
+    `INSERT INTO app_state (key, data, updated_at)
+       SELECT k, d::jsonb, now() FROM unnest($1::text[], $2::text[]) AS t(k, d)
+     ON CONFLICT (key) DO UPDATE SET
+       data = CASE WHEN app_state.key = $3 THEN app_state.data || EXCLUDED.data ELSE EXCLUDED.data END,
+       updated_at = now()`,
+    [keys, values, META_KEY]
+  );
 }
 
 async function loadStateFromDb(): Promise<Record<string, unknown> | null> {
@@ -178,7 +175,8 @@ export async function PUT(request: Request) {
     const state = payload.data as Record<string, unknown>;
     await ensureAppStateTable();
     await saveStateToDb(state);
-    void writeBackupFile(state);
+    // The JSON backup needs the whole state; partial saves skip it.
+    if (payload.partial !== true) void writeBackupFile(state);
     return NextResponse.json({ saved: true, target: "database" });
   } catch (error) {
     console.error("Failed to save app data to the database.", error);

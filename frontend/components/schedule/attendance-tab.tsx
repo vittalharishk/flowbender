@@ -49,6 +49,7 @@ import {
 } from "@/lib/attendance-store";
 import type { AttendanceStatus, AttendanceRecord } from "@/lib/types";
 import { toast } from "sonner";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -282,6 +283,9 @@ export function AttendanceTab({ projectId: scopedProjectId }: AttendanceTabProps
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManagerGroup sections={[{ source: "app", sliceKey: "attendanceRecords", label: "Attendance record" }, { source: "app", sliceKey: "cateringAdjustments", label: "Catering adjustment" }]} />
+      </div>
       {/* project selector (only in global view) */}
       {!scopedProjectId && (
         <div className="flex items-center gap-3">

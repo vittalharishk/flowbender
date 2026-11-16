@@ -41,6 +41,7 @@ import {
   RENTAL_STATUS_LABELS,
 } from "@/lib/rental-categories";
 import type { Vendor, RentalRecord, RentalStatus } from "@/lib/types";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-IN", {
@@ -74,6 +75,9 @@ export function RentalsWorkspace({ projectId }: Props) {
 
   return (
     <Tabs defaultValue="dashboard" className="space-y-4">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManagerGroup sections={[{ source: "app", sliceKey: "rentalRecords", label: "Rental" }, { source: "app", sliceKey: "rentalVendors", label: "Rental vendor" }]} />
+      </div>
       <TabsList className="flex-wrap h-auto">
         <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
         <TabsTrigger value="register">Rental Register</TabsTrigger>

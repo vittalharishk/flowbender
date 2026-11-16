@@ -53,3 +53,6 @@ Thumbs.db
 .vscode/
 .idea/
 .venv/
+
+# uploaded files (stored on the server; later S3)
+/frontend/uploads/

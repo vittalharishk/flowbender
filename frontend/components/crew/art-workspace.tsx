@@ -45,6 +45,7 @@ import {
 } from "@/lib/art-categories";
 import { useAppDataSlice } from "@/lib/app-data-store";
 import type { PropItem, PropTransaction, ProductionSet, AISetExtensionTask, SetTask } from "@/lib/types";
+import { RecordManager, RecordManagerGroup } from "@/components/app/record-manager";
 
 interface Props { projectId?: string; }
 
@@ -1045,6 +1046,9 @@ function ReportsTab({ projectId }: Props) {
 export function ArtWorkspace({ projectId }: Props) {
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManagerGroup sections={[{ source: "app", sliceKey: "propItems", label: "Prop" }, { source: "app", sliceKey: "productionSets", label: "Production set" }, { source: "app", sliceKey: "setTasks", label: "Set task" }]} />
+      </div>
       <Tabs defaultValue="dashboard">
         <TabsList className="bg-slate-800/50 border border-slate-700">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>

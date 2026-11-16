@@ -145,3 +145,13 @@ export function seedModuleSlice<T extends { id: string }>(key: string, seedData:
   if (existing.length > 0) return;
   writeRaw(key, seedData);
 }
+
+/** Remove every module record that belongs to a project (used when a project is deleted). */
+export function removeProjectFromModules(projectId: string) {
+  Array.from(cacheMap.keys()).forEach((key) => {
+    const items = readRaw<{ projectId?: unknown }>(key);
+    if (items.some((item) => item?.projectId === projectId)) {
+      writeRaw(key, items.filter((item) => item?.projectId !== projectId));
+    }
+  });
+}

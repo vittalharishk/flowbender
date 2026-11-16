@@ -1,5 +1,6 @@
 import type { Project } from "./types";
 import { assignProjectToCurrentUser } from "./auth-client";
+import { removeProjectFromModules } from "./module-store";
 import {
   getAppDataSlice,
   updateAppData,
@@ -212,3 +213,25 @@ export function useSelectedProject(): Project | undefined {
   return projects.find((p) => p.id === selectedId) ?? projects.find((p) => p.id === DEFAULT_PROJECT_ID) ?? projects[0];
 }
 
+
+/**
+ * Delete a project and every record that belongs to it (cast, crew, schedule,
+ * budgets, module sections, ...). Cannot be undone.
+ */
+export function deleteProject(id: string) {
+  updateAppData((current) => {
+    const next = { ...current } as Record<string, unknown>;
+    Object.entries(current).forEach(([key, value]) => {
+      if (!Array.isArray(value)) return;
+      next[key] = key === "projects"
+        ? value.filter((item) => (item as { id?: string }).id !== id)
+        : value.filter((item) => (item as { projectId?: string } | null)?.projectId !== id);
+    });
+    return next as unknown as typeof current;
+  });
+  removeProjectFromModules(id);
+  if (getSelectedProjectId() === id) {
+    const remaining = getProjects();
+    if (remaining[0]) setSelectedProjectId(remaining[0].id);
+  }
+}

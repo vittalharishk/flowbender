@@ -35,7 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/components/auth-provider";
 import { emitAppDataChange } from "@/lib/app-data-store";
-import { getDemoAccounts, saveDemoAccounts, type DemoAccount } from "@/lib/auth-client";
+import { getCompanyAccounts, getDemoAccounts, saveCompanyAccounts, type DemoAccount } from "@/lib/auth-client";
 
 type Workspace = "distribution" | "reports" | "settings";
 
@@ -104,7 +104,7 @@ export function SettingsWorkspace() {
   const isProducer = user?.roles.some((role) => role.slug === "super-admin") ?? false;
 
   useEffect(() => {
-    setAccounts(getDemoAccounts());
+    setAccounts(getCompanyAccounts());
   }, []);
 
   const countCards = [
@@ -163,7 +163,7 @@ export function SettingsWorkspace() {
 
   function saveAccounts(next: DemoAccount[]) {
     setAccounts(next);
-    saveDemoAccounts(next);
+    saveCompanyAccounts(next);
     emitAppDataChange();
   }
 
@@ -174,11 +174,11 @@ export function SettingsWorkspace() {
       setAccountMessage("Name and email are required.");
       return;
     }
-    if (accounts.some((account) => account.email.toLowerCase() === email)) {
+    if (getDemoAccounts().some((account) => account.email.toLowerCase() === email)) {
       setAccountMessage("An account with this email already exists.");
       return;
     }
-    const id = Math.max(...accounts.map((account) => account.user.id), 0) + 1;
+    const id = Math.max(...getDemoAccounts().map((account) => account.user.id), 0) + 1;
     const template = accounts.find((account) => account.role === "Production Manager") ?? accounts[0];
     const account: DemoAccount = {
       email,

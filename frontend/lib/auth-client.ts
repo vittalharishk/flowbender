@@ -53,6 +53,8 @@ export interface DemoAccount {
   user: AuthUser;
   // undefined = legacy/demo account (no onboarding); null = signup pending company setup
   companyProfile?: CompanyProfile | null;
+  /** Email of the signed-up account (company) that created this team account. */
+  ownerAccount?: string;
 }
 
 function createDemoUser(id: number, email: string, full_name: string, role: string, permissions: string[]): AuthUser {
@@ -371,4 +373,24 @@ export function stampOwner<T>(previous: T[] | undefined, next: T[]): T[] {
 export function isOwnedRecordVisible(record: unknown, owner: string | undefined): boolean {
   const tag = (record as { ownerAccount?: unknown } | null)?.ownerAccount;
   return owner ? tag === owner : !tag;
+}
+
+// Accounts belonging to the signed-in user's company. A signed-up account sees
+// itself plus the team accounts it created; demo accounts see only demo accounts.
+function accountCompany(account: DemoAccount): string | undefined {
+  if (account.ownerAccount) return account.ownerAccount.toLowerCase();
+  return account.companyProfile !== undefined ? account.email.toLowerCase() : undefined;
+}
+
+export function getCompanyAccounts(): DemoAccount[] {
+  const owner = getCurrentOwnerTag();
+  return getDemoAccounts().filter((account) => accountCompany(account) === owner);
+}
+
+/** Save a company-scoped list without touching other companies' accounts. */
+export function saveCompanyAccounts(companyAccounts: DemoAccount[]) {
+  const owner = getCurrentOwnerTag();
+  const others = getDemoAccounts().filter((account) => accountCompany(account) !== owner);
+  const stamped = companyAccounts.map((account) => (owner && !account.ownerAccount && account.email.toLowerCase() !== owner ? { ...account, ownerAccount: owner } : account));
+  saveDemoAccounts([...others, ...stamped]);
 }

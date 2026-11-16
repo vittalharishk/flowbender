@@ -39,7 +39,7 @@ import { useConfirm } from "@/components/app/confirm-dialog";
 import { useAuth } from "@/components/auth-provider";
 import { useProjects } from "@/lib/project-store";
 import { exportAppData, importAppData, resetAppData, useAppDataCounts, emitAppDataChange } from "@/lib/app-data-store";
-import { getDemoAccounts, saveDemoAccounts, type DemoAccount } from "@/lib/auth-client";
+import { getCompanyAccounts, getDemoAccounts, saveDemoAccounts, type DemoAccount } from "@/lib/auth-client";
 import "@/lib/persistence-bootstrap";
 import {
   useOrgSettings,
@@ -156,7 +156,7 @@ function GeneralTab() {
 
 function UsersTab() {
   const managedUsers = useManagedUsers();
-  const demoAccounts = useMemo(() => getDemoAccounts(), []);
+  const demoAccounts = useMemo(() => getCompanyAccounts(), []);
   const confirm = useConfirm();
   const [showAdd, setShowAdd] = useState(false);
   const [editUser, setEditUser] = useState<ManagedUser | null>(null);
@@ -317,7 +317,7 @@ function UsersTab() {
 
 function RolesAccessTab() {
   const managedUsers = useManagedUsers();
-  const demoAccounts = useMemo(() => getDemoAccounts(), []);
+  const demoAccounts = useMemo(() => getCompanyAccounts(), []);
   const projectAccessList = useProjectAccess();
   const projects = useProjects();
 

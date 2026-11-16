@@ -15,6 +15,7 @@ import { StatusBadge } from "@/components/app/status-badge";
 import { DataTable, type DataTableColumn } from "@/components/app/data-table";
 import { EmptyState } from "@/components/app/empty-state";
 import type { Invoice } from "@/lib/invoice-store";
+import { RecordManager } from "@/components/app/record-manager";
 
 export function InvoicesWorkspace() {
   const projects = useProjects();
@@ -78,6 +79,9 @@ export function InvoicesWorkspace() {
           </div>
         }
       />
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManager source="module" sliceKey="invoices" label="Invoice" />
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Total Invoices" value={String(dash.total)} icon={FileText} />

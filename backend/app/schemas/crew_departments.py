@@ -1,5 +1,6 @@
 """Crew Departments sub-module schemas."""
 
+import datetime as _dt
 from datetime import date, datetime
 from typing import Optional
 from uuid import UUID
@@ -649,7 +650,7 @@ class ProductionVehicleResponse(BaseModel):
     type: str
     registration_number: Optional[str] = None
     driver_name: Optional[str] = None
-    daily_rate: float
+    daily_rate: Optional[float] = None
     status: str
     created_at: datetime
     updated_at: datetime
@@ -687,7 +688,7 @@ class CaravanResponse(BaseModel):
     type: str
     registration_number: Optional[str] = None
     capacity: Optional[int] = None
-    daily_rate: float
+    daily_rate: Optional[float] = None
     total_rental_cost: float
     deposit_paid: float
     status: str
@@ -699,7 +700,7 @@ class CaravanResponse(BaseModel):
 
 class StuntPlanCreate(BaseModel):
     project_id: UUID
-    scene_id: Optional[UUID] = None
+    scene_id: Optional[str] = None
     title: str
     description: Optional[str] = None
     risk_level: str = "medium"
@@ -709,7 +710,7 @@ class StuntPlanCreate(BaseModel):
 
 class StuntPlanUpdate(BaseModel):
     project_id: Optional[UUID] = None
-    scene_id: Optional[UUID] = None
+    scene_id: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None
     risk_level: Optional[str] = None
@@ -722,7 +723,7 @@ class StuntPlanResponse(BaseModel):
 
     id: UUID
     project_id: UUID
-    scene_id: Optional[UUID] = None
+    scene_id: Optional[str] = None
     title: str
     description: Optional[str] = None
     risk_level: str
@@ -783,7 +784,7 @@ class PropTransactionResponse(BaseModel):
     prop_id: UUID
     type: str
     amount: Optional[float] = None
-    date: Optional[date] = None
+    date: Optional[_dt.date] = None
     notes: Optional[str] = None
     created_at: datetime
 
@@ -838,7 +839,7 @@ class VehicleAllocationResponse(BaseModel):
     vehicle_id: UUID
     project_id: UUID
     allocated_to: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[_dt.date] = None
     purpose: Optional[str] = None
     status: Optional[str] = None
     created_at: datetime
@@ -859,7 +860,7 @@ class CaravanAllocationResponse(BaseModel):
     id: UUID
     caravan_id: UUID
     allocated_to: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[_dt.date] = None
     status: Optional[str] = None
     created_at: datetime
 
@@ -909,7 +910,7 @@ class DriverAssignmentResponse(BaseModel):
     driver_id: UUID
     vehicle_id: Optional[UUID] = None
     project_id: UUID
-    date: Optional[date] = None
+    date: Optional[_dt.date] = None
     shift: Optional[str] = None
     status: Optional[str] = None
     created_at: datetime

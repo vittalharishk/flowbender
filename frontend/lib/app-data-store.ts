@@ -1,6 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { createFlowBenderSeedData } from "./flowbender-demo-seed";
-import { DEMO_ACCOUNTS_STORAGE_KEY, getAccessToken, getDemoAccountForUser, getDemoAccounts, getDemoUserFromToken } from "./auth-client";
+import { DEMO_ACCOUNTS_STORAGE_KEY, getAccessToken, getDemoAccountForUser, getDemoAccounts, getDemoUserFromToken, getCurrentOwnerTag, isOwnedRecordVisible, stampOwner } from "./auth-client";
 import type {
   AttendanceRecord,
   CateringAdjustment,
@@ -882,10 +882,13 @@ function getVisibleAppData(data: AppDataState): AppDataState {
   const allowed = isDemoProducer
     ? new Set(data.projects.map((project) => project.id).filter((id) => !privateProjectIds.has(id)))
     : new Set(account.assignedProjectIds);
+  const owner = getCurrentOwnerTag();
   const visible = { ...data };
   collectionKeys.forEach((key) => {
     const records = data[key] as Array<{ projectId?: string }>;
-    (visible[key] as Array<{ projectId?: string }>) = records.filter((record) => !record.projectId || allowed.has(record.projectId));
+    (visible[key] as Array<{ projectId?: string }>) = records.filter((record) =>
+      record.projectId ? allowed.has(record.projectId) : isOwnedRecordVisible(record, owner)
+    );
   });
   visible.projects = data.projects.filter((project) => allowed.has(project.id));
   visibleStateSource = data;
@@ -912,7 +915,7 @@ export function updateAppDataSlice<K extends AppDataCollectionKey>(
 ): AppDataCollections[K] {
   const nextState = updateAppData((current) => ({
     ...current,
-    [key]: updater(current[key]),
+    [key]: key === "projects" ? updater(current[key]) : stampOwner(current[key] as unknown[], updater(current[key]) as unknown[]),
   }));
 
   return cloneValue(nextState[key]);

@@ -73,7 +73,7 @@ class ScriptVersionResponse(ScriptVersionBase):
 
 class SceneBase(BaseModel):
     project_id: UUID
-    scene_number: int
+    scene_number: str
     title: Optional[str] = None
     description: Optional[str] = None
     location: Optional[str] = None
@@ -92,7 +92,7 @@ class SceneCreate(SceneBase):
 
 class SceneUpdate(BaseModel):
     project_id: Optional[UUID] = None
-    scene_number: Optional[int] = None
+    scene_number: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None
     location: Optional[str] = None

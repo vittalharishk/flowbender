@@ -345,3 +345,30 @@ export function hasPermission(user: AuthUser | null, permission: string): boolea
     (role) => role.slug === "super-admin" || role.permissions.some((item) => item.code === permission)
   );
 }
+
+// ── Per-account data ownership ─────────────────────────────────────────────
+// Signed-up accounts (companyProfile set) own their data privately. Records that
+// are not tied to a project carry `ownerAccount` (the creator's email) so they
+// show only in that account; unowned project-less records are the shared demo.
+export function getCurrentOwnerTag(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  const account = getDemoAccountForUser(getDemoUserFromToken());
+  return account && account.companyProfile !== undefined ? account.user.email.toLowerCase() : undefined;
+}
+
+export function stampOwner<T>(previous: T[] | undefined, next: T[]): T[] {
+  const owner = getCurrentOwnerTag();
+  if (!owner || !Array.isArray(next)) return next;
+  const known = new Set((previous ?? []).map((r) => (r as { id?: unknown })?.id));
+  return next.map((record) => {
+    if (!record || typeof record !== "object") return record;
+    const r = record as Record<string, unknown>;
+    if (r.ownerAccount || known.has(r.id)) return record;
+    return { ...r, ownerAccount: owner } as T;
+  });
+}
+
+export function isOwnedRecordVisible(record: unknown, owner: string | undefined): boolean {
+  const tag = (record as { ownerAccount?: unknown } | null)?.ownerAccount;
+  return owner ? tag === owner : !tag;
+}

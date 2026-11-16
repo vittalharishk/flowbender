@@ -47,7 +47,7 @@ class CrewMemberResponse(CrewMemberBase):
     id: UUID
     organization_id: UUID
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
 
 # ---------------------------------------------------------------------------
@@ -72,7 +72,7 @@ class CrewAssignmentResponse(CrewAssignmentBase):
 
     id: UUID
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
 
 # ---------------------------------------------------------------------------
@@ -84,7 +84,7 @@ class RemunerationAgreementBase(BaseModel):
     project_id: UUID
     rate_type: str
     rate_amount: float
-    total_days: int
+    total_days: Optional[int] = None
     total_payable: float
     payment_schedule: Optional[str] = None
 
@@ -98,7 +98,7 @@ class RemunerationAgreementResponse(RemunerationAgreementBase):
 
     id: UUID
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
 
 # ---------------------------------------------------------------------------
@@ -124,4 +124,4 @@ class CrewPaymentResponse(CrewPaymentBase):
 
     id: UUID
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None

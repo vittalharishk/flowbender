@@ -10,6 +10,7 @@ import { StatCard } from "@/components/app/stat-card";
 import { StatusBadge } from "@/components/app/status-badge";
 import { DataTable, type DataTableColumn } from "@/components/app/data-table";
 import { EmptyState } from "@/components/app/empty-state";
+import { RecordManager } from "@/components/app/record-manager";
 
 export function LoansWorkspace({ projectId }: { projectId?: string }) {
   const loans = useLoans(projectId);
@@ -34,6 +35,9 @@ export function LoansWorkspace({ projectId }: { projectId?: string }) {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManager source="module" sliceKey="loans" label="Loan" />
+      </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Active Loans" value={String(stats.active)} icon={Landmark} />
         <StatCard label="Total Principal" value={formatINR(stats.totalPrincipal)} icon={IndianRupee} />

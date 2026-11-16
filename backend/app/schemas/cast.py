@@ -51,7 +51,7 @@ class CastMemberResponse(CastMemberBase):
     id: UUID
     organization_id: UUID
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
 
 # ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ class CastContractResponse(CastContractBase):
 
     id: UUID
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
 
 # ---------------------------------------------------------------------------
@@ -102,7 +102,7 @@ class CastCandidateResponse(CastCandidateBase):
 
     id: UUID
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
 
 # ---------------------------------------------------------------------------
@@ -126,4 +126,4 @@ class CharacterProfileResponse(CharacterProfileBase):
 
     id: UUID
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None

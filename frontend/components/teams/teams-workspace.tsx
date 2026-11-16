@@ -10,6 +10,7 @@ import { StatCard } from "@/components/app/stat-card";
 import { StatusBadge } from "@/components/app/status-badge";
 import { DataTable, type DataTableColumn } from "@/components/app/data-table";
 import { EmptyState } from "@/components/app/empty-state";
+import { RecordManager } from "@/components/app/record-manager";
 
 export function TeamsWorkspace() {
   const departments = useDepartments();
@@ -64,6 +65,11 @@ export function TeamsWorkspace() {
         description="Manage departments and team members."
         icon={Users}
       />
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManager source="module" sliceKey="teamMembers" label="Team member" />
+        <RecordManager source="module" sliceKey="departments" label="Department" />
+        <RecordManager source="module" sliceKey="teamProjectAssignments" label="Project assignment" />
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <StatCard label="Departments" value={String(stats.totalDepartments)} icon={Building2} />

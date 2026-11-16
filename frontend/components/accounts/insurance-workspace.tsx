@@ -22,6 +22,7 @@ import type { InsurancePolicy, InsurancePolicyType, InsurancePolicyStatus, Insur
 import { StatCard } from "@/components/app/stat-card";
 import { StatusBadge, type StatusTone } from "@/components/app/status-badge";
 import { EmptyState } from "@/components/app/empty-state";
+import { RecordManager } from "@/components/app/record-manager";
 
 interface Props {
   projectId?: string;
@@ -721,6 +722,9 @@ export function InsuranceWorkspace({ projectId }: Props) {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManager source="app" sliceKey="insurancePolicies" label="Insurance policy" />
+      </div>
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Shield className="w-5 h-5 text-blue-400" />

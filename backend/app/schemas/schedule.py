@@ -1,7 +1,8 @@
 """Schedule schemas: Entries, Shoot Days, Call Sheets, Attendance, Catering."""
 
+import datetime as _dt
 from datetime import date, datetime, time
-from typing import Optional
+from typing import Any, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -27,7 +28,7 @@ class ScheduleEntryCreate(ScheduleEntryBase):
 
 class ScheduleEntryUpdate(BaseModel):
     project_id: Optional[UUID] = None
-    date: Optional[date] = None
+    date: Optional[_dt.date] = None
     call_time: Optional[time] = None
     location: Optional[str] = None
     scenes: Optional[list] = None
@@ -64,7 +65,7 @@ class ShootDayCreate(ShootDayBase):
 class ShootDayUpdate(BaseModel):
     project_id: Optional[UUID] = None
     day_number: Optional[int] = None
-    date: Optional[date] = None
+    date: Optional[_dt.date] = None
     location: Optional[str] = None
     status: Optional[str] = None
     scenes_planned: Optional[list] = None
@@ -91,8 +92,8 @@ class CallSheetBase(BaseModel):
     call_time: Optional[time] = None
     location: Optional[str] = None
     status: str = "draft"
-    cast_call: Optional[list] = None
-    crew_call: Optional[list] = None
+    cast_call: Optional[Any] = None
+    crew_call: Optional[Any] = None
 
 
 class CallSheetCreate(CallSheetBase):
@@ -103,12 +104,12 @@ class CallSheetUpdate(BaseModel):
     project_id: Optional[UUID] = None
     shoot_day_id: Optional[UUID] = None
     title: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[_dt.date] = None
     call_time: Optional[time] = None
     location: Optional[str] = None
     status: Optional[str] = None
-    cast_call: Optional[list] = None
-    crew_call: Optional[list] = None
+    cast_call: Optional[Any] = None
+    crew_call: Optional[Any] = None
 
 
 class CallSheetResponse(CallSheetBase):
@@ -126,11 +127,11 @@ class CallSheetResponse(CallSheetBase):
 class AttendanceRecordBase(BaseModel):
     project_id: UUID
     date: date
-    person_id: UUID
+    person_id: str
     person_type: str
     status: str = "present"
-    check_in_time: Optional[time] = None
-    check_out_time: Optional[time] = None
+    check_in_time: Optional[datetime] = None
+    check_out_time: Optional[datetime] = None
     notes: Optional[str] = None
 
 

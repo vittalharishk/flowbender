@@ -20,6 +20,7 @@ import { useAppDataSlice } from "@/lib/app-data-store";
 import {
   formatCurrency, formatCompactINR, ACCOUNTS_DEPARTMENTS, getDepartmentDisplay,
 } from "@/lib/accounts-departments";
+import { RecordManager } from "@/components/app/record-manager";
 
 interface Props {
   projectId?: string;
@@ -328,6 +329,9 @@ export function ExpensesRegister({ projectId }: Props) {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManager source="app" sliceKey="expenseItems" label="Expense" />
+      </div>
       {/* Summary */}
       <ExpenseSummaryCards items={allExpenses} />
 

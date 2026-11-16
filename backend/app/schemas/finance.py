@@ -61,7 +61,7 @@ class DepartmentBudgetResponse(BaseModel):
     department: str
     allocated: float
     committed: float
-    spent: float
+    spent: Optional[float] = None
     created_at: datetime
     updated_at: datetime
 
@@ -117,7 +117,7 @@ class BudgetLineItemResponse(BaseModel):
     description: Optional[str] = None
     allocated: float
     committed: float
-    spent: float
+    spent: Optional[float] = None
     created_at: datetime
     updated_at: datetime
 
@@ -161,7 +161,7 @@ class PurchaseOrderResponse(BaseModel):
     project_id: UUID
     po_number: Optional[str] = None
     vendor_id: Optional[UUID] = None
-    vendor_name: str
+    vendor_name: Optional[str] = None
     department: Optional[str] = None
     items: Optional[list[dict[str, Any]]] = None
     subtotal: float
@@ -214,7 +214,7 @@ class VendorResponse(BaseModel):
     gst_number: Optional[str] = None
     pan_number: Optional[str] = None
     payment_terms: Optional[str] = None
-    credit_limit: float
+    credit_limit: Optional[float] = None
     status: str
     created_at: datetime
     updated_at: datetime

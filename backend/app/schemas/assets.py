@@ -147,7 +147,7 @@ class StorageDeviceResponse(StorageDeviceBase):
 class FootageMetadataBase(BaseModel):
     project_id: UUID
     camera_card_id: Optional[UUID] = None
-    scene_id: Optional[UUID] = None
+    scene_id: Optional[str] = None
     take_number: Optional[int] = None
     duration_seconds: Optional[float] = None
     format: Optional[str] = None

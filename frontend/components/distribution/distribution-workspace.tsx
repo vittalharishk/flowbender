@@ -28,6 +28,7 @@ import { StatusBadge } from "@/components/app/status-badge";
 import { DataTable, type DataTableColumn } from "@/components/app/data-table";
 import { ChartContainer, seriesColors } from "@/components/app/chart-container";
 import { EmptyState } from "@/components/app/empty-state";
+import { RecordManager } from "@/components/app/record-manager";
 
 export function DistributionWorkspace() {
   const projects = useProjects();
@@ -149,6 +150,14 @@ export function DistributionWorkspace() {
           </div>
         }
       />
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManager source="app" sliceKey="rightsDeals" label="Rights deal" />
+        <RecordManager source="app" sliceKey="distributionAgreements" label="Agreement" />
+        <RecordManager source="app" sliceKey="distributionReleases" label="Release" />
+        <RecordManager source="app" sliceKey="distributionRevenue" label="Revenue entry" />
+        <RecordManager source="app" sliceKey="distributionSettlements" label="Settlement" />
+        <RecordManager source="app" sliceKey="deliverables" label="Deliverable" />
+      </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">

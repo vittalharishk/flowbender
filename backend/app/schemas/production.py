@@ -1,5 +1,6 @@
 """Production schemas: Tasks, Pre-Prod Checklist, DPR, Calendar Events."""
 
+import datetime as _dt
 from datetime import date, datetime
 from typing import Optional
 from uuid import UUID
@@ -18,7 +19,7 @@ class ProductionTaskBase(BaseModel):
     category: Optional[str] = None
     status: str = "pending"
     priority: str = "medium"
-    assigned_to: Optional[UUID] = None
+    assigned_to: Optional[str] = None
     due_date: Optional[date] = None
 
 
@@ -33,7 +34,7 @@ class ProductionTaskUpdate(BaseModel):
     category: Optional[str] = None
     status: Optional[str] = None
     priority: Optional[str] = None
-    assigned_to: Optional[UUID] = None
+    assigned_to: Optional[str] = None
     due_date: Optional[date] = None
 
 
@@ -90,7 +91,7 @@ class DprReportCreate(DprReportBase):
 class DprReportUpdate(BaseModel):
     project_id: Optional[UUID] = None
     shoot_day_id: Optional[UUID] = None
-    date: Optional[date] = None
+    date: Optional[_dt.date] = None
     day_number: Optional[int] = None
     status: Optional[str] = None
     scenes_planned: Optional[list] = None
@@ -130,7 +131,7 @@ class CalendarEventUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[_dt.date] = None
     end_date: Optional[date] = None
     all_day: Optional[bool] = None
     status: Optional[str] = None

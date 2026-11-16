@@ -16,13 +16,38 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
         self.model = model
 
+    def _scope(self, stmt, organization_id: UUID):
+        """Restrict a query to one organization.
+
+        Not every table carries organization_id: link tables (investor-projects,
+        team assignments, access grants) are scoped through their project or user,
+        and the organizations table through its own id.
+        """
+        from ..models import Organization, Project, User
+
+        model = self.model
+        if hasattr(model, "organization_id"):
+            return stmt.where(model.organization_id == organization_id)
+        if model is Organization:
+            return stmt.where(model.id == organization_id)
+        if hasattr(model, "project_id"):
+            return stmt.where(
+                model.project_id.in_(
+                    select(Project.id).where(Project.organization_id == organization_id)
+                )
+            )
+        if hasattr(model, "user_id"):
+            return stmt.where(
+                model.user_id.in_(
+                    select(User.id).where(User.organization_id == organization_id)
+                )
+            )
+        raise ValueError(f"{model.__name__} has no organization scope")
+
     async def get(
         self, db: AsyncSession, id: UUID, organization_id: UUID
     ) -> Optional[ModelType]:
-        stmt = select(self.model).where(
-            self.model.id == id,
-            self.model.organization_id == organization_id,
-        )
+        stmt = self._scope(select(self.model).where(self.model.id == id), organization_id)
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -36,9 +61,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         project_id: Optional[UUID] = None,
         filters: Optional[dict[str, Any]] = None,
     ) -> tuple[Sequence[ModelType], int]:
-        stmt = select(self.model).where(
-            self.model.organization_id == organization_id
-        )
+        stmt = self._scope(select(self.model), organization_id)
 
         if project_id and hasattr(self.model, "project_id"):
             stmt = stmt.where(self.model.project_id == project_id)
@@ -69,7 +92,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         **extra_fields,
     ) -> ModelType:
         data = obj_in.model_dump(exclude_unset=True)
-        data["organization_id"] = organization_id
+        if hasattr(self.model, "organization_id"):
+            data["organization_id"] = organization_id
         data.update(extra_fields)
 
         db_obj = self.model(**data)

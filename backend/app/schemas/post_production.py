@@ -17,7 +17,7 @@ class PostProductionItemBase(BaseModel):
     department: str
     status: str = "not-started"
     priority: Optional[str] = None
-    assigned_to: Optional[UUID] = None
+    assigned_to: Optional[str] = None
     start_date: Optional[date] = None
     due_date: Optional[date] = None
     notes: Optional[str] = None
@@ -33,7 +33,7 @@ class PostProductionItemUpdate(BaseModel):
     department: Optional[str] = None
     status: Optional[str] = None
     priority: Optional[str] = None
-    assigned_to: Optional[UUID] = None
+    assigned_to: Optional[str] = None
     start_date: Optional[date] = None
     due_date: Optional[date] = None
     notes: Optional[str] = None

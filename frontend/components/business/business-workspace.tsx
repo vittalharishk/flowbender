@@ -40,6 +40,7 @@ import { InvestorsWorkspace } from "./investors-workspace";
 import { LoansWorkspace } from "./loans-workspace";
 import { BrandingWorkspace } from "./branding-workspace";
 import { TranchesWorkspace } from "./tranches-workspace";
+import { RecordManager } from "@/components/app/record-manager";
 
 export function BusinessWorkspace() {
   const projects = useProjects();
@@ -108,6 +109,10 @@ export function BusinessWorkspace() {
           </div>
         }
       />
+      <div className="flex flex-wrap justify-end gap-2">
+        <RecordManager source="module" sliceKey="ostReceivables" label="OST receivable" />
+        <RecordManager source="module" sliceKey="burnRecords" label="Burn record" />
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
         <StatCard label="Investment Committed" value={formatINR(dashboard.investmentCommitted)} icon={IndianRupee} />

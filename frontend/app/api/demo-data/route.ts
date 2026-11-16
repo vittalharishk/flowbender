@@ -11,6 +11,9 @@ const storageFile = path.join(storageDirectory, "flowbender-demo-data.json");
 
 const META_KEY = "_meta";
 const ACCOUNTS_KEY = "_demoAccounts";
+// Rows for module-store slices (BGM, dubbing, invoices, business, ...): "mod:<sliceKey>".
+const MODULE_PREFIX = "mod:";
+const MODULE_KEY_PATTERN = /^[A-Za-z][A-Za-z0-9_.-]{0,80}$/;
 
 export const dynamic = "force-dynamic";
 
@@ -70,8 +73,8 @@ async function saveStateToDb(state: Record<string, unknown>) {
 
 async function loadStateFromDb(): Promise<Record<string, unknown> | null> {
   const result = await getPool().query<{ key: string; data: unknown }>(
-    "SELECT key, data FROM app_state WHERE key <> $1",
-    [ACCOUNTS_KEY]
+    "SELECT key, data FROM app_state WHERE key <> $1 AND key NOT LIKE $2",
+    [ACCOUNTS_KEY, MODULE_PREFIX + "%"]
   );
   if (result.rows.length === 0) return null;
   const state: Record<string, unknown> = {};
@@ -107,10 +110,40 @@ async function handleAccountsPut(payload: unknown) {
   return NextResponse.json({ saved: true });
 }
 
+async function handleModulesGet() {
+  await ensureAppStateTable();
+  const result = await getPool().query<{ key: string; data: unknown }>(
+    "SELECT key, data FROM app_state WHERE key LIKE $1",
+    [MODULE_PREFIX + "%"]
+  );
+  const modules: Record<string, unknown> = {};
+  for (const row of result.rows) modules[row.key.slice(MODULE_PREFIX.length)] = row.data;
+  return NextResponse.json({ modules });
+}
+
+async function handleModulePut(payload: unknown) {
+  if (
+    !isRecord(payload) ||
+    typeof payload.key !== "string" ||
+    !MODULE_KEY_PATTERN.test(payload.key) ||
+    !Array.isArray(payload.data)
+  ) {
+    return NextResponse.json({ error: "Invalid module payload." }, { status: 400 });
+  }
+  await ensureAppStateTable();
+  await getPool().query(
+    `INSERT INTO app_state (key, data, updated_at) VALUES ($1, $2::jsonb, now())
+     ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`,
+    [MODULE_PREFIX + payload.key, JSON.stringify(payload.data)]
+  );
+  return NextResponse.json({ saved: true });
+}
+
 export async function GET(request: Request) {
   const slice = new URL(request.url).searchParams.get("slice");
   try {
     if (slice === "accounts") return await handleAccountsGet();
+    if (slice === "modules") return await handleModulesGet();
 
     await ensureAppStateTable();
     let state = await loadStateFromDb();
@@ -137,6 +170,7 @@ export async function PUT(request: Request) {
     const payload: unknown = await request.json();
 
     if (slice === "accounts") return await handleAccountsPut(payload);
+    if (slice === "module") return await handleModulePut(payload);
 
     if (!isRecord(payload) || !isRecord(payload.data)) {
       return NextResponse.json({ error: "Invalid demo data payload." }, { status: 400 });

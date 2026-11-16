@@ -154,9 +154,9 @@ class DistributionRevenueCreate(BaseModel):
     source: Optional[str] = None
     territory: Optional[str] = None
     amount: float
-    collection_date: date
+    collection_date: Optional[date] = None
     gst_amount: float = 0
-    net_amount: float
+    net_amount: Optional[float] = None
     payment_status: str = "pending"
     notes: Optional[str] = None
 
@@ -185,9 +185,9 @@ class DistributionRevenueResponse(BaseModel):
     source: Optional[str] = None
     territory: Optional[str] = None
     amount: float
-    collection_date: date
+    collection_date: Optional[date] = None
     gst_amount: float
-    net_amount: float
+    net_amount: Optional[float] = None
     payment_status: str
     notes: Optional[str] = None
     created_at: datetime
@@ -199,13 +199,13 @@ class DistributionRevenueResponse(BaseModel):
 class DistributionSettlementCreate(BaseModel):
     project_id: UUID
     agreement_id: Optional[UUID] = None
-    counterparty_name: str
+    counterparty_name: Optional[str] = None
     settlement_type: str
-    period_start: date
-    period_end: date
+    period_start: Optional[date] = None
+    period_end: Optional[date] = None
     gross_amount: float
     deductions: Optional[dict[str, Any]] = None
-    net_amount: float
+    net_amount: Optional[float] = None
     advance_adjusted: float = 0
     amount_payable: float
     payment_status: str = "pending"
@@ -226,13 +226,13 @@ class DistributionSettlementResponse(BaseModel):
     id: UUID
     project_id: UUID
     agreement_id: Optional[UUID] = None
-    counterparty_name: str
+    counterparty_name: Optional[str] = None
     settlement_type: str
-    period_start: date
-    period_end: date
+    period_start: Optional[date] = None
+    period_end: Optional[date] = None
     gross_amount: float
     deductions: Optional[dict[str, Any]] = None
-    net_amount: float
+    net_amount: Optional[float] = None
     advance_adjusted: float
     amount_payable: float
     payment_status: str

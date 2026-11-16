@@ -35,18 +35,21 @@ npm run dev        # http://localhost:3000
 
 Demo login: `producer@flowbender.demo` / `demo`
 
-App data is stored in PostgreSQL (`app_state` table, one JSONB row per collection) via the `/api/demo-data` route. Set `FLOWBENDER_DATABASE_URL` in `frontend/.env.local` (never committed). localStorage is only a fast-start cache, and `frontend/data/flowbender-demo-data.json` is the first-run seed + backup. User accounts created in Settings also persist to the database.
+App data is stored in PostgreSQL (`app_state` table, one JSONB row per collection) via the `/api/demo-data` route. Module sections (BGM, dubbing, editing, invoices, marketing, publicity, release, teams, trailers, business, distribution channels, receivables) are stored there too, as `mod:<name>` rows. Set `FLOWBENDER_DATABASE_URL` in `frontend/.env.local` (never committed). localStorage is only a fast-start cache, and `frontend/data/flowbender-demo-data.json` is the first-run seed + backup. User accounts persist to the database.
 
 ### Backend API
 
 ```bash
 cd backend
 python -m pip install -r requirements.txt
-python seed_demo.py                      # one-time demo seed (SQLite)
-python -m uvicorn app.main:app --port 8000
+python seed_demo.py                      # one-time: demo organization + users
+python sync_app_state.py                 # copy the app's data (app_state) into the backend tables
+python -m uvicorn app.main:app --port 8010
 ```
 
-API docs: http://localhost:8000/docs — health: `/api/v1/health`
+`DATABASE_URL` in `backend/.env` must point at the same PostgreSQL database as the frontend. Re-run `sync_app_state.py` whenever you want the backend tables to catch up with the app; it is idempotent. Projects owned by signed-up accounts go into that account's own organization, with a backend login using the same email and password.
+
+API docs: http://localhost:8010/docs — health: `/api/v1/health`. The Next.js app proxies `/api/v1/*` to `BACKEND_INTERNAL_URL` (default `http://127.0.0.1:8010`).
 Backend demo login: `producer@flowbender.demo` / `Demo1234`
 
 ### Connect frontend to backend (later / production)

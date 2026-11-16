@@ -18,6 +18,12 @@ export function getPool(): Pool {
       max: 5,
       connectionTimeoutMillis: 10_000,
       idleTimeoutMillis: 30_000,
+      keepAlive: true,
+    });
+    // An idle client dropped by the remote server emits "error"; without a
+    // listener Node treats it as unhandled and the whole Next.js server exits.
+    global.__flowbenderPgPool.on("error", (error) => {
+      console.error("[db] idle PostgreSQL client error:", error.message);
     });
   }
   return global.__flowbenderPgPool;

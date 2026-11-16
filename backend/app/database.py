@@ -14,7 +14,9 @@ engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DATABASE_ECHO,
     connect_args=connect_args,
-    **({"pool_size": 20, "max_overflow": 10} if not settings.DATABASE_URL.startswith("sqlite") else {}),
+    # pre_ping + recycle: the remote PostgreSQL drops idle connections; without
+    # these the first request after an idle period fails with a 500.
+    **({"pool_size": 20, "max_overflow": 10, "pool_pre_ping": True, "pool_recycle": 300} if not settings.DATABASE_URL.startswith("sqlite") else {}),
 )
 
 AsyncSessionLocal = async_sessionmaker(

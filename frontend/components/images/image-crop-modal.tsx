@@ -32,42 +32,42 @@ const SAMPLE_PRESETS = [
   {
     name: "Charminar Heritage",
     type: "heritage",
-    url: "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=85",
+    url: "/api/files/2026-11/6833960ac3868b88f5ee9562.jpg",
   },
   {
     name: "Film City Backlot",
     type: "studio",
-    url: "https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?auto=format&fit=crop&w=1200&q=85",
+    url: "/api/files/2026-11/8ae14cccfd7b2924cd788ac5.jpg",
   },
   {
     name: "Old City Cafe",
     type: "cafe",
-    url: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=85",
+    url: "/api/files/2026-11/0b957cffb477d7b90f009849.jpg",
   },
   {
     name: "MMTS Railway Transit",
     type: "transit",
-    url: "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1200&q=85",
+    url: "/api/files/2026-11/1c7181247ab1bc7e147f8e8e.jpg",
   },
   {
     name: "Riverfront Pier",
     type: "waterfront",
-    url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=85",
+    url: "/api/files/2026-11/26e17746a8dbe9230740aa73.jpg",
   },
   {
     name: "Night Urban Circle",
     type: "urban",
-    url: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1200&q=85",
+    url: "/api/files/2026-11/6b4db5b79508041ed7e42f5e.jpg",
   },
   {
     name: "Apartment Terrace Set",
     type: "housing",
-    url: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=85",
+    url: "/api/files/2026-11/684c4cb91bba88bcf903df76.jpg",
   },
   {
     name: "Grand Music Hall",
     type: "interior",
-    url: "https://images.unsplash.com/photo-1520523839898-507127054c3f?auto=format&fit=crop&w=1200&q=85",
+    url: "/api/files/2026-11/d331dd4615ce8f2d8c4708a7.jpg",
   },
 ];
 
@@ -344,7 +344,7 @@ export function ImageCropModal({
             <TabsContent value="url" className="pt-3">
               <div className="flex gap-2">
                 <Input
-                  placeholder="https://images.unsplash.com/... or CDN link"
+                  placeholder="https://... or /api/files/... link"
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
                   onKeyDown={(e) => {

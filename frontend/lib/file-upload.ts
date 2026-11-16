@@ -1,5 +1,8 @@
-// Browser side of file uploads. Files go to POST /api/files (stored on the
-// server today, S3 later) and records keep only the returned URL.
+// Browser side of file uploads. Files go to POST /api/files (stored in S3)
+// and records keep only the returned URL. Each file is saved under the
+// signed-in account's folder in the bucket.
+import { getDemoUserFromToken } from "@/lib/auth-client";
+
 export interface UploadedFile {
   url: string;
   key: string;
@@ -14,6 +17,12 @@ export async function uploadFile(file: Blob, name?: string): Promise<UploadedFil
   if (file.size > MAX_UPLOAD_MB * 1024 * 1024) throw new Error(`File is larger than ${MAX_UPLOAD_MB} MB.`);
   const form = new FormData();
   form.append("file", file, name ?? (file instanceof File ? file.name : "upload.bin"));
+  try {
+    const email = getDemoUserFromToken()?.email;
+    if (email) form.append("owner", email);
+  } catch {
+    // not signed in: file is stored without an account folder
+  }
   const response = await fetch("/api/files", { method: "POST", body: form });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.error || `Upload failed (${response.status}).`);

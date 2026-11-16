@@ -18,7 +18,8 @@ export async function POST(request: Request) {
   if (file.size > MAX_UPLOAD_BYTES) return NextResponse.json({ error: "File is larger than 50 MB." }, { status: 413 });
   if (!allowedExtension(file.name)) return NextResponse.json({ error: "This file type is not allowed." }, { status: 415 });
   try {
-    const stored = await getFileStorage().save(Buffer.from(await file.arrayBuffer()), file.name, file.type);
+    const owner = form.get("owner");
+    const stored = await getFileStorage().save(Buffer.from(await file.arrayBuffer()), file.name, file.type, typeof owner === "string" ? owner : undefined);
     return NextResponse.json(stored, { status: 201 });
   } catch (error) {
     console.error("[files] upload failed:", error);

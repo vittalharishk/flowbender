@@ -1,18 +1,18 @@
 // Public film poster references for authentic Telugu blockbuster project slate.
 export const projectImageReferences: Record<string, string> = {
   "Pushpa 2: The Rule":
-    "https://upload.wikimedia.org/wikipedia/en/1/11/Pushpa_2-_The_Rule.jpg",
+    "/api/files/2026-11/b42c4618bbddabe2367ef1e4.jpg",
   "Kalki 2898 AD":
-    "https://upload.wikimedia.org/wikipedia/en/4/4c/Kalki_2898_AD.jpg",
+    "/api/files/2026-11/438bcc173930a9254dbcdb1a.jpg",
   "Devara: Part 1":
-    "https://upload.wikimedia.org/wikipedia/en/f/f0/Devara_Part_1.jpg",
+    "/api/files/2026-11/2bb6c9236393e4561e35e169.jpg",
   "Game Changer":
-    "https://upload.wikimedia.org/wikipedia/en/6/6a/Game_Changer_Telugu.jpg",
+    "/api/files/2026-11/c11333e97ea719c8ce5a4651.jpg",
   "They Call Him OG":
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Shri_Konidela_Pawan_Kalyan.jpg/500px-Shri_Konidela_Pawan_Kalyan.jpg",
+    "/api/files/2026-11/8a1608c5d7f1d64a81842559.jpg",
   "HIT: The Third Case":
-    "https://upload.wikimedia.org/wikipedia/en/0/09/HIT_-_The_Third_Case.jpg",
+    "/api/files/2026-11/90f39d395bbe4c37d73d00ae.jpg",
   "The Raja Saab":
-    "https://upload.wikimedia.org/wikipedia/en/9/9e/The_RajaSaab_poster.jpg",
+    "/api/files/2026-11/64ef16678e47400506d96af7.jpg",
 };
 

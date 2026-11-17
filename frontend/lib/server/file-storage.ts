@@ -83,8 +83,20 @@ function newKey(ext: string) {
 
 class S3FileStorage implements FileStorage {
   private client: S3Client;
-  constructor(private bucket: string, region: string) {
+  // Keys are random and never rewritten, so a local copy never goes stale.
+  // Caching them on disk makes every repeat read local instead of a trip to S3.
+  constructor(private bucket: string, region: string, private cacheDir: string) {
     this.client = new S3Client({ region });
+  }
+
+  private async cachePut(key: string, data: Buffer) {
+    try {
+      const full = path.join(this.cacheDir, key);
+      await fs.mkdir(path.dirname(full), { recursive: true });
+      await fs.writeFile(full, data);
+    } catch {
+      // cache is best-effort; S3 remains the source of truth
+    }
   }
 
   async save(data: Buffer, originalName: string, contentType: string, owner?: string): Promise<StoredFile> {
@@ -93,15 +105,24 @@ class S3FileStorage implements FileStorage {
     const key = ownerFolder(owner) + newKey(ext);
     const type = TYPES[ext] || contentType;
     await this.client.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: data, ContentType: type }));
+    await this.cachePut(key, data);
     return { key, url: `/api/files/${key}`, name: originalName, size: data.length, contentType: type };
   }
 
   async read(key: string) {
     if (!KEY_PATTERN.test(key)) return null;
+    const type = TYPES[path.extname(key)] || "application/octet-stream";
+    try {
+      const data = await fs.readFile(path.join(this.cacheDir, key));
+      return { data, contentType: type };
+    } catch {
+      // not cached yet: fall through to S3
+    }
     try {
       const result = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
       if (!result.Body) return null;
       const data = Buffer.from(await result.Body.transformToByteArray());
+      await this.cachePut(key, data);
       return { data, contentType: TYPES[path.extname(key)] || result.ContentType || "application/octet-stream" };
     } catch (error) {
       if ((error as { name?: string }).name !== "NoSuchKey") console.error("[files] S3 read failed:", key, error);
@@ -112,6 +133,7 @@ class S3FileStorage implements FileStorage {
   async remove(key: string) {
     if (!KEY_PATTERN.test(key)) return;
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+    await fs.rm(path.join(this.cacheDir, key), { force: true }).catch(() => {});
   }
 }
 
@@ -119,9 +141,10 @@ let storage: FileStorage | undefined;
 export function getFileStorage(): FileStorage {
   if (!storage) {
     const bucket = process.env.AWS_S3_BUCKET;
+    const localDir = path.resolve(process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads"));
     storage = bucket
-      ? new S3FileStorage(bucket, process.env.AWS_REGION || "ap-southeast-2")
-      : new LocalDiskStorage(path.resolve(process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads")));
+      ? new S3FileStorage(bucket, process.env.AWS_REGION || "ap-southeast-2", localDir)
+      : new LocalDiskStorage(localDir);
   }
   return storage;
 }
